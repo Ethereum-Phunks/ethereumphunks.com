@@ -246,7 +246,8 @@ export class DataService {
         const result = res.data.map((tx: any) => {
           let type = tx.type;
           if (type === 'transfer') {
-            if (tx.toAddress?.toLowerCase() === environment.bridgeAddress) type = 'bridge';
+            if (tx.toAddress?.toLowerCase() === environment.bridgeAddress) type = 'bridgeOut';
+            if (tx.fromAddress?.toLowerCase() === environment.bridgeAddress) type = 'bridgeIn';
           }
           return { ...tx, type, };
         });
@@ -273,7 +274,8 @@ export class DataService {
 
           if (tx.type === 'transfer') {
             if (tx.to.toLowerCase() === environment.marketAddress) type = 'escrow';
-            if (tx.to.toLowerCase() === environment.bridgeAddress) type = 'bridge';
+            if (tx.to.toLowerCase() === environment.bridgeAddress) type = 'bridgeOut';
+            if (tx.from.toLowerCase() === environment.bridgeAddress) type = 'bridgeIn';
           }
 
           return {

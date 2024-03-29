@@ -40,20 +40,22 @@
             @if (
               event.toAddress && (
                 event.type === 'transfer' ||
-                event.type === 'created'
+                event.type === 'created' ||
+                event.type === 'bridgeIn'
               )
             ) {
-              <app-address
-                [address]="event.toAddress">
-              </app-address>
-            } @else if (event.type === 'bridge') {
-              <app-address
-                [address]="event.fromAddress">
-              </app-address>
+              <app-address [address]="event.toAddress" />
+            } @else if (event.type === 'bridgeOut') {
+              <app-address [address]="event.fromAddress" />
             }
 
-
-            @if (event.value !== '0' && event.type !== 'transfer' && event.type !== 'created' && event.type !== 'bridge') {
+            @if (
+              event.value !== '0' &&
+              event.type !== 'transfer' &&
+              event.type !== 'created' &&
+              event.type !== 'bridgeIn' &&
+              event.type !== 'bridgeOut'
+            ) {
               <span class="value">
                 Ξ{{ event.value | weiToEth }}<br />
               </span>

@@ -170,7 +170,8 @@
           }
         }
 
-        &.bridge {
+        &.bridgein,
+        &.bridgeout {
           td {
             background-color: rgba(var(--magma), .5);
 

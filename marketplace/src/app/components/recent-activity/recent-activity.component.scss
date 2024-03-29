@@ -161,7 +161,8 @@ section {
       }
     }
 
-    &.bridge {
+    &.bridgein,
+    &.bridgeout {
       .image-wrapper {
         background-color: rgba(var(--magma), 1);
       }
