@@ -161,6 +161,12 @@ section {
       }
     }
 
+    &.bridge {
+      .image-wrapper {
+        background-color: rgba(var(--magma), 1);
+      }
+    }
+
     // &.escrow {
     //   .image-wrapper {
     //     background-color: rgba(var(--escrow-color), 1);

@@ -379,6 +379,25 @@ export class Web3Service {
     return await this.transferPhunk(`0x${hash}`, toAddress);
   }
 
+  async lockPhunk(hexArr: string[]): Promise<string | undefined> {
+    if (!hexArr.length) throw new Error('No phunk selected');
+
+    await this.switchNetwork();
+
+    const data = hexArr.map((res) => res.replace('0x', '')).join('');
+
+    console.log({ data });
+
+    const wallet = await getWalletClient(this.config);
+    return wallet?.sendTransaction({
+      chain: wallet.chain,
+      account: getAccount(this.config).address as `0x${string}`,
+      to: environment.bridgeAddress as `0x${string}`,
+      value: BigInt(1000000000000000),
+      data: `0x${data}` as `0x${string}`,
+    });
+  }
+
   async withdraw(): Promise<any> {
     const hash = await this.writeMarketContract('withdraw', []);
     const receipt = await this.waitForTransaction(hash!);
@@ -516,6 +535,11 @@ export class Web3Service {
   //////////////////////////////////
   // UTILS /////////////////////////
   //////////////////////////////////
+
+  async getCurrentAddress(): Promise<`0x${string}` | undefined> {
+    const account = getAccount(this.config);
+    return account.address;
+  }
 
   async getCurrentBlock(): Promise<number> {
     const publicClient = getPublicClient(this.config);

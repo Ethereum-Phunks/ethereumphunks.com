@@ -39,6 +39,7 @@ export class NotificationPipe implements PipeTransform {
       withdrawPhunk: 'Withdraw %singleName% from Escrow',
       purchased: 'Your item Sold!',
       chatMessage: 'New message',
+      bridge: 'Bridge %singleName% to Magma',
       batch: {
         sendToEscrow: 'Send <span class="highlight">%length%</span> items to Escrow',
         phunkNoLongerForSale: 'Delist <span class="highlight">%length%</span> items',
@@ -83,6 +84,7 @@ export class NotificationPipe implements PipeTransform {
       withdrawPhunk: 'escrow',
       purchased: 'purchased',
       chatMessage: 'chat',
+      bridge: 'bridge',
     },
   }
 

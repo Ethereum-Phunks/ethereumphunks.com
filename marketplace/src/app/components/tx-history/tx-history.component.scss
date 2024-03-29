@@ -169,6 +169,18 @@
             }
           }
         }
+
+        &.bridge {
+          td {
+            background-color: rgba(var(--magma), .5);
+
+            .cell-inner {
+              &.type-label {
+                border-left: .3rem solid rgba(var(--magma), 1);
+              }
+            }
+          }
+        }
       }
     }
 

@@ -41,6 +41,7 @@ import { selectNotifications } from '@/state/selectors/notification.selectors';
 import { upsertNotification } from '@/state/actions/notification.actions';
 import { signMessage } from '@wagmi/core';
 import { HttpClient } from '@angular/common/http';
+import { keccak256 } from 'viem';
 
 interface TxStatus {
   title: string;
@@ -539,21 +540,46 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
   async bridgePhunk(phunk: Phunk): Promise<void> {
 
     const config = this.web3Svc.config;
-    const signature = await signMessage(config, {
-      message: 'bridge-phunk',
-    });
-    console.log({ phunk, signature });
+    const address = await this.web3Svc.getCurrentAddress();
+    if (!address) throw new Error('Invalid user address');
 
-    const url = `http://localhost:3000/bridge-phunk`;
-    const res = await firstValueFrom(
-      this.http.post(url, {
+    const baseUrl = `http://localhost:3000`;
+
+    const nonceUrl = `${baseUrl}/generate-nonce`;
+    const nonceResult = await firstValueFrom(
+      this.http.get(nonceUrl, { params: { address }, responseType: 'text' })
+    );
+
+    const signature = await signMessage(config, {
+      message: `Sign this message to verify ownership of the asset.\n\nAddress: ${address.toLowerCase()}\nEthscription ID: ${phunk.hashId}\nSHA: ${phunk.sha}\nNonce: ${nonceResult}`,
+    });
+
+    const bridgeUrl = `${baseUrl}/bridge-phunk`;
+    const bridgeResponse: any = await firstValueFrom(
+      this.http.post(bridgeUrl, {
+        address,
         hashId: phunk.hashId,
         sha: phunk.sha,
         signature
       })
     );
 
-    console.log({res});
+    console.log({ bridgeResponse });
+
+    const hexArr = [
+      bridgeResponse.hashId,
+      bridgeResponse.signature.r,
+      bridgeResponse.signature.s,
+      bridgeResponse.signature.v,
+    ];
+
+    const data = hexArr.map((res) => res.replace('0x', '')).join('');
+    console.log('0x' + data);
+
+    const hash = await this.web3Svc.lockPhunk(hexArr);
+    console.log({ hash });
+    const receipt = await this.web3Svc.pollReceipt(hash!);
+    console.log({ receipt });
   }
 
   // async sendToAuction(hashId: string) {

@@ -242,8 +242,17 @@ export class DataService {
       p_type: type && type !== 'All' ? type : null,
       p_collection_slug: slug
     })).pipe(
-      // tap((res) => console.log('fetchEvents', res)),
-      map((res: any) => res.data),
+      map((res: any) => {
+        const result = res.data.map((tx: any) => {
+          let type = tx.type;
+          if (type === 'transfer') {
+            if (tx.toAddress?.toLowerCase() === environment.bridgeAddress) type = 'bridge';
+          }
+          return { ...tx, type, };
+        });
+        return result;
+      }),
+      tap((res) => console.log('fetchEvents', res)),
     );
   }
 
@@ -259,14 +268,21 @@ export class DataService {
 
     return from(response).pipe(
       map((res: any) => {
-        return res.data.map((item: any) => {
+        return res.data.map((tx: any) => {
+          let type: string = tx.type;
+
+          if (tx.type === 'transfer') {
+            if (tx.to.toLowerCase() === environment.marketAddress) type = 'escrow';
+            if (tx.to.toLowerCase() === environment.bridgeAddress) type = 'bridge';
+          }
+
           return {
-            ...item,
-            ...item[`ethscriptions${this.prefix}`],
+            ...tx,
+            ...tx[`ethscriptions${this.prefix}`],
+            type,
           };
         });
       }),
-      // tap((res) => console.log('fetchSingleTokenEvents', res)),
     );
   }
 
@@ -380,25 +396,6 @@ export class DataService {
       };
     } catch (error) {
       console.log('getListingFromHashId', error);
-      return null;
-    }
-  }
-
-  async getBidFromHashId(hashId: string | undefined): Promise<Bid | null> {
-    if (!hashId) return null;
-
-    try {
-      const call = await this.web3Svc.readMarketContract('phunkBids', [hashId]);
-      if (!call[0]) return null;
-
-      return {
-        createdAt: new Date(),
-        hashId: call[1],
-        value: call[3].toString(),
-        fromAddress: call[2],
-      };
-    } catch (error) {
-      console.log('getBidFromHashId', error);
       return null;
     }
   }

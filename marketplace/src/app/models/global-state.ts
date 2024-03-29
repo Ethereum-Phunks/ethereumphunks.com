@@ -97,7 +97,8 @@ export type TxFunction =
   | 'transferPhunk'
   | 'withdrawPhunk'
   | 'purchased'
-  | 'chatMessage';
+  | 'chatMessage'
+  | 'bridge';
 
 export interface TraitFilter {
   [key: string]: string;
@@ -117,4 +118,5 @@ export type EventType =
   | 'PhunkBidEntered'
   | 'PhunkBidWithdrawn'
   | 'PhunkBought'
-  | 'PhunkOfferWithdrawn';
+  | 'PhunkOfferWithdrawn'
+  | 'bridge';
