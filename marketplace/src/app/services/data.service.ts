@@ -170,6 +170,9 @@ export class DataService {
           isEscrowed:
             ethscription.phunk.owner === environment.marketAddress
             && ethscription.phunk.prevOwner === address,
+          isBridged:
+            ethscription.phunk.owner === environment.bridgeAddress
+            && ethscription.phunk.prevOwner === address,
           attributes: [],
         };
       })),
@@ -357,6 +360,7 @@ export class DataService {
 
         const newPhunk = { ...phunk, ...collection, collectionName } as Phunk;
         newPhunk.isEscrowed = phunk?.owner === environment.marketAddress;
+        newPhunk.isBridged = phunk?.owner === environment.bridgeAddress;
         newPhunk.attributes = [];
 
         return newPhunk;

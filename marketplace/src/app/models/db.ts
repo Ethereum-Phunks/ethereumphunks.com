@@ -31,6 +31,8 @@ export interface Phunk {
   data?: string | null
 
   isEscrowed?: boolean;
+  isBridged?: boolean;
+
   attributes?: Attribute[]
   listing?: Listing | null
   bid?: Bid | null

@@ -39,7 +39,7 @@ import * as dataStateSelectors from '@/state/selectors/data-state.selectors';
 
 import { selectNotifications } from '@/state/selectors/notification.selectors';
 import { upsertNotification } from '@/state/actions/notification.actions';
-import { signMessage } from '@wagmi/core';
+import { signMessage, signTypedData } from '@wagmi/core';
 import { HttpClient } from '@angular/common/http';
 import { keccak256 } from 'viem';
 
@@ -90,6 +90,7 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
 
   explorerUrl = environment.explorerUrl
   escrowAddress = environment.marketAddress;
+  bridgeAddress = environment.bridgeAddress;
 
   sellActive: boolean = false;
   withdrawActive: boolean = false;

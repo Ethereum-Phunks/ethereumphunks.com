@@ -144,7 +144,9 @@ export class MarketComponent {
   );
 
   marketType$ = this.store.select(marketStateSelectors.selectMarketType);
-  activeMarketRouteData$ = this.store.select(marketStateSelectors.selectActiveMarketRouteData);
+  activeMarketRouteData$ = this.store.select(marketStateSelectors.selectActiveMarketRouteData).pipe(
+    tap((routeData: any) => console.log({ routeData }))
+  );
   activeTraitFilters$ = this.store.select(marketStateSelectors.selectActiveTraitFilters).pipe(
     map((traitFilters: any) => {
       const traitFiltersCopy = { ...traitFilters };
@@ -654,6 +656,8 @@ export class MarketComponent {
       [ selected, invalid ] = await this.filterOwnedItems(selected);
     }
 
+    [ selected, invalid ] = await this.filterLockedItems(selected);
+
     selected = await this.dataSvc.checkConsensus(Object.values(selected));
 
     const consensusInvalid = selected.filter((phunk: Phunk) => phunk.consensus === false);
@@ -671,6 +675,15 @@ export class MarketComponent {
     return { notInEscrow, inEscrow, invalid };
   }
 
+  async filterLockedItems(phunks: Phunk[]): Promise<[Phunk[], Phunk[]]> {
+    let validItems: Phunk[] = [];
+    let invalidItems: Phunk[] = [];
+
+    validItems = phunks.filter(phunk => !phunk.isBridged);
+    invalidItems = phunks.filter(phunk => phunk.isBridged);
+    return [validItems, invalidItems];
+  }
+
   async filterOwnedItems(phunks: Phunk[]): Promise<[Phunk[], Phunk[]]> {
     const walletAddress = (await this.web3Svc.getActiveWalletAddress())?.toLowerCase();
     const marketAddress = environment.marketAddress.toLowerCase();
@@ -679,7 +692,10 @@ export class MarketComponent {
 
     phunks.forEach(phunk => {
       const owner = phunk.owner.toLowerCase();
-      if ((owner === marketAddress && phunk.prevOwner === walletAddress) || owner === walletAddress) {
+      if (
+        (owner === marketAddress && phunk.prevOwner === walletAddress) ||
+        owner === walletAddress
+      ) {
         invalidItems.push(phunk);
       } else {
         validItems.push(phunk);
@@ -688,5 +704,4 @@ export class MarketComponent {
 
     return [validItems, invalidItems];
   }
-
 }

@@ -72,7 +72,7 @@ export class RecentActivityComponent {
     PhunkBought: 'Bought for',
     transfer: 'Transferred to',
     created: 'Created by',
-    bridgeOut: 'Bridged (Locked) by',
+    bridgeOut: 'Bridged by',
     bridgeIn: 'Bridged (Unlocked) by',
     // escrow: 'Escrowed by',
     // PhunkNoLongerForSale: 'Offer withdrawn',

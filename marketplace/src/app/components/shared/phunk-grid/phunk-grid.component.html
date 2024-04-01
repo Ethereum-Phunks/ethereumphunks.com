@@ -44,19 +44,25 @@
       (waIntersectionObservee)="onIntersection($event)"
       [class.selected]="selected[phunk.hashId]"
       [attr.data-index]="i"
+      [class.bridged]="
+        (marketType === 'owned' && viewType === 'market') &&
+        phunk.isBridged
+      "
       [class.in-escrow]="
         (marketType === 'owned' && viewType === 'market') &&
         phunk.owner === escrowAddress && !phunk.listing
       "
       [class.listing]="
-        (marketType === 'listings' ||
-        (marketType === 'owned' && viewType === 'market')) &&
-        phunk.listing
+        (
+          marketType === 'listings' ||
+          (marketType === 'owned' && viewType === 'market')
+        ) && phunk.listing
       "
       [class.bid]="
-        (marketType === 'bids' ||
-        (marketType === 'owned' && viewType === 'market')) &&
-        phunk.bid
+        (
+          marketType === 'bids' ||
+          (marketType === 'owned' && viewType === 'market')
+        ) && phunk.bid
       ">
 
       @if (selectable) {
@@ -75,10 +81,6 @@
           </label>
         </div>
       }
-
-      <!-- @if (phunk.listing?.listedBy === walletAddress) {
-        <div class="owned-label" i18n></div>
-      } -->
 
       <a
         class="item-link"

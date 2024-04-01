@@ -42,6 +42,11 @@
                 @if (phunk.prevOwner; as owner) {
                   <p i18n>This {{ phunk.singleName }} is held in <a [routerLink]="['/', 'curated', phunk.slug, 'market', 'owned']" [queryParams]="{ address: escrowAddress }">escrow</a> for <a [routerLink]="['/', 'curated', phunk.slug, 'market', 'owned']" [queryParams]="{ address: owner }"><app-address [address]="owner" /></a>.</p>
                 }
+              } @else if (phunk.isBridged) {
+                <!-- Owner -->
+                @if (phunk.prevOwner; as owner) {
+                  <p i18n>This {{ phunk.singleName }} has been <a [routerLink]="['/', 'curated', phunk.slug, 'market', 'owned']" [queryParams]="{ address: bridgeAddress }">bridged</a> by <a [routerLink]="['/', 'curated', phunk.slug, 'market', 'owned']" [queryParams]="{ address: owner }"><app-address [address]="owner" /></a>.</p>
+                }
               } @else {
                 <!-- Owner -->
                 @if (phunk.owner; as owner) {
@@ -58,7 +63,7 @@
             </div>
 
             <div class="actions-wrapper">
-              <!-- <button (click)="bridgePhunk(phunk)">Bridge</button> -->
+              <button (click)="bridgePhunk(phunk)">Bridge</button>
 
               @if ((walletAddress$ | async); as address) {
                 @if (phunk.owner; as owner) {
