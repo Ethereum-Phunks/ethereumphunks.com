@@ -63,10 +63,11 @@
               @if (
                 (marketType === 'owned'
                 && (route.snapshot.queryParams.address | lowercase) === walletAddress)
-                || marketType === 'listings'
               ) {
+                <!-- || marketType === 'listings' -->
                 <div class="select-buttons">
-                  @if (selectMutipleActive && marketType !== 'listings') {
+                  @if (selectMutipleActive) {
+                    <!--  && marketType !== 'listings' -->
                     <button
                       class="all-none"
                       [class.all]="selectAll"
