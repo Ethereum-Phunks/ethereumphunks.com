@@ -14,6 +14,7 @@ export const environment = {
   // auctionAddress: '0xc6a824D8cce7c946A3F35879694b9261A36fc823'.toLowerCase(),
   bridgeAddress: '0xE492425712642c560a8dAa8dCa333FA34Dd51C6c'.toLowerCase(),
 
+  relayUrl: 'http://localhost:3069',
   staticUrl: 'https://kcbuycbhynlmsrvoegzp.supabase.co/storage/v1/object/public',
 
   // Local

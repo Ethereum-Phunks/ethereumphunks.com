@@ -1,4 +1,4 @@
-import { Component, HostListener, Inject } from '@angular/core';
+import { Component, Inject } from '@angular/core';
 import { CommonModule, DOCUMENT } from '@angular/common';
 import { NavigationEnd, NavigationStart, Router, RouterModule } from '@angular/router';
 
@@ -13,21 +13,22 @@ import { FooterComponent } from '@/components/footer/footer.component';
 import { MenuComponent } from '@/components/menu/menu.component';
 import { NotificationsComponent } from '@/components/notifications/notifications.component';
 import { StatusBarComponent } from '@/components/status-bar/status-bar.component';
-import { ModalComponent } from './components/shared/modal/modal.component';
-import { ChatComponent } from './components/chat/chat.component';
+import { ModalComponent } from '@/components/shared/modal/modal.component';
+import { ChatComponent } from '@/components/chat/chat.component';
+import { CollectionsComponent } from '@/components/collections/collections.component';
 
 import { Web3Service } from '@/services/web3.service';
 import { DataService } from '@/services/data.service';
 import { ThemeService } from '@/services/theme.service';
 
-import { debounceTime, filter, observeOn, scan, tap } from 'rxjs/operators';
-import { asyncScheduler, fromEvent } from 'rxjs';
-
-import { selectChatActive } from './state/selectors/chat.selectors';
+import { selectChatActive } from '@/state/selectors/chat.selectors';
 
 import * as appStateActions from '@/state/actions/app-state.actions';
 import * as dataStateActions from '@/state/actions/data-state.actions';
 import * as marketStateActions from '@/state/actions/market-state.actions';
+
+import { debounceTime, filter, observeOn, scan, tap } from 'rxjs/operators';
+import { asyncScheduler, fromEvent } from 'rxjs';
 
 @Component({
   standalone: true,
@@ -38,6 +39,7 @@ import * as marketStateActions from '@/state/actions/market-state.actions';
     IntersectionObserverModule,
 
     MenuComponent,
+    CollectionsComponent,
     HeaderComponent,
     FooterComponent,
     NotificationsComponent,

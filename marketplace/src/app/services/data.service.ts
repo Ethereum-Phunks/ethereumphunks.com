@@ -61,9 +61,9 @@ export class DataService {
     this.createListeners();
     this.fetchUSDPrice();
 
-    this.fetchStats(90, undefined).subscribe((res: any) => {
-      console.log('fetchStats', res);
-    });
+    // this.fetchStats().subscribe((res: any) => {
+    //   console.log('fetchStats', res);
+    // });
 
     // this.fetchUserEvents(
     //   '0xf1Aa941d56041d47a9a18e99609A047707Fe96c7',
@@ -483,17 +483,10 @@ export class DataService {
     );
   }
 
-  fetchStats(
-    days: number = 1,
-    slug?: string
-  ): Observable<any> {
+  fetchStats(): Observable<any> {
 
     const query = supabase
-      .rpc(`get_total_volume${this.prefix}`, {
-        start_date: new Date(new Date().getTime() - ((1000 * 60 * 60 * 24) * days)),
-        end_date: new Date(),
-        slug_filter: slug,
-      });
+      .rpc(`get_collections_stats`);
 
     return from(query).pipe(
       map((res: any) => res.data[0]),

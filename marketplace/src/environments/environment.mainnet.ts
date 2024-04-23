@@ -13,6 +13,7 @@ export const environment = {
   // auctionAddress: '0xc6a824D8cce7c946A3F35879694b9261A36fc823'.toLowerCase(),
   bridgeAddress: ''.toLowerCase(),
 
+  relayUrl: 'http://localhost:3002',
   staticUrl: 'https://kcbuycbhynlmsrvoegzp.supabase.co/storage/v1/object/public',
 
   supabaseUrl: 'https://kcbuycbhynlmsrvoegzp.supabase.co',

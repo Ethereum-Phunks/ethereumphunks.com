@@ -1,7 +1,5 @@
 import { defineChain } from 'viem'
 
-const sourceId = 1;
-
 export const magma = defineChain({
   id: 6969696969,
   name: 'Magma:Onyx',

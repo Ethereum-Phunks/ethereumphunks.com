@@ -65,7 +65,7 @@ export class Web3Service {
     private ngZone: NgZone
   ) {
 
-    const chains: [Chain, ...Chain[]] = environment.chainId === 1 ? [mainnet] : [sepolia];
+    const chains: [Chain, ...Chain[]] = environment.chainId === 1 ? [mainnet] : [sepolia, magma];
 
     this.config = createConfig({
       chains,

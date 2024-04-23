@@ -96,6 +96,7 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
   withdrawActive: boolean = false;
   transferActive: boolean = false;
   escrowActive: boolean = false;
+  bridgeActive: boolean = false;
 
   transferAddress = new FormControl<string | null>('');
   listPrice = new FormControl<number | undefined>(undefined);
@@ -174,6 +175,12 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
     setTimeout(() => this.transferAddressInput?.nativeElement.focus(), 0);
   }
 
+  bridgePhunkAction(): void {
+    this.closeAll();
+    this.bridgeActive = true;
+    // this.bridgePhunk();
+  }
+
   closeListing(): void {
     this.sellActive = false;
     this.clearAll();
@@ -188,6 +195,10 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
     this.clearAll();
   }
 
+  closeBridge(): void {
+    this.bridgeActive = false;
+  }
+
   clearAll(): void {
     this.listPrice.setValue(undefined);
     this.listToAddress.setValue('');
@@ -198,6 +209,7 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
     this.closeListing();
     this.closeTransfer();
     this.closeEscrow();
+    this.closeBridge();
   }
 
   async submitListing(phunk: Phunk): Promise<void> {
@@ -538,13 +550,13 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
     if (!res[0]?.consensus) throw new Error('Consensus not reached. Contact Support @etherphunks');
   }
 
-  async bridgePhunk(phunk: Phunk): Promise<void> {
+  async bridge(phunk: Phunk): Promise<void> {
 
     const config = this.web3Svc.config;
     const address = await this.web3Svc.getCurrentAddress();
     if (!address) throw new Error('Invalid user address');
 
-    const baseUrl = `http://localhost:3000`;
+    const baseUrl = environment.relayUrl;
 
     const nonceUrl = `${baseUrl}/generate-nonce`;
     const nonceResult = await firstValueFrom(

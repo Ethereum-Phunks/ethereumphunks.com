@@ -1,6 +1,15 @@
 @import 'abstracts/variables';
 @import 'abstracts/mixins';
 
+// .collections-menu {
+//   position: absolute;
+//   top: var(--header-height);
+//   left: 0;
+
+//   app-collections {
+//   }
+// }
+
 main {
   min-height: calc(100vh - 21rem);
   // padding-top: 20rem;

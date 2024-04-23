@@ -63,10 +63,10 @@
             </div>
 
             <div class="actions-wrapper">
-              <!-- <button (click)="bridgePhunk(phunk)">Bridge</button> -->
 
               @if ((walletAddress$ | async); as address) {
                 @if (phunk.owner; as owner) {
+
                   <!-- Buy button -->
                   @if (
                     phunk.listing &&
@@ -93,22 +93,16 @@
                     <!-- Sell Actions -->
                     @if (sellActive) {
                       @if (phunk.isEscrowed) {
+                        <!-- Escrowed -->
                         <ng-container *ngTemplateOutlet="sellForm; context:{ $implicit: phunk }" />
                       } @else {
-                        <!-- <ng-container *ngTemplateOutlet="escrowForm; context:{ $implicit: phunk, type: 'list' }" /> -->
+                        <!-- Not escrowed -->
                         <ng-container *ngTemplateOutlet="escrowAndSellForm; context:{ $implicit: phunk }" />
                       }
                     }
                   }
 
-                  <!-- Escrow actions -->
-                  @if (phunk.isEscrowed && (phunk.prevOwner | lowercase) === (address | lowercase)) {
-                    <button class="withdraw" (click)="withdrawPhunk(phunk)">
-                      <span>Withdraw from escrow</span>
-                      <ng-container *ngTemplateOutlet="pending; context:{ $implicit: 'withdrawPhunk' }" />
-                    </button>
-                  }
-
+                  <!-- Escrow actions (Send) -->
                   @if (!phunk.isEscrowed && (owner | lowercase) === (address | lowercase)) {
                     <button class="send-to-escrow" (click)="escrowPhunk()" [class.active]="escrowActive">
                       <span>Send to escrow</span>
@@ -118,6 +112,14 @@
                     @if (escrowActive) {
                       <ng-container *ngTemplateOutlet="escrowForm; context:{ $implicit: phunk }" />
                     }
+                  }
+
+                  <!-- Escrow actions (Withdraw) -->
+                  @if (phunk.isEscrowed && (phunk.prevOwner | lowercase) === (address | lowercase)) {
+                    <button class="withdraw" (click)="withdrawPhunk(phunk)">
+                      <span>Withdraw from escrow</span>
+                      <ng-container *ngTemplateOutlet="pending; context:{ $implicit: 'withdrawPhunk' }" />
+                    </button>
                   }
 
                   <!-- Transfer -->
@@ -131,7 +133,6 @@
                     @if (transferActive) {
                       <ng-container *ngTemplateOutlet="transferForm; context:{ $implicit: phunk }" />
                     }
-                    <!-- <button (click)="sendToAuction(phunk.hashId)">Send to Auction</button> -->
                   }
 
                   <!-- Delist button -->
@@ -144,6 +145,15 @@
                       <span>Delist</span>
                       <ng-container *ngTemplateOutlet="pending; context:{ $implicit: 'phunkNoLongerForSale' }" />
                     </button>
+                  }
+
+                  <!-- Bridge button -->
+                  @if ((owner | lowercase) === (address | lowercase)) {
+                    <button class="bridge" [class.active]="bridgeActive" (click)="bridgePhunkAction()">Bridge</button>
+                  }
+
+                  @if (bridgeActive) {
+                    <ng-container *ngTemplateOutlet="bridgeForm; context:{ $implicit: phunk }" />
                   }
                 }
 
@@ -316,6 +326,21 @@
 
     <button i18n class="sell" (click)="sendToEscrow(phunk)">
       Send to Escrow
+    </button>
+  </div>
+</ng-template>
+
+<!-- Bridge Form -->
+<ng-template #bridgeForm let-phunk>
+  <div class="form-wrapper">
+    <ng-template [ngTemplateOutlet]="cooldown" />
+
+    <p i18n>Bridge your {{ phunk.singleName }} to the magma L2 for faster and cheaper transacting on our marketplace. You can unlock and bridge your {{ phunk.singleName }} back at any time</p>
+
+    <p><span class="small">You must own magma's native token in order to transact on the L2.</span> <a href="#">Click here to swap</a></p>
+
+    <button i18n class="sell" (click)="bridge(phunk)">
+      Bridge
     </button>
   </div>
 </ng-template>

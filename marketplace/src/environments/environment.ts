@@ -12,6 +12,7 @@ export const environment = {
   marketAddress: '0x3dfbc8c62d3ce0059bdaf21787ec24d5d116fe1e'.toLowerCase(),
   bridgeAddress: '0xE492425712642c560a8dAa8dCa333FA34Dd51C6c'.toLowerCase(),
 
+  relayUrl: 'http://localhost:3003',
   staticUrl: 'https://kcbuycbhynlmsrvoegzp.supabase.co/storage/v1/object/public',
 
   supabaseUrl: 'https://kcbuycbhynlmsrvoegzp.supabase.co',
