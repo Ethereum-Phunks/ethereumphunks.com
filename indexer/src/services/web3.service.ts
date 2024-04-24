@@ -3,8 +3,9 @@ import { Injectable, Logger } from '@nestjs/common';
 import { FormattedTransaction, GetBlockReturnType, TransactionReceipt, createPublicClient, http } from 'viem';
 import { sepolia, mainnet } from 'viem/chains';
 
-import punkDataAbi from '../abi/PunkData.json';
-import pointsAbi from '../abi/Points.json';
+import punkDataAbi from '@/abi/PunkData.json';
+import pointsAbi from '@/abi/Points.json';
+import bridgeAbi from '@/abi/EtherPhunksBridgeMainnet.json';
 
 import dotenv from 'dotenv';
 dotenv.config();
@@ -20,6 +21,8 @@ export class Web3Service {
   ).map((address: string) => address.toLowerCase());
 
   pointsAddress: string = this.chain === 'mainnet' ? process.env.POINTS_ADDRESS_MAINNET : process.env.POINTS_ADDRESS_SEPOLIA;
+
+  bridgeAddressMainnet: string = this.chain === 'mainnet' ? process.env.BRIDGE_ADDRESS_MAINNET_L1 : process.env.BRIDGE_ADDRESS_SEPOLIA_L1;
 
   public client = createPublicClient({
     chain: this.chain === 'mainnet' ? mainnet : sepolia,
@@ -75,9 +78,31 @@ export class Web3Service {
     return receipt;
   }
 
+  async waitForTransaction(hash: `0x${string}`): Promise<TransactionReceipt> {
+    const receipt = await this.client.waitForTransactionReceipt({ hash });
+    return receipt;
+  }
+
   async getBlock(n?: number): Promise<GetBlockReturnType> {
     if (n) return await this.client.getBlock({ blockNumber: BigInt(n), includeTransactions: false });
     return await this.client.getBlock({ includeTransactions: false });
+  }
+
+  waitNBlocks(blocks: number): Promise<void> {
+    return new Promise(async (resolve) => {
+      const currentBlock = await this.client.getBlockNumber();
+      const targetBlock = currentBlock + BigInt(blocks);
+
+      const unwatch = this.client.watchBlocks({
+        onBlock: (block) => {
+          Logger.debug(`${Number(targetBlock) - Number(block.number)} blocks remaining`, 'Bridge confirmations');
+          if (Number(block.number) >= Number(targetBlock)) {
+            unwatch();
+            resolve();
+          }
+        },
+      });
+    });
   }
 
   ///////////////////////////////////////////////////////////////////////////////
@@ -92,6 +117,17 @@ export class Web3Service {
       args: [`${address}`],
     });
     return points as number;
+  }
+
+  async fetchNonce(address: string): Promise<bigint> {
+    // return BigInt(0);
+    const nonce = await this.client.readContract({
+      address: this.bridgeAddressMainnet as `0x${string}`,
+      abi: bridgeAbi,
+      functionName: 'expectedNonce',
+      args: [`${address}`],
+    });
+    return nonce as bigint;
   }
 
   ///////////////////////////////////////////////////////////////////////////////
@@ -116,5 +152,11 @@ export class Web3Service {
       args: [`${tokenId}`],
     });
     return punkAttributes as any;
+  }
+
+  async getEnsFromAddress(address: string): Promise<string> {
+    // return '';
+    const ens = await this.client.getEnsName({ address: address as `0x${string}` });
+    return ens;
   }
 }

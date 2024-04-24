@@ -56,10 +56,9 @@ export interface Ethscription {
   owner: string | null;
   sha: string;
   tokenId: number | null;
-  ethscriptionNumber?: number | null;
-  prevOwner?: string | null;
-  slug?: string | null;
-  data?: string | null;
+  prevOwner: string;
+  slug: string | null;
+  locked: boolean;
 }
 
 export interface Event {
@@ -78,7 +77,8 @@ export interface Event {
 
 export interface PhunkSha {
   sha: string | null;
-  phunkId: number;
+  tokenId: number;
+  slug: string | null;
 }
 
 export interface CuratedItem {

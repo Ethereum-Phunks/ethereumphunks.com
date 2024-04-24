@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 
-import { UtilityService } from 'src/utils/utility.service';
+import { UtilityService } from '@/utils/utility.service';
 
 import { createClient } from '@supabase/supabase-js';
 import { Transaction, hexToString, zeroAddress } from 'viem';
@@ -19,13 +19,13 @@ import {
   PhunkSha,
   EthscriptionResponse,
   Ethscription,
-} from 'src/models/db';
+} from '@/models/db';
 
 import dotenv from 'dotenv';
 dotenv.config();
 
-const supabaseUrl = process.env.CHAIN_ID === '1' ? process.env.SUPABASE_URL_MAINNET : process.env.SUPABASE_URL_SEPOLIA;
-const serviceRole = process.env.CHAIN_ID === '1' ? process.env.SUPABASE_SERVICE_ROLE_MAINNET : process.env.SUPABASE_SERVICE_ROLE_SEPOLIA;
+const supabaseUrl = process.env.SUPABASE_URL;
+const serviceRole = process.env.SUPABASE_SERVICE_ROLE;
 
 const supabase = createClient(supabaseUrl, serviceRole);
 
@@ -145,7 +145,7 @@ export class SupabaseService {
 
   async checkIsEthPhunk(sha: string): Promise<PhunkSha | null> {
     const response: ShaResponse = await supabase
-      .from('phunk_shas')
+      .from('attributes')
       .select('*')
       .eq('sha', sha);
 
@@ -202,7 +202,7 @@ export class SupabaseService {
   async addEthPhunk(
     txn: Transaction,
     createdAt: Date,
-    phunkShaData: PhunkSha
+    phunkShaData: PhunkSha,
   ): Promise<void> {
 
     const stringData = hexToString(txn.input.toString() as `0x${string}`);
@@ -228,8 +228,8 @@ export class SupabaseService {
           hashId: txn.hash.toLowerCase(),
           // data: cleanedString,
           sha: phunkShaData.sha,
-          slug: 'ethereum-phunks',
-          tokenId: phunkShaData.phunkId,
+          slug: phunkShaData.slug || 'ethereum-phunks',
+          tokenId: phunkShaData.tokenId,
         },
       ]);
 
@@ -303,17 +303,6 @@ export class SupabaseService {
     Logger.log(`${events.length} events created`, `Block ${events[0].blockNumber.toString()}`);
   }
 
-  async addSha(phunkId: string, sha: string): Promise<PhunkSha> {
-    const response: ShaResponse = await supabase
-      .from('phunk_shas' + this.suffix)
-      .insert({ sha, phunkId });
-
-    const { data, error } = response;
-
-    if (error) throw error;
-    if (data?.length) return data[0];
-  }
-
   async getOrCreateUser(address: string, createdAt?: Date): Promise<User> {
     if (!address) return null;
 
@@ -342,6 +331,30 @@ export class SupabaseService {
     if (newError) throw newError.message;
     Logger.log('User created', address);
     if (newUser?.length) return newUser[0];
+  }
+
+  async getCollectionBySlug(slug: string): Promise<any> {
+    const response = await supabase
+      .from('collections' + this.suffix)
+      .select('*')
+      .eq('slug', slug);
+
+    const { data, error } = response;
+    if (error) throw error;
+    if (data?.length) return data[0];
+    return null;
+  }
+
+  async getAttributesFromSha(sha: string): Promise<any> {
+    const response = await supabase
+      .from('attributes')
+      .select('*')
+      .eq('sha', sha);
+
+    const { data, error } = response;
+    if (error) throw error;
+    if (data?.length) return data[0];
+    return null;
   }
 
   ////////////////////////////////////////////////////////////////////////////////
@@ -609,6 +622,39 @@ export class SupabaseService {
 
     // await writeFile('tree.json', JSON.stringify(cleanPhunks));
   }
+
+  ////////////////////////////////////////////////////////////////////////////////
+  // Bridge //////////////////////////////////////////////////////////////////////
+  ////////////////////////////////////////////////////////////////////////////////
+
+  async lockEthscription(hashId: string): Promise<boolean> {
+    const response: EthscriptionResponse = await supabase
+      .from('ethscriptions' + this.suffix)
+      .update({
+        locked: true,
+      })
+      .eq('hashId', hashId.toLowerCase())
+      .select();
+
+    const { data, error } = response;
+    if (error) throw error;
+    return data[0].locked;
+  }
+
+  async unlockEthscription(hashId: string): Promise<boolean> {
+    const response: EthscriptionResponse = await supabase
+      .from('ethscriptions' + this.suffix)
+      .update({
+        locked: false,
+      })
+      .eq('hashId', hashId.toLowerCase())
+      .select();
+
+    const { data, error } = response;
+    if (error) throw error;
+    return data[0].locked;
+  }
+
 }
 
 // 0x6ab3099fa660b0d2ac925b50d5e96410f3c7571c75f0ef88e01a6b8fe9df1bef

@@ -2,6 +2,6 @@
   "extends": "./tsconfig.json",
   "exclude": ["node_modules", "test", "dist", "**/*spec.ts"],
   "compilerOptions": {
-    "outDir": "./dist/goerli"
+    "outDir": "./dist/sepolia"
   }
 }

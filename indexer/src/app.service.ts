@@ -1,43 +1,33 @@
 import { Injectable, Logger } from '@nestjs/common';
 
-import { BlockService } from './modules/queue/services/block.service';
+import { BlockProcessingService } from '@/modules/queue/services/block-processing.service';
 
-import { SupabaseService } from './services/supabase.service';
-import { ProcessingService } from './services/processing.service';
-import { Web3Service } from './services/web3.service';
+import { SupabaseService } from '@/services/supabase.service';
+import { ProcessingService } from '@/services/processing.service';
 
-import { UtilityService } from './utils/utility.service';
-
-import { StandardMerkleTree } from '@openzeppelin/merkle-tree';
-
-import * as MerkleTree from './abi/tree.json'
-
-// import allBlocks from '../allblocks.json';
-// import nogood from '../nogood.json';
+import { UtilityService } from '@/utils/utility.service';
 
 import dotenv from 'dotenv';
 dotenv.config();
 
 const chain: 'mainnet' | 'sepolia' = process.env.CHAIN_ID === '1' ? 'mainnet' : 'sepolia';
-const originBlock = Number(chain === 'mainnet' ? process.env.ORIGIN_BLOCK_MAINNET : process.env.ORIGIN_BLOCK_SEPOLIA);
 
 @Injectable()
 export class AppService {
 
   constructor(
-    private readonly blockSvc: BlockService,
+    private readonly blockSvc: BlockProcessingService,
     private readonly processSvc: ProcessingService,
     private readonly sbSvc: SupabaseService,
-    private readonly utilSvc: UtilityService,
-    private readonly web3Svc: Web3Service
+    private readonly utilSvc: UtilityService
   ) {
+    // Start the Indexer
     this.blockSvc.clearQueue().then(() => {
       Logger.debug('Queue Cleared', chain.toUpperCase());
       this.startIndexer();
     });
   }
 
-  // Start Indexer //
   async startIndexer() {
     try {
       await this.utilSvc.delay(10000);
@@ -57,59 +47,21 @@ export class AppService {
       this.startIndexer();
     }
   }
-
-  getMerkleProofs(leaf: string): any {
-    // return '';
-    const tree = StandardMerkleTree.load(MerkleTree as any);
-    const root = tree.root;
-    let proof = tree.getProof([leaf]);
-
-    console.log(root);
-    return leaf + proof.map(p => p.substring(2)).join('');
-  }
-
-  getMerkleRoot(): string {
-    // return '';
-    const tree = StandardMerkleTree.load(MerkleTree as any);
-    return tree.root
-  }
-
-  // async reIndexTransactions() {
-  //   // Takes an array of transaction hashes
-  //   for (let i = 0; i < nogood.length; i++) {
-
-  //     try {
-  //       const hash = nogood[i] as `0x${string}`;
-  //       console.log(hash);
-
-  //       const [ transaction, receipt ] = await Promise.all([
-  //         this.web3Svc.getTransaction(hash),
-  //         this.web3Svc.getTransactionReceipt(hash),
-  //       ]);
-
-  //       const block = await this.web3Svc.getBlock(transaction.blockNumber);
-  //       const createdAt = new Date(Number(block.timestamp) * 1000);
-
-  //       await this.processSvc.processTransaction(
-  //         transaction,
-  //         receipt,
-  //         createdAt,
-  //       );
-  //     } catch (error) {
-  //       console.log(error);
-  //       break;
-  //     }
-
-  //   }
-  // }
-
-  // async reIndexBlocks() {
-  //   const allBlocks = [];
-  //   const blocks = [...new Set(allBlocks)].sort((a, b) => a - b);
-  //   console.log(blocks);
-  //   for (let i = 0; i < blocks.length; i++) {
-  //     const block = blocks[i];
-  //     await this.processSvc.addBlockToQueue(block, new Date().getTime());
-  //   }
-  // }
 }
+
+// this.bridgeSvc.addBridgeToQueue(
+//   '0xeca65bfbdffbbe9274911599351d12df8575a95da14d65719e3d6da3b1fd65d5',
+//   '0xf1aa941d56041d47a9a18e99609a047707fe96c7',
+//   Number(process.env.CHAIN_ID)
+// );
+
+// this.mintSvc.createMintRequest(
+//   '0xfbb90d955f2ad3e3a0e77ac6fce322e3fff60ff6684b872b26c2b81f5daf4031',
+//   '0xf1aa941d56041d47a9a18e99609a047707fe96c7'
+// ).then((req) => {
+//   // console.log(req);
+// });
+
+// this.mintSvc.validateTokenMint(
+//   '0xa9080447f05810063ec35075898aa5813b53b8866ba5e509199bd5cb7883fe24'
+// );

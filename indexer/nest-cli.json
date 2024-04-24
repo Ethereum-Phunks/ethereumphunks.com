@@ -6,10 +6,10 @@
     "deleteOutDir": true
   },
   "projects": {
-    "goerli": {
+    "sepolia": {
       "sourceRoot": "src",
       "compilerOptions": {
-        "tsConfigPath": "tsconfig.goerli.json"
+        "tsConfigPath": "tsconfig.sepolia.json"
       }
     },
     "mainnet": {

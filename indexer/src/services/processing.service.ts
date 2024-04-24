@@ -1,30 +1,31 @@
 import { Injectable, Logger } from '@nestjs/common';
 
-import { BlockService } from 'src/modules/queue/services/block.service';
+import { Web3Service } from '@/services/web3.service';
+import { SupabaseService } from '@/services/supabase.service';
+import { TelegramService } from '@/modules/notifs/services/telegram.service';
+import { DiscordService } from '@/modules/notifs/services/discord.service';
 
-import { Web3Service } from './web3.service';
-import { SupabaseService } from './supabase.service';
-import { DataService } from './data.service';
-import { CuratedService } from './curated.service';
-import { TelegramService } from '../modules/notifs/services/telegram.service';
+import { BridgeProcessingService } from '@/modules/queue/services/bridge-processing.service';
+import { BlockProcessingService } from '@/modules/queue/services/block-processing.service';
 
-import { UtilityService } from 'src/utils/utility.service';
-import { TimeService } from 'src/utils/time.service';
+import { UtilityService } from '@/utils/utility.service';
+import { TimeService } from '@/utils/time.service';
 
-import { esip1Abi, esip2Abi } from 'src/abi/EthscriptionsProtocol';
+import { esip1Abi, esip2Abi } from '@/abi/EthscriptionsProtocol';
 
-import etherPhunksMarketProxyAbi from 'src/abi/EtherPhunksMarketProxy.json';
-import pointsAbi from 'src/abi/Points.json';
-import etherPhunksAuctionHouseAbi from 'src/abi/EtherPhunksAuctionHouse.json';
+import etherPhunksMarketProxyAbi from '@/abi/EtherPhunksMarketProxy.json';
+import pointsAbi from '@/abi/Points.json';
+import bridgeMainnetAbi from '@/abi/EtherPhunksBridgeMainnet.json';
 
-import * as esips from 'src/constants/EthscriptionsProtocol';
+import * as esips from '@/constants/EthscriptionsProtocol';
 
-import { Ethscription, Event, PhunkSha } from 'src/models/db';
+import { Ethscription, Event, PhunkSha } from '@/models/db';
 
 import { DecodeEventLogReturnType, FormattedTransaction, Log, Transaction, TransactionReceipt, decodeEventLog, hexToString, zeroAddress } from 'viem';
 
-import crypto from 'crypto';
 import { writeFile } from 'fs/promises';
+
+import crypto from 'crypto';
 
 import dotenv from 'dotenv';
 dotenv.config();
@@ -37,20 +38,22 @@ export class ProcessingService {
   startTime: Date;
 
   constructor(
-    private readonly blockSvc: BlockService,
+    private readonly blockSvc: BlockProcessingService,
+    private readonly bridgeSvc: BridgeProcessingService,
     private readonly web3Svc: Web3Service,
     private readonly sbSvc: SupabaseService,
     private readonly utilSvc: UtilityService,
     private readonly timeSvc: TimeService,
-    private readonly dataSvc: DataService,
-    private readonly curatedSvc: CuratedService,
-    private readonly telegramSvc: TelegramService
+    private readonly telegramSvc: TelegramService,
+    private readonly discordSvc: DiscordService,
   ) {}
 
   // Method to start fetching and processing blocks from the network
   async startBackfill(startBlock: number): Promise<void> {
     const latestBlock = await this.web3Svc.getBlock();
     const latestBlockNum = Number(latestBlock.number);
+
+    console.log({ startBlock, latestBlockNum })
 
     if (startBlock > latestBlockNum) throw new Error('RPC Error: Start block is greater than latest block');
 
@@ -166,10 +169,14 @@ export class ProcessingService {
     // Remove null bytes from the string
     const stringData = hexToString(input.toString() as `0x${string}`);
     const cleanedString = stringData.replace(/\x00/g, '');
+    if (cleanedString.startsWith('data:')) return [];
 
     // DISABLED: All 10,000 have been ethscribed
     // Check if possible ethPhunk creation
-    const possibleEthPhunk = cleanedString.startsWith('data:image/svg+xml,');
+    const possibleEthPhunk =
+      cleanedString.startsWith('data:image/svg+xml,') ||
+      cleanedString.startsWith('data:image/png;base64,');
+
     if (possibleEthPhunk) {
       const sha = crypto.createHash('sha256').update(cleanedString).digest('hex');
 
@@ -224,6 +231,7 @@ export class ProcessingService {
         transaction,
         createdAt
       );
+      this.discordSvc.postMessage(eventArr);
       if (eventArr?.length) events.push(...eventArr);
     }
 
@@ -237,6 +245,7 @@ export class ProcessingService {
         transaction.hash
       );
       const eventArr = await this.processEsip2(esip2Transfers, transaction, createdAt);
+      this.discordSvc.postMessage(eventArr);
       if (eventArr?.length) events.push(...eventArr);
     }
 
@@ -259,6 +268,18 @@ export class ProcessingService {
       if (eventArr?.length) events.push(...eventArr);
     }
 
+    const bridgeMainnetLogs = receipt.logs.filter(
+      (log: any) =>  log.address.toLowerCase() === this.web3Svc.bridgeAddressMainnet.toLowerCase()
+    );
+    if (bridgeMainnetLogs.length) {
+      Logger.debug(
+        `Processing Points event (${this.web3Svc.chain})`,
+        transaction.hash
+      );
+      await this.processBridgeMainnetEvents(bridgeMainnetLogs);
+      return events;
+    }
+
     const pointsLogs = receipt.logs.filter(
       (log: any) => this.web3Svc.pointsAddress.toLowerCase() === log.address.toLowerCase()
     );
@@ -271,24 +292,12 @@ export class ProcessingService {
     }
 
     return events;
-
-    // Filter logs for EtherPhunk Auction House Events
-    // const auctionHouseLogs = receipt.logs.filter(
-    //   (log: any) => log.address === this.web3Svc.auctionAddress
-    // );
-    // if (auctionHouseLogs.length) {
-    //   Logger.debug(
-    //     `Processing EtherPhunk Auction House event (${this.web3Svc.chain})`,
-    //     transaction.hash
-    //   );
-    //   await this.processAuctionHouseEvents(auctionHouseLogs, transaction, createdAt);
-    // }
   }
 
   async processEtherPhunkCreationEvent(
     txn: Transaction,
     createdAt: Date,
-    phunkShaData: PhunkSha
+    phunkShaData: PhunkSha,
   ): Promise<Event> {
     const { from, to, hash: hashId } = txn;
 
@@ -309,6 +318,46 @@ export class ProcessingService {
       blockTimestamp: createdAt,
       value: BigInt(0).toString(),
     };
+  }
+
+  async processBridgeMainnetEvents(bridgeMainnetLogs: any[]): Promise<void> {
+    for (const log of bridgeMainnetLogs) {
+      const decoded = decodeEventLog({
+        abi: bridgeMainnetAbi,
+        data: log.data,
+        topics: log.topics,
+      });
+
+      const { eventName } = decoded;
+      const { args } = decoded as any;
+
+      if (!eventName || !args) return;
+
+      if (eventName === 'HashLocked') {
+        const { hashId, prevOwner } = args;
+        const locked = await this.sbSvc.lockEthscription(hashId);
+        if (!locked) throw new Error('Failed to lock ethscription');
+
+        // Bridge the ethscription
+        this.bridgeSvc.addBridgeToQueue(hashId, prevOwner, Number(process.env.CHAIN_ID));
+
+        // args
+        // address prevOwner,
+        // bytes32 hashId,
+        // uint256 nonce,
+        // uint256 value
+      }
+
+      if (eventName === 'HashUnlocked') {
+        const { hashId, prevOwner } = args;
+        const locked = await this.sbSvc.unlockEthscription(hashId);
+        if (locked) throw new Error('Failed to unlock ethscription');
+
+        // args
+        // address prevOwner,
+        // bytes32 hashId
+      }
+    }
   }
 
   async processPointsEvent(pointsLogs: any[]): Promise<void> {
@@ -359,12 +408,6 @@ export class ProcessingService {
     await this.sbSvc.updateEthscriptionOwner(hashId, ethscript.owner, txn.to);
     Logger.log('Updated ethscript owner (transfer event)', `Hash: ${ethscript.hashId} -- To: ${to.toLowerCase()}`);
 
-    // console.log({
-    //   type: 'transfer',
-    //   transactionIndex: txn.transactionIndex,
-    //   txId: txn.hash + new Date().getTime(),
-    // });
-
     return {
       txId: txn.hash + (index || txn.transactionIndex),
       type: 'transfer',
@@ -405,11 +448,6 @@ export class ProcessingService {
     // Update the eth phunk owner
     await this.sbSvc.updateEthscriptionOwner(ethscript.hashId, ethscript.owner, to);
     Logger.log('Updated ethscript owner (contract event)', `Hash: ${ethscript.hashId} -- To: ${to.toLowerCase()}`);
-
-    // console.log({
-    //   type: 'contract transfer',
-    //   txId: txn.hash + (log?.logIndex || txn.transactionIndex || new Date().getTime()),
-    // });
 
     return {
       txId: txn.hash + (log?.logIndex || txn.transactionIndex || new Date().getTime()),
@@ -658,76 +696,4 @@ export class ProcessingService {
       };
     }
   }
-
-  // async processAuctionHouseEvents(
-  //   auctionHouseLogs: any[],
-  //   transaction: Transaction,
-  //   createdAt: Date
-  // ): Promise<void> {
-  //   for (const log of auctionHouseLogs) {
-
-  //     if (log.address.toLowerCase() !== this.web3Svc.auctionAddress) continue;
-
-  //     const decoded = decodeEventLog({
-  //       abi: etherPhunksAuctionHouseAbi,
-  //       data: log.data,
-  //       topics: log.topics,
-  //     });
-
-  //     await this.processAuctionHouseEvent(transaction, createdAt, decoded, log);
-  //   }
-  // }
-
-  // async processAuctionHouseEvent(
-  //   txn: Transaction,
-  //   createdAt: Date,
-  //   decoded: DecodeEventLogReturnType,
-  //   log: Log
-  // ): Promise<void> {
-  //   const { eventName } = decoded;
-  //   const { args } = decoded as any;
-
-  //   if (!eventName || !args) return;
-
-  //   const hashId = args.hashId;
-  //   if (!hashId) return;
-
-  //   const phunkExists = await this.sbSvc.checkEthscriptionExistsByHashId(hashId);
-  //   if (!phunkExists) return;
-
-  //   if (eventName === 'AuctionSettled') {
-  //     await this.sbSvc.settleAuction(args);
-  //   }
-
-  //   if (eventName === 'AuctionCreated') {
-  //     await this.sbSvc.createAuction(args, createdAt);
-  //   }
-
-  //   if (eventName === 'AuctionBid') {
-  //     await this.sbSvc.createAuctionBid(args, txn, createdAt);
-  //   }
-
-  //   if (eventName === 'AuctionExtended') {
-  //     await this.sbSvc.extendAuction(args);
-  //   }
-
-  //   // event AuctionCreated(bytes32 indexed hashId, address owner, uint256 auctionId, uint256 startTime, uint256 endTime);
-  //   // event AuctionBid(bytes32 indexed hashId, uint256 auctionId, address sender, uint256 value, bool extended);
-  //   // event AuctionExtended(bytes32 indexed hashId, uint256 auctionId, uint256 endTime);
-  //   // event AuctionSettled(bytes32 indexed hashId, uint256 auctionId, address winner, uint256 amount);
-  //   // event AuctionTimeBufferUpdated(uint256 timeBuffer);
-  //   // event AuctionDurationUpdated(uint256 duration);
-  //   // event AuctionReservePriceUpdated(uint256 reservePrice);
-  //   // event AuctionMinBidIncrementPercentageUpdated(uint256 minBidIncrementPercentage);
-  // }
-
-  // async distributePoints(fromAddress: `0x${string}`): Promise<void> {
-  //   try {
-  //     const points = await this.web3Svc.getPoints(fromAddress);
-  //     await this.sbSvc.updateUserPoints(fromAddress, Number(points));
-  //     Logger.log(`Updated user points to ${points}`, fromAddress);
-  //   } catch (error) {
-  //     console.log(error);
-  //   }
-  // }
 }

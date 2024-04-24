@@ -3,17 +3,27 @@ import { HttpModule } from '@nestjs/axios';
 
 import { BullModule } from '@nestjs/bull';
 
-import { BlockService } from './services/block.service';
-import { QueueService } from './services/queue.service';
+import { BlockProcessingService } from '@/modules/queue/services/block-processing.service';
+import { BlockQueueService } from '@/modules/queue/services/block-queue.service';
 
-import { UtilityService } from 'src/utils/utility.service';
-import { ProcessingService } from 'src/services/processing.service';
-import { Web3Service } from 'src/services/web3.service';
-import { SupabaseService } from 'src/services/supabase.service';
-import { CuratedService } from 'src/services/curated.service';
-import { TelegramService } from 'src/modules/notifs/services/telegram.service';
-import { DataService } from 'src/services/data.service';
-import { TimeService } from 'src/utils/time.service';
+import { BridgeProcessingService } from '@/modules/queue/services/bridge-processing.service';
+import { BridgeQueueService } from '@/modules/queue/services/bridge-queue.service';
+
+import { TelegramService } from '@/modules/notifs/services/telegram.service';
+
+import { ProcessingService } from '@/services/processing.service';
+import { Web3Service } from '@/services/web3.service';
+import { SupabaseService } from '@/services/supabase.service';
+import { DataService } from '@/services/data.service';
+
+import { TimeService } from '@/utils/time.service';
+import { UtilityService } from '@/utils/utility.service';
+
+import { DiscordService } from '@/modules/notifs/services/discord.service';
+import { ImageService } from '@/modules/notifs/services/image.service';
+
+import { MintService } from '@/modules/bridge/services/mint.service';
+import { ImageUriService } from '@/modules/bridge/services/image.service';
 
 import dotenv from 'dotenv';
 dotenv.config();
@@ -29,26 +39,38 @@ const chain: 'mainnet' | 'sepolia' = process.env.CHAIN_ID === '1' ? 'mainnet' : 
         port: 6379
       }
     }),
-    BullModule.registerQueue({
-      name: `blockProcessingQueue_${chain}`
-    }),
+    BullModule.registerQueue(
+      {
+        name: `blockProcessingQueue_${chain}`
+      },
+      {
+        name: `bridgeProcessingQueue_${chain}`
+      }
+    ),
   ],
   providers: [
-    QueueService,
-    BlockService,
+    BlockQueueService,
+    BlockProcessingService,
+
+    BridgeQueueService,
+    BridgeProcessingService,
 
     ProcessingService,
+    MintService,
     Web3Service,
     SupabaseService,
     UtilityService,
     TimeService,
     DataService,
-    CuratedService,
+    ImageUriService,
 
-    TelegramService
+    TelegramService,
+    DiscordService,
+    ImageService
   ],
   exports: [
-    BlockService,
+    BlockProcessingService,
+    BridgeProcessingService,
     TimeService
   ],
 })

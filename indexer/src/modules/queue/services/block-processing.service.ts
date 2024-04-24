@@ -10,23 +10,23 @@ dotenv.config();
 const chain: 'mainnet' | 'sepolia' = process.env.CHAIN_ID === '1' ? 'mainnet' : 'sepolia';
 
 @Injectable()
-export class BlockService {
+export class BlockProcessingService {
 
   constructor(
-    @InjectQueue(`blockProcessingQueue_${chain}`) private readonly queue: Queue
+    @InjectQueue(`blockProcessingQueue_${chain}`) private readonly blockQueue: Queue
   ) {}
 
   async addBlockToQueue(blockNum: number, timestamp: number) {
     const jobId = `block_${blockNum}__${chain}`;
     const maxRetries = 69;
 
-    const existingJob = await this.queue.getJob(jobId);
+    const existingJob = await this.blockQueue.getJob(jobId);
     if (existingJob) {
       await existingJob.remove();
       Logger.error('⚠️', `Updated existing job for block ${blockNum}`);
     }
 
-    await this.queue.add(
+    await this.blockQueue.add(
       `blockNumQueue_${chain}`,
       { blockNum, chain, timestamp, retryCount: 0, maxRetries, },
       { jobId, removeOnComplete: true, removeOnFail: true, }
@@ -35,23 +35,23 @@ export class BlockService {
   }
 
   async pauseQueue() {
-    await this.queue.pause();
+    await this.blockQueue.pause();
   }
 
   async resumeQueue() {
-    await this.queue.resume();
+    await this.blockQueue.resume();
   }
 
   async getJobCounts(): Promise<Bull.JobCounts> {
-    return await this.queue.getJobCounts();
+    return await this.blockQueue.getJobCounts();
   }
 
   async clearQueue(): Promise<void> {
-    await this.queue.clean(0, 'completed');
-    await this.queue.clean(0, 'wait');
-    await this.queue.clean(0, 'active');
-    await this.queue.clean(0, 'delayed');
-    await this.queue.clean(0, 'failed');
-    await this.queue.clean(0, 'paused');
+    await this.blockQueue.clean(0, 'completed');
+    await this.blockQueue.clean(0, 'wait');
+    await this.blockQueue.clean(0, 'active');
+    await this.blockQueue.clean(0, 'delayed');
+    await this.blockQueue.clean(0, 'failed');
+    await this.blockQueue.clean(0, 'paused');
   }
 }
