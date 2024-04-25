@@ -156,8 +156,8 @@ export class AppStateEffects {
       }
 
       if (
-        searchHistoryActive
-        && !search?.contains(target)
+        searchHistoryActive &&
+        !search?.contains(target)
       ) {
         this.store.dispatch(appStateActions.setSearchHistoryActive({ searchHistoryActive: false }));
       }

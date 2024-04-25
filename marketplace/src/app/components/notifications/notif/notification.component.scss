@@ -183,6 +183,19 @@
       }
     }
   }
+  &.bridge {
+    box-shadow: -.3rem .3rem 0 0 rgba(var(--magma), 1);
+
+    app-phunk-image {
+      background-color: rgba(var(--magma), 1);
+    }
+
+    .txn-info {
+      h4 {
+        color: rgba(var(--magma), 1);
+      }
+    }
+  }
   &.event {
     box-shadow: -.3rem .3rem 0 0 rgba(var(--sale-color), 1);
 

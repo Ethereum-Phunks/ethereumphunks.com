@@ -59,6 +59,7 @@ export interface Event {
   blockTimestamp: Date | null
   from: string
   hashId: string
+  sha: string
   id: number
   tokenId?: number | null
   to: string

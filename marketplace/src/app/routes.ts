@@ -5,6 +5,11 @@ export const routes: Routes = [
     path: '',
     loadComponent: () => import('./routes/index/index.component').then(mod => mod.IndexComponent),
   },
+  {
+    path: 'curated/ethereum-phunks',
+    redirectTo: '/',
+    pathMatch: 'full',
+  },
   // {
   //   // create a redirect
   //   path: 'curated/ethereum-phunks/market/:marketType',

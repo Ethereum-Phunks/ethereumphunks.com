@@ -9,6 +9,14 @@ export interface Collection {
   image?: string;
 }
 
+export interface CollectionWAssets {
+  image: string;
+  name: string;
+  previews: Phunk[];
+  slug: string;
+  supply: number;
+}
+
 export interface DataState {
   usd: number | null;
   events: any[] | null;
@@ -17,6 +25,7 @@ export interface DataState {
 
   txHistory: any[] | null;
   leaderboard: any[] | null;
-  collections: any[] | null;
+  collections: Collection[];
+  collectionsWithAssets: CollectionWAssets[];
   activeCollection: Collection | null;
 }

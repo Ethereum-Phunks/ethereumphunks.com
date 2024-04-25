@@ -14,7 +14,7 @@ import DonationsAbi from '@/abi/Contributions.json';
 import { EtherPhunksMarketABI } from '@/abi/EtherPhunksMarket';
 import AuctionAbi from '@/abi/EtherPhunksAuctionHouse.json';
 
-import { reconnect, http, createConfig, Config, watchAccount, getPublicClient, getAccount, disconnect, getChainId, switchChain, getWalletClient, GetWalletClientReturnType, GetAccountReturnType } from '@wagmi/core';
+import { reconnect, http, createConfig, Config, watchAccount, getPublicClient, getAccount, disconnect, getChainId, getWalletClient, GetWalletClientReturnType, GetAccountReturnType } from '@wagmi/core';
 import { coinbaseWallet, walletConnect, injected } from '@wagmi/connectors';
 
 import * as appStateActions from '@/state/actions/app-state.actions';
@@ -88,14 +88,14 @@ export class Web3Service {
       projectId,
       enableAnalytics: false,
       themeVariables,
-    })
+    });
 
     this.createListeners();
     this.startBlockWatcher();
     this.startPointsWatcher();
   }
 
-  createListeners(): void {
+  async createListeners(): Promise<void> {
     this.connectedState = new Observable((observer) => watchAccount(this.config, {
       onChange: (account) => this.ngZone.run(() => observer.next(account))
     }));
@@ -111,7 +111,7 @@ export class Web3Service {
       }),
     ).subscribe();
 
-    reconnect(this.config);
+    await reconnect(this.config);
   }
 
   blockWatcher!: WatchBlockNumberReturnType | undefined;
@@ -160,12 +160,25 @@ export class Web3Service {
     }
   }
 
-  async switchNetwork(): Promise<void> {
+  async switchNetwork(l: string): Promise<void> {
+    // 'l1' | 'l2'
+
+    const walletClient = await getWalletClient(this.config);
     const chainId = getChainId(this.config);
-    if (!chainId) return;
-    if (chainId !== environment.chainId) {
-      await switchChain(this.config, { chainId: environment.chainId });
+
+    if (l === 'l1') {
+      if (chainId === environment.chainId) return;
+      await walletClient?.switchChain({ id: environment.chainId });
+    } else if (l === 'l2') {
+      if (chainId === magma.id) return;
+      await walletClient?.switchChain({ id: magma.id });
     }
+
+    // const chainId = getChainId(this.config);
+    // if (!chainId) return;
+    // if (chainId !== environment.chainId) {
+    //   await switchChain(this.config, { chainId: environment.chainId });
+    // }
   }
 
   async getActiveWalletClient(): Promise<GetWalletClientReturnType> {
@@ -220,7 +233,7 @@ export class Web3Service {
     value?: string
   ): Promise<string | undefined> {
     if (!functionName) return;
-    await this.switchNetwork();
+    await this.switchNetwork('l1');
 
     const chainId = getChainId(this.config);
     const walletClient = await getWalletClient(this.config, { chainId });
@@ -360,7 +373,7 @@ export class Web3Service {
     if (!hashId) throw new Error('No phunk selected');
     if (!toAddress) throw new Error('No address provided');
 
-    await this.switchNetwork();
+    await this.switchNetwork('l1');
 
     const wallet = await getWalletClient(this.config);
     return wallet?.sendTransaction({
@@ -381,12 +394,9 @@ export class Web3Service {
 
   async lockPhunk(hexArr: string[]): Promise<string | undefined> {
     if (!hexArr.length) throw new Error('No phunk selected');
-
-    await this.switchNetwork();
+    await this.switchNetwork('l1');
 
     const data = hexArr.map((res) => res.replace('0x', '')).join('');
-
-    console.log({ data });
 
     const wallet = await getWalletClient(this.config);
     return wallet?.sendTransaction({

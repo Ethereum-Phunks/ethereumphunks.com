@@ -1,10 +1,10 @@
-@if (txn) {
+@if (txn(); as txn) {
   @if ((collections$ | async); as collections) {
     <div
       class="txn-item {{ txn.type }} {{ txn | notifText : collections : 'class' }}"
-      [class.is-menu]="isMenu">
+      [class.is-menu]="isMenu()">
 
-      @if (dismissible) {
+      @if (dismissible()) {
         <button class="dismiss" (click)="dismiss(txn)">x</button>
       }
 
@@ -49,7 +49,7 @@
 
           @if (txn.type === 'error') {
             <span class="error">
-              {{ txn.detail.metaMessages?.["0"] || txn.detail.shortMessage || txn.detail.message || txn.detail }}
+              {{ txn.detail.details || txn.detail.metaMessages?.["0"] || txn.detail.shortMessage || txn.detail.message || txn.detail }}
             </span>
           }
 

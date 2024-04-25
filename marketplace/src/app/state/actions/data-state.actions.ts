@@ -1,4 +1,4 @@
-import { EventType } from '@/models/global-state';
+import { EventType, GlobalState } from '@/models/global-state';
 import { createAction, props } from '@ngrx/store';
 
 import { Phunk } from '@/models/db';
@@ -68,7 +68,12 @@ export const fetchCollections = createAction(
 
 export const setCollections = createAction(
   '[Data State] Set Collections',
-  props<{ collections: any[] }>()
+  props<{ collections: GlobalState['dataState']['collections'] }>()
+);
+
+export const setCollectionsWithAssets = createAction(
+  '[Data State] Set Collections With Assets',
+  props<{ collectionsWithAssets: GlobalState['dataState']['collectionsWithAssets'] }>()
 );
 
 export const setActiveCollection = createAction(

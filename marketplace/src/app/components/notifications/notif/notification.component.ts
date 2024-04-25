@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, Input, effect, input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 
@@ -44,9 +44,9 @@ import { setChatActive, setToUser } from '@/state/actions/chat.actions';
 })
 export class NotificationComponent {
 
-  @Input() txn: Notification | undefined;
-  @Input() dismissible: boolean = true;
-  @Input() isMenu: boolean = false;
+  txn = input<Notification | undefined>();
+  dismissible = input<boolean>(true);
+  isMenu = input<boolean>(false);
 
   env = environment;
 
@@ -61,26 +61,34 @@ export class NotificationComponent {
 
   constructor(
     private store: Store<GlobalState>
-  ) {}
+  ) {
+
+    effect(() => {
+      if (this.txn()?.type === 'error') {
+        console.log('NotificationComponent', {...this.txn()?.detail});
+      }
+    });
+
+  }
 
   dismiss(txn: Notification) {
     this.store.dispatch(removeNotification({ txId: txn.id }));
   }
 
   onMouseEnter(notificationId: string) {
-    if (this.isMenu) return;
+    if (this.isMenu()) return;
     this.store.dispatch(setNotifHoverState({ notifHoverState: { [notificationId]: true } }));
   }
 
   onMouseLeave(notificationId: string) {
-    if (this.isMenu) return;
+    if (this.isMenu()) return;
     this.store.dispatch(setNotifHoverState({ notifHoverState: { [notificationId]: false } }));
   }
 
   setChatActive(address: string) {
     this.store.dispatch(setChatActive({ active: true }));
     this.store.dispatch(setToUser({ address }));
-    this.store.dispatch(removeNotification({ txId: this.txn?.id || '' }));
+    this.store.dispatch(removeNotification({ txId: this.txn()?.id || '' }));
   }
 
 }

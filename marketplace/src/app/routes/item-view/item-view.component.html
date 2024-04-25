@@ -149,7 +149,10 @@
 
                   <!-- Bridge button -->
                   @if ((owner | lowercase) === (address | lowercase)) {
-                    <button class="bridge" [class.active]="bridgeActive" (click)="bridgePhunkAction()">Bridge</button>
+                    <button class="bridge" [class.active]="bridgeActive" (click)="bridgePhunkAction()">
+                      <span>Bridge</span>
+                      <ng-container *ngTemplateOutlet="pending; context:{ $implicit: 'bridgePhunk' }" />
+                    </button>
                   }
 
                   @if (bridgeActive) {
@@ -234,6 +237,7 @@
   </div>
 </div>
 
+<!-- Pending 'spinner' -->
 <ng-template #pending let-txFunction>
   @if (pendingTx$ | async; as tx) {
     @if (tx.function === txFunction) {
@@ -242,6 +246,7 @@
   }
 </ng-template>
 
+<!-- Cooldown overlay -->
 <ng-template #cooldown>
   @if (isCooling$ | async) {
     <div class="cooldown-wrapper">

@@ -10,7 +10,8 @@ export const initialState: DataState = {
   userOpenBids: [],
   txHistory: null,
   leaderboard: null,
-  collections: null,
+  collections: [],
+  collectionsWithAssets: [],
   activeCollection: null
 }
 
@@ -65,6 +66,13 @@ export const dataStateReducer: ActionReducer<DataState, Action> = createReducer(
       collections,
     };
     return setCollections
+  }),
+  on(actions.setCollectionsWithAssets, (state, { collectionsWithAssets }) => {
+    const setCollectionsWithAssets = {
+      ...state,
+      collectionsWithAssets,
+    };
+    return setCollectionsWithAssets
   }),
   on(actions.setActiveCollection, (state, { activeCollection }) => {
     const setActiveCollection = {

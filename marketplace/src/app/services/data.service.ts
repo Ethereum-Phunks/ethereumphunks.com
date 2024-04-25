@@ -468,7 +468,10 @@ export class DataService {
       .order('id', { ascending: false })
       .eq('active', true);
 
-    return from(query).pipe(map((res: any) => res.data));
+    return from(query).pipe(
+      map((res: any) => res.data),
+      tap((res) => console.log('fetchCollections', res)),
+    );
   }
 
   fetchCollectionsWithAssets(limit: number = 10): Observable<any[]> {
@@ -480,6 +483,7 @@ export class DataService {
 
     return from(query).pipe(
       map((res: any) => res.data.map((item: any) => ({ ...item.ethscription }))),
+      tap((res) => console.log('fetchCollectionsWithAssets', res)),
     );
   }
 

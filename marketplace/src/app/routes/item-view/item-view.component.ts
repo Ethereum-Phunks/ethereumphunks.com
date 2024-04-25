@@ -178,7 +178,6 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
   bridgePhunkAction(): void {
     this.closeAll();
     this.bridgeActive = true;
-    // this.bridgePhunk();
   }
 
   closeListing(): void {
@@ -540,6 +539,86 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
     }
   }
 
+  async bridge(phunk: Phunk): Promise<void> {
+
+    const hashId = phunk.hashId;
+
+    const config = this.web3Svc.config;
+    const chainId = config.getClient().chain.id;
+
+    const address = await this.web3Svc.getCurrentAddress();
+    if (!address) throw new Error('Invalid user address');
+
+    let notification: Notification = {
+      id: this.utilSvc.createIdFromString('bridgeOut' + hashId),
+      timestamp: Date.now(),
+      slug: phunk.slug,
+      type: 'wallet',
+      function: 'bridgeOut',
+      hashId,
+      tokenId: phunk.tokenId,
+    };
+
+    try {
+      this.store.dispatch(upsertNotification({ notification }));
+
+      const baseUrl = environment.relayUrl;
+      const nonceUrl = `${baseUrl}/generate-nonce`;
+      const nonceResult = await firstValueFrom(
+        this.http.get(nonceUrl, { params: { address }, responseType: 'text' })
+      );
+
+      const signature = await signMessage(config, {
+        message: `Sign this message to verify ownership of the asset.\n\nAddress: ${address.toLowerCase()}\nEthscription ID: ${phunk.hashId}\nSHA: ${phunk.sha}\nNonce: ${nonceResult}\nChain ID: ${chainId}`,
+      });
+
+      const relayUrl = `${baseUrl}/bridge-phunk`;
+      const relayResponse: any = await firstValueFrom(
+        this.http.post(relayUrl, {
+          address,
+          hashId: phunk.hashId,
+          sha: phunk.sha,
+          signature,
+          chainId,
+        })
+      );
+
+      const hexArr = [
+        relayResponse.hashId,
+        relayResponse.signature.r,
+        relayResponse.signature.s,
+        relayResponse.signature.v,
+      ];
+
+      const hash = await this.web3Svc.lockPhunk(hexArr);
+      if (!hash) throw new Error('Could not proccess transaction');
+      notification = {
+        ...notification,
+        type: 'pending',
+        hash,
+      };
+      this.store.dispatch(upsertNotification({ notification }));
+
+      const receipt = await this.web3Svc.pollReceipt(hash!);
+      notification = {
+        ...notification,
+        type: 'complete',
+        hash: receipt.transactionHash,
+      };
+      this.store.dispatch(upsertNotification({ notification }));
+
+      // this.store.dispatch(appStateActions.addCooldown({ cooldown: { [hashId]: Number(receipt.blockNumber) }}));
+    } catch (err) {
+      console.log(err);
+      notification = {
+        ...notification,
+        type: 'error',
+        detail: err,
+      };
+      this.store.dispatch(upsertNotification({ notification }));
+    };
+  }
+
   getItemQueryParams(item: any): any {
     if (!item) return;
     return { [item.k.replace(/ /g, '-').toLowerCase()]: item.v.replace(/ /g, '-').toLowerCase() };
@@ -548,51 +627,6 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
   async checkConsenus(phunk: Phunk): Promise<void> {
     const res = await this.dataSvc.checkConsensus([phunk]);
     if (!res[0]?.consensus) throw new Error('Consensus not reached. Contact Support @etherphunks');
-  }
-
-  async bridge(phunk: Phunk): Promise<void> {
-
-    const config = this.web3Svc.config;
-    const address = await this.web3Svc.getCurrentAddress();
-    if (!address) throw new Error('Invalid user address');
-
-    const baseUrl = environment.relayUrl;
-
-    const nonceUrl = `${baseUrl}/generate-nonce`;
-    const nonceResult = await firstValueFrom(
-      this.http.get(nonceUrl, { params: { address }, responseType: 'text' })
-    );
-
-    const signature = await signMessage(config, {
-      message: `Sign this message to verify ownership of the asset.\n\nAddress: ${address.toLowerCase()}\nEthscription ID: ${phunk.hashId}\nSHA: ${phunk.sha}\nNonce: ${nonceResult}`,
-    });
-
-    const bridgeUrl = `${baseUrl}/bridge-phunk`;
-    const bridgeResponse: any = await firstValueFrom(
-      this.http.post(bridgeUrl, {
-        address,
-        hashId: phunk.hashId,
-        sha: phunk.sha,
-        signature
-      })
-    );
-
-    console.log({ bridgeResponse });
-
-    const hexArr = [
-      bridgeResponse.hashId,
-      bridgeResponse.signature.r,
-      bridgeResponse.signature.s,
-      bridgeResponse.signature.v,
-    ];
-
-    const data = hexArr.map((res) => res.replace('0x', '')).join('');
-    console.log('0x' + data);
-
-    const hash = await this.web3Svc.lockPhunk(hexArr);
-    console.log({ hash });
-    const receipt = await this.web3Svc.pollReceipt(hash!);
-    console.log({ receipt });
   }
 
   // async sendToAuction(hashId: string) {

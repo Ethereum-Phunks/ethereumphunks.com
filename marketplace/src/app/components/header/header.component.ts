@@ -49,10 +49,13 @@ export class HeaderComponent {
   activeMultiplier$ = this.store.select(appStateSelectors.selectActiveMultiplier);
   activeCollection$ = this.store.select(dataStateSelectors.selectActiveCollection);
   menuActive$ = this.store.select(appStateSelectors.selectMenuActive);
+  searchActive$ = this.store.select(appStateSelectors.selectSearchHistoryActive);
   theme$ = this.store.select(appStateSelectors.selectTheme);
   notifications$ = this.store.select(notificationSelectors.selectNotifications).pipe(
     map((res) => res.filter((tx) => !tx.dismissed && tx.isNotification).length),
   );
+
+  collections$ = this.store.select(dataStateSelectors.selectCollectionsWithAssets);
 
   toggleTheme$ = new Subject<void>();
   toggleMenu$ = new Subject<void>();

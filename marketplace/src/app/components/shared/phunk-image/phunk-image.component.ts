@@ -1,45 +1,73 @@
-import { Component, Input, OnChanges, SimpleChanges } from '@angular/core';
+import { Component, effect, input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 
 import { Web3Service } from '@/services/web3.service';
 
 import { hexToString } from 'viem';
+import { catchError, firstValueFrom, of } from 'rxjs';
+import { environment } from 'src/environments/environment';
 
 @Component({
-  selector: 'app-phunk-image',
   standalone: true,
   imports: [CommonModule],
+  selector: 'app-phunk-image',
   templateUrl: './phunk-image.component.html',
   styleUrls: ['./phunk-image.component.scss']
 })
-export class PhunkImageComponent implements OnChanges {
+export class PhunkImageComponent {
 
-  @Input() hashId!: string;
-  @Input() tokenId!: number;
-  @Input() color: boolean = true;
+  hashId = input<string>();
+  sha = input<string>();
+  tokenId = input<number>();
+  color = input<boolean>(true);
+
+  hashIdPrevValue!: string;
+  shaPrevValue!: string;
+  tokenIdPrevValue!: number;
+  colorPrevValue!: boolean;
 
   phunkImgSrc!: string | null;
 
   constructor(
     private http: HttpClient,
     private web3Svc: Web3Service,
-  ) {}
+  ) {
 
-  ngOnChanges(changes: SimpleChanges): void {
-    if (
-      changes.hashId &&
-      changes.hashId.currentValue &&
-      changes.hashId.currentValue !== changes.hashId.previousValue
-    ) {
-      this.getPhunkByHashId(this.hashId);
-      return;
-    }
+    effect(() => {
+      if (this.hashId() && this.hashId() !== this.hashIdPrevValue) {
+        this.getPhunkByHashId(this.hashId()!);
+      }
+
+      if (this.sha() && this.sha() !== this.shaPrevValue) {
+        this.getPhunkBySha(this.sha()!);
+      }
+
+      this.hashIdPrevValue = this.hashId()!;
+      this.shaPrevValue = this.sha()!;
+      this.tokenIdPrevValue = this.tokenId()!;
+      this.colorPrevValue = this.color()!;
+    });
+  }
+
+  async getPhunkBySha(sha: string): Promise<any> {
+    const baseImageUrl = `${environment.staticUrl}/images`;
+    const image = await firstValueFrom(
+      this.http.get(`${baseImageUrl}/${sha}.png`, { responseType: 'arraybuffer' }).pipe(
+        catchError(err => {
+          console.error(err);
+          return of(null);
+        }),
+      ),
+    );
+
+    if (!image) return null;
+    const dataUri = `data:image/png;base64,${Buffer.from(image).toString('base64')}`;
+    this.phunkImgSrc = dataUri;
   }
 
   async getPhunkByHashId(hashId: string): Promise<any> {
     const tx = await this.web3Svc.getTransaction(hashId);
-    // console.log(tx);
     this.phunkImgSrc = hexToString(tx.input);
   }
 }

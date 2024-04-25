@@ -1,18 +1,8 @@
 @import 'abstracts/variables';
 @import 'abstracts/mixins';
 
-// .collections-menu {
-//   position: absolute;
-//   top: var(--header-height);
-//   left: 0;
-
-//   app-collections {
-//   }
-// }
-
 main {
   min-height: calc(100vh - 21rem);
-  // padding-top: 20rem;
   padding-bottom: 8rem;
 
   @media (max-width: $mobile) {
@@ -28,4 +18,5 @@ main {
   width: 100%;
   height: var(--header-height);
   background-color: rgba(var(--base-color), 1);
+  pointer-events: none;
 }

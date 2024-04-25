@@ -10,7 +10,7 @@ import { GlobalState, HistoryItem } from '@/models/global-state';
 import * as appStateSelectors from '@/state/selectors/app-state.selectors';
 import * as appStateActions from '@/state/actions/app-state.actions';
 import { NgSelectModule } from '@ng-select/ng-select';
-import { map, of, switchMap, tap, withLatestFrom } from 'rxjs';
+import { firstValueFrom, map, of, switchMap, tap, withLatestFrom } from 'rxjs';
 
 @Component({
   selector: 'app-search',
@@ -114,8 +114,10 @@ export class SearchComponent {
     }
   }
 
-  onFocus($event: any): void {
+  async onFocus($event: any): Promise<void> {
     // console.log('onFocus', $event);
+    const searchHistory = await firstValueFrom(this.searchHistory$);
+    if (!searchHistory.length) return;
     this.store.dispatch(appStateActions.setSearchHistoryActive({ searchHistoryActive: true }));
   }
 
