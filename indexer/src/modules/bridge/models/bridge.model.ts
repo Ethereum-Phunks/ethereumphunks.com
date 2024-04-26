@@ -3,6 +3,7 @@ export interface SignatureBody {
   hashId: string;
   sha: string;
   signature: `0x${string}`;
+  chainId: number;
 }
 
 export interface MagmaEtherPhunk {

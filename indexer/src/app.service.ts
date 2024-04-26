@@ -6,11 +6,10 @@ import { SupabaseService } from '@/services/supabase.service';
 import { ProcessingService } from '@/services/processing.service';
 
 import { UtilityService } from '@/utils/utility.service';
+import { l1Chain } from './constants/ethereum';
 
 import dotenv from 'dotenv';
 dotenv.config();
-
-const chain: 'mainnet' | 'sepolia' = process.env.CHAIN_ID === '1' ? 'mainnet' : 'sepolia';
 
 @Injectable()
 export class AppService {
@@ -21,25 +20,30 @@ export class AppService {
     private readonly sbSvc: SupabaseService,
     private readonly utilSvc: UtilityService
   ) {
-    // Start the Indexer
     this.blockSvc.clearQueue().then(() => {
-      Logger.debug('Queue Cleared', chain.toUpperCase());
+      Logger.debug('Queue Cleared', l1Chain.toUpperCase());
       this.startIndexer();
     });
   }
 
-  async startIndexer() {
+  /**
+   * Starts the indexer process.
+   *
+   * @returns A promise that resolves when the indexer process is started.
+   * @description This function starts the indexer process by clearing the queue, starting the backfill, and starting the block watcher. If an error occurs, the function will restart the indexer process.
+   */
+  async startIndexer(): Promise<void> {
     try {
       await this.utilSvc.delay(10000);
       await this.blockSvc.pauseQueue();
 
       const startBlock = (await this.sbSvc.getLastBlock(Number(process.env.CHAIN_ID)));
 
-      Logger.debug('Starting Backfill', chain.toUpperCase());
+      Logger.debug('Starting Backfill', l1Chain.toUpperCase());
       await this.processSvc.startBackfill(startBlock);
       await this.blockSvc.resumeQueue();
 
-      Logger.debug('Starting Block Watcher', chain.toUpperCase());
+      Logger.debug('Starting Block Watcher', l1Chain.toUpperCase());
       await this.processSvc.startPolling();
 
     } catch (error) {

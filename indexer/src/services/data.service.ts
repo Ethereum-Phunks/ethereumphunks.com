@@ -1,12 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 
-import { catchError, firstValueFrom, map, of, tap } from 'rxjs';
+import { catchError, firstValueFrom, map, of } from 'rxjs';
 
 import dotenv from 'dotenv';
 dotenv.config();
-
-const prefix = process.env.CHAIN_ID === '1' ? '' : 'sepolia-';
 
 @Injectable()
 export class DataService {
@@ -16,8 +14,11 @@ export class DataService {
   ) {}
 
   checkConsensus(owner: string, hashId: string): any {
+    const prefix = process.env.CHAIN_ID === '1' ? '' : 'sepolia-';
+    const url = `https://${prefix}api-v2.ethscriptions.com/api/ethscriptions/${hashId}`;
+
     return firstValueFrom(
-      this.http.get(`https://${prefix}api-v2.ethscriptions.com/api/ethscriptions/${hashId}`).pipe(
+      this.http.get(url).pipe(
         map(response => {
           if (response.data?.current_owner?.toLowerCase() === owner.toLowerCase()) return true;
           return false;

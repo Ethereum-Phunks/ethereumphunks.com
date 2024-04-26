@@ -12,11 +12,22 @@ export class BridgeController {
     private readonly nonceSvc: NonceService
   ) {}
 
+  /**
+   * Generates a temporary nonce for the given address.
+   * @param query - The query object containing the address.
+   * @returns A promise that resolves to the generated nonce.
+   */
   @Get('generate-nonce')
-  getMerkleRoot(@Query() query: { address: string }): Promise<string> {
+  generateNonce(@Query() query: { address: string }): Promise<string> {
     return this.nonceSvc.generateNonce(query.address);
   }
 
+  /**
+   * Verifies the signature of an asset ownership and returns a signature
+   * @param body - The body object containing the signature.
+   * @returns A promise that resolves to signature to send to the contract
+   * with some other data for the users transaction.
+   */
   @Post('bridge-phunk')
   bridgePhunk(@Body() body: SignatureBody): Promise<any> {
     return this.veriSvc.verifySignature(body);

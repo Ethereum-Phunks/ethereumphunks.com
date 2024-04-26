@@ -1,27 +1,17 @@
 import { Injectable } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 
-import { WriteContractParameters, createPublicClient, createWalletClient, hexToString, http, parseEventLogs } from 'viem';
-import { privateKeyToAccount } from 'viem/accounts';
+import { WriteContractParameters, hexToString, parseEventLogs } from 'viem';
 import { catchError, firstValueFrom, map, of } from 'rxjs';
 
-import { magma } from '@/constants/magmaChain';
 import EtherPhunksTokenMagma from '@/abi/EtherPhunksTokenMagma.json';
 
 import { ImageUriService } from '@/modules/bridge/services/image.service';
 import { SupabaseService } from '@/services/supabase.service';
 import { Web3Service } from '@/services/web3.service';
+import { UtilityService } from '@/utils/utility.service';
 
-const walletClient = createWalletClient({
-  chain: magma,
-  transport: http(magma.rpcUrls.default.http[0]),
-  account: privateKeyToAccount(`0x${process.env.DATA_DEPLOYER_PK}`),
-});
-
-const publicClient = createPublicClient({
-  chain: magma,
-  transport: http(magma.rpcUrls.default.http[0]),
-});
+import { l1Client, l2Client, l2WalletClient } from '@/constants/ethereum';
 
 @Injectable()
 export class MintService {
@@ -30,9 +20,17 @@ export class MintService {
     private readonly http: HttpService,
     private readonly sbSvc: SupabaseService,
     private readonly web3Svc: Web3Service,
-    private imageSvc: ImageUriService
+    private readonly imageSvc: ImageUriService,
+    private readonly utilSvc: UtilityService
   ) {}
 
+  /**
+   * Processes a Layer 2 mint request.
+   *
+   * @param hashId - The hash ID of the mint request.
+   * @param owner - The owner of the minted token.
+   * @returns A Promise that resolves when the mint request is processed.
+   */
   async processLayer2Mint(
     hashId: string,
     owner: string
@@ -47,9 +45,9 @@ export class MintService {
   }
 
   async mintToken(request: WriteContractParameters) {
-    const hash = await walletClient.writeContract(request);
+    const hash = await l2WalletClient.writeContract(request);
     console.log({ hash });
-    const receipt = await publicClient.waitForTransactionReceipt({ hash });
+    const receipt = await this.web3Svc.waitForTransactionReceiptL2(hash);
     console.log({ receipt });
 
     const logs = parseEventLogs({
@@ -62,25 +60,32 @@ export class MintService {
     });
   }
 
+  /**
+   * Creates a mint request that can be used to transact with the L2
+   *
+   * @param hashId - The hash ID of the transaction.
+   * @param owner - The owner of the token.
+   * @returns A promise that resolves to the write contract parameters for the mint request.
+   */
   async createMintRequest(
     hashId: string,
     owner: string,
   ): Promise<WriteContractParameters> {
-    const original = await this.web3Svc.getTransaction(hashId as `0x${string}`);
-    const stringData = hexToString(original.input.toString() as `0x${string}`);
-
     const { slug, tokenId, sha } = await this.sbSvc.checkEthscriptionExistsByHashId(hashId);
-    const { name, singleName } = await this.sbSvc.getCollectionBySlug(slug);
-    const { values } = await this.sbSvc.getAttributesFromSha(sha);
+
+    const [ { name, singleName }, { values } ] = await Promise.all([
+      this.sbSvc.getCollectionBySlug(slug),
+      this.sbSvc.getAttributesFromSha(sha)
+    ]);
 
     const imageUri = await this.imageSvc.createImageUri(sha);
     const metadata = this.createMetadata(hashId, tokenId, name, singleName, imageUri, values);
 
-    console.log({ hashId, owner, tokenId, metadata });
+    console.log({ hashId, owner, tokenId });
 
-    const { request } = await publicClient.simulateContract({
-      account: walletClient.account,
-      address: process.env.BRIDGE_ADDRESS_L2 as `0x${string}`,
+    const { request } = await l2Client.simulateContract({
+      account: l2WalletClient.account,
+      address: process.env.BRIDGE_ADDRESS_SEPOLIA_L2 as `0x${string}`,
       abi: EtherPhunksTokenMagma,
       functionName: 'mintToken',
       args: [
@@ -94,28 +99,34 @@ export class MintService {
     return request;
   }
 
-  async estimateContractGas(request: WriteContractParameters): Promise<number> {
-    const gas = await publicClient.estimateContractGas(request);
-    return Number(gas);
-  }
-
+  /**
+   * Validates a token mint by retrieving the token URI associated with the given hash ID.
+   * @param hashId - The hash ID of the token.
+   * @returns A Promise that resolves to the response containing the token URI.
+   */
   async validateTokenMint(hashId: string) {
-
-    const { request } = await publicClient.simulateContract({
-      account: walletClient.account,
+    const { request } = await l2Client.simulateContract({
+      account: l2WalletClient.account,
       address: process.env.BRIDGE_ADDRESS_L2 as `0x${string}`,
       abi: EtherPhunksTokenMagma,
       functionName: 'tokenURIByHashId',
-      args: [
-        hashId
-      ]
+      args: [hashId]
     });
 
-    const response = await publicClient.readContract(request);
-
-    console.log({ response });
+    const response = await l1Client.readContract(request);
+    return response;
   }
 
+  /**
+   * Creates on-chain metadata for the NFT minted to L2.
+   * @param hashId - The hash ID of the token.
+   * @param tokenId - The ID of the token.
+   * @param name - The name of the token.
+   * @param singleName - The single name of the token.
+   * @param imageUri - The URI of the token's image.
+   * @param attributes - The attributes of the token.
+   * @returns The metadata in base64 format.
+   */
   createMetadata(
     hashId: string,
     tokenId: number,
@@ -125,20 +136,23 @@ export class MintService {
     attributes: any
   ) {
     const metadataAttributes = [];
+
+    // Add the attributes to the metadata
+    // NOTE: The attributes are stored as an object with the key being the attribute name and the value being the attribute value. Some attributes are stored as an array of values so we must iterate over the array and add each value to the metadata as separate entries
     Object.keys(attributes).forEach((key) => {
 
       const isArray = Array.isArray(attributes[key]);
       if (isArray) {
         attributes[key].forEach((value: string) => {
           metadataAttributes.push({
-            trait_type: this.toTitleCase(key),
-            value: this.toTitleCase(value)
+            trait_type: this.utilSvc.toTitleCase(key),
+            value: this.utilSvc.toTitleCase(value)
           });
         });
       } else {
         metadataAttributes.push({
-          trait_type: this.toTitleCase(key),
-          value: this.toTitleCase(attributes[key])
+          trait_type: this.utilSvc.toTitleCase(key),
+          value: this.utilSvc.toTitleCase(attributes[key])
         });
       }
     });
@@ -162,10 +176,10 @@ export class MintService {
     return 'data:application/json;base64,' + Buffer.from(JSON.stringify(metadata)).toString('base64');
   }
 
-  toTitleCase(str: string) {
-    return str?.split('-')?.map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())?.join(' ');
-  }
-
+  /**
+   * Fetches the L2 fees from the specified API endpoint.
+   * @returns A promise that resolves to an object containing the fetched L2 fees.
+   */
   async fetchL2Fees() {
     return await firstValueFrom(
       this.http.get('https://magmascan.org/api/v2/stats').pipe(

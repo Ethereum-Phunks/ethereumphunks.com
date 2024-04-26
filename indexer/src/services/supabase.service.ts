@@ -1,7 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
 
-import { UtilityService } from '@/utils/utility.service';
-
 import { createClient } from '@supabase/supabase-js';
 import { Transaction, hexToString, zeroAddress } from 'viem';
 import { writeFile } from 'fs/promises';
@@ -127,14 +125,21 @@ export class SupabaseService {
     Logger.log('Listing created', hashId);
   }
 
-  async removeListing(hashId: string): Promise<void> {
+  async removeListing(hashId: string): Promise<boolean> {
+
+    const listing = await this.getListing(hashId);
+    if (!listing) return false;
+
     const response: ListingResponse = await supabase
       .from('listings' + this.suffix)
       .delete()
-      .eq('hashId', hashId);
-    const { error } = response;
-    if (error) return Logger.error(error.details, error.message);
+      .eq('hashId', hashId)
+
+    const { data, error } = response;
+    if (error) throw error;
+
     Logger.log('Removed listing', hashId);
+    return true;
   }
 
   async updateListing() {}
@@ -522,6 +527,18 @@ export class SupabaseService {
 
     if (error) throw error;
     if (data?.length) return data[0];
+  }
+
+  async getListing(hashId: string): Promise<any> {
+    const response = await supabase
+      .from('listings' + this.suffix)
+      .select('*')
+      .eq('hashId', hashId);
+
+    const { data, error } = response;
+    if (error) throw error;
+    if (data?.length) return data[0];
+    return null;
   }
 
   async getAllTransfers(): Promise<Event[]> {

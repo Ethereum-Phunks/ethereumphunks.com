@@ -19,11 +19,13 @@ import bridgeMainnetAbi from '@/abi/EtherPhunksBridgeMainnet.json';
 
 import * as esips from '@/constants/EthscriptionsProtocol';
 
+import { bridgeAddressMainnet, l1Chain, l1Client, marketAddress, pointsAddress } from '@/constants/ethereum';
+
 import { Ethscription, Event, PhunkSha } from '@/models/db';
 
 import { DecodeEventLogReturnType, FormattedTransaction, Log, Transaction, TransactionReceipt, decodeEventLog, hexToString, zeroAddress } from 'viem';
 
-import { writeFile } from 'fs/promises';
+import { mkdir, writeFile } from 'fs/promises';
 
 import crypto from 'crypto';
 
@@ -63,10 +65,16 @@ export class ProcessingService {
     }
   }
 
+  /**
+   * Starts polling for new blocks and adds them to the queue.
+   *
+   * @returns A promise that resolves when the polling is started.
+   * @throws If an error occurs while polling.
+   */
   async startPolling(): Promise<void> {
     return new Promise((resolve, reject) => {
       // Watch for new blocks and add them to the queue
-      const unwatch = this.web3Svc.client.watchBlocks({
+      const unwatch = l1Client.watchBlocks({
         // blockTag: 'safe',
         emitMissed: true,
         includeTransactions: false,
@@ -89,26 +97,38 @@ export class ProcessingService {
     });
   }
 
-  async processBlock(blockNum: number): Promise<void> {
+  /**
+   * Processes a block by retrieving its transactions, processing them, and adding the events to the database.
+   * Optionally, updates the last block in the database.
+   *
+   * @param blockNum - The number of the block to process.
+   * @param updateBlockDb - Whether to update the last block in the database. Default is true.
+   * @returns A Promise that resolves when the block processing is complete.
+   */
+  async processBlock(blockNum: number, updateBlockDb = true): Promise<void> {
     const { txns, createdAt } = await this.web3Svc.getBlockTransactions(blockNum);
 
     // Log the block
     const timeAgo = this.timeSvc.howLongAgo(createdAt as any);
-    Logger.log(`Processing block ${blockNum} (${this.web3Svc.chain}) ➖  ${timeAgo}`);
+    Logger.log(`Processing block ${blockNum} (${l1Chain}) ➖  ${timeAgo}`);
 
-    // Process the transactions
+    // Process the transactions & get the events
     const events = await this.processTransactions(txns, createdAt);
-
     // Add the events to the database
     if (events.length) await this.sbSvc.addEvents(events);
 
     // Update the block in db
-    this.sbSvc.updateLastBlock(blockNum, createdAt);
+    if (updateBlockDb) this.sbSvc.updateLastBlock(blockNum, createdAt);
   }
 
+  /**
+   * Retries processing a block if an error occurs.
+   * @param blockNum - The block number to retry.
+   * @returns A Promise that resolves when the block processing is complete.
+   */
   async retryBlock(blockNum: number): Promise<void> {
     try {
-      Logger.debug(`Retrying block ${blockNum} (${this.web3Svc.chain})`);
+      Logger.debug(`Retrying block ${blockNum} (${l1Chain})`);
       await this.utilSvc.delay(5000);
       // Get the transactions from the block
       const { txns, createdAt } = await this.web3Svc.getBlockTransactions(blockNum);
@@ -122,11 +142,26 @@ export class ProcessingService {
     }
   }
 
+  /**
+   * Adds a block to the processing queue.
+   *
+   * @param blockNum - The block number to add to the queue.
+   * @param blockTimestamp - The timestamp of the block to add to the queue.
+   * @returns A Promise that resolves when the block is added to the queue.
+   */
   async addBlockToQueue(blockNum: number, blockTimestamp: number): Promise<void> {
     await this.blockSvc.addBlockToQueue(blockNum, blockTimestamp);
   }
 
-  // Method to add transactions to the database
+
+  /**
+   * Processes an array of transactions and their receipts.
+   * Sorts the transactions by transaction index and processes each transaction.
+   * If an error occurs during processing, it logs the error, sends a message, and retries the block.
+   * @param txns - An array of transactions and their receipts.
+   * @param createdAt - The date when the transactions were created.
+   * @returns An array of events generated from the processed transactions.
+   */
   async processTransactions(
     txns: { transaction: FormattedTransaction; receipt: TransactionReceipt; }[],
     createdAt: Date
@@ -152,6 +187,14 @@ export class ProcessingService {
     return events;
   }
 
+  /**
+   * Processes a transaction and returns an array of events.
+   *
+   * @param transaction - The transaction object to process.
+   * @param receipt - The transaction receipt object.
+   * @param createdAt - The date when the transaction was created.
+   * @returns A promise that resolves to an array of events.
+   */
   async processTransaction(
     transaction: Transaction,
     receipt: TransactionReceipt,
@@ -197,7 +240,7 @@ export class ProcessingService {
     const possibleTransfer = input.substring(2).length === SEGMENT_SIZE;
     if (possibleTransfer) {
       // console.log({ possibleTransfer });
-      Logger.debug(`Processing transfer (${this.web3Svc.chain})`, transaction.hash);
+      Logger.debug(`Processing transfer (${l1Chain})`, transaction.hash);
       const event = await this.processTransferEvent(
         input,
         transaction as Transaction,
@@ -223,7 +266,7 @@ export class ProcessingService {
     );
     if (esip1Transfers.length) {
       Logger.debug(
-        `Processing marketplace event (esip1) (${this.web3Svc.chain})`,
+        `Processing marketplace event (esip1) (${l1Chain})`,
         transaction.hash
       );
       const eventArr = await this.processEsip1(
@@ -241,7 +284,7 @@ export class ProcessingService {
     );
     if (esip2Transfers.length) {
       Logger.debug(
-        `Processing marketplace event (esip2) (${this.web3Svc.chain})`,
+        `Processing marketplace event (esip2) (${l1Chain})`,
         transaction.hash
       );
       const eventArr = await this.processEsip2(esip2Transfers, transaction, createdAt);
@@ -251,13 +294,13 @@ export class ProcessingService {
 
     // Filter logs for EtherPhunk Marketplace events
     const marketplaceLogs = receipt.logs.filter(
-      (log: any) => this.web3Svc.marketAddress.filter(
+      (log: any) => marketAddress.filter(
         (addr) => addr.toLowerCase() === log.address.toLowerCase()
       )?.length
     );
     if (marketplaceLogs.length) {
       Logger.debug(
-        `Processing EtherPhunk Marketplace event (${this.web3Svc.chain})`,
+        `Processing EtherPhunk Marketplace event (${l1Chain})`,
         transaction.hash
       );
       const eventArr = await this.processEtherPhunkMarketplaceEvents(
@@ -265,15 +308,21 @@ export class ProcessingService {
         transaction,
         createdAt
       );
-      if (eventArr?.length) events.push(...eventArr);
+
+      // Check if there are any events
+      // If there aer no events, it means either:
+      // 1. The listing was not created by the previous owner
+      // 2. The listing was not removed
+      if (!eventArr?.length) return events;
+      events.push(...eventArr);
     }
 
     const bridgeMainnetLogs = receipt.logs.filter(
-      (log: any) =>  log.address.toLowerCase() === this.web3Svc.bridgeAddressMainnet.toLowerCase()
+      (log: any) =>  log.address.toLowerCase() === bridgeAddressMainnet.toLowerCase()
     );
     if (bridgeMainnetLogs.length) {
       Logger.debug(
-        `Processing Points event (${this.web3Svc.chain})`,
+        `Processing Points event (${l1Chain})`,
         transaction.hash
       );
       await this.processBridgeMainnetEvents(bridgeMainnetLogs);
@@ -281,11 +330,11 @@ export class ProcessingService {
     }
 
     const pointsLogs = receipt.logs.filter(
-      (log: any) => this.web3Svc.pointsAddress.toLowerCase() === log.address.toLowerCase()
+      (log: any) => pointsAddress.toLowerCase() === log.address.toLowerCase()
     );
     if (pointsLogs.length) {
       Logger.debug(
-        `Processing Points event (${this.web3Svc.chain})`,
+        `Processing Points event (${l1Chain})`,
         transaction.hash
       );
       await this.processPointsEvent(pointsLogs);
@@ -294,6 +343,15 @@ export class ProcessingService {
     return events;
   }
 
+
+  /**
+   * Processes the EtherPhunk creation event.
+   *
+   * @param txn - The transaction object.
+   * @param createdAt - The creation date of the transaction.
+   * @param phunkShaData - The PhunkSha data.
+   * @returns The processed event object.
+   */
   async processEtherPhunkCreationEvent(
     txn: Transaction,
     createdAt: Date,
@@ -320,6 +378,12 @@ export class ProcessingService {
     };
   }
 
+  /**
+   * Processes the bridge mainnet (L1) events.
+   *
+   * @param bridgeMainnetLogs - An array of bridge mainnet logs.
+   * @returns A promise that resolves to void.
+   */
   async processBridgeMainnetEvents(bridgeMainnetLogs: any[]): Promise<void> {
     for (const log of bridgeMainnetLogs) {
       const decoded = decodeEventLog({
@@ -339,7 +403,7 @@ export class ProcessingService {
         if (!locked) throw new Error('Failed to lock ethscription');
 
         // Bridge the ethscription
-        this.bridgeSvc.addBridgeToQueue(hashId, prevOwner, Number(process.env.CHAIN_ID));
+        this.bridgeSvc.addBridgeToQueue(hashId, prevOwner);
 
         // args
         // address prevOwner,
@@ -360,7 +424,15 @@ export class ProcessingService {
     }
   }
 
+  /**
+   * Processes the points event logs and updates the users' points.
+   * @param pointsLogs - An array of points event logs.
+   * @returns A Promise that resolves when the processing is complete.
+   */
   async processPointsEvent(pointsLogs: any[]): Promise<void> {
+
+    const usersToUpdate = new Set<`0x${string}`>();
+
     for (const log of pointsLogs) {
       const decoded = decodeEventLog({
         abi: pointsAbi,
@@ -374,11 +446,20 @@ export class ProcessingService {
       if (!eventName || !args) return;
       if (eventName === 'PointsAdded') {
         const { user, amount } = args;
-        await this.distributePoints(user);
+        usersToUpdate.add(user);
       }
+    }
+
+    for (const user of usersToUpdate) {
+      await this.distributePoints(user);
     }
   }
 
+  /**
+   * Distributes points to a user from a given address.
+   * @param fromAddress The address from which the points will be distributed.
+   * @returns A Promise that resolves when the points are successfully distributed.
+   */
   async distributePoints(fromAddress: `0x${string}`): Promise<void> {
     try {
       const points = await this.web3Svc.getPoints(fromAddress);
@@ -389,6 +470,15 @@ export class ProcessingService {
     }
   }
 
+  /**
+   * Processes a calldata transfer event.
+   *
+   * @param hashId - The hash ID of the event.
+   * @param txn - The transaction object.
+   * @param createdAt - The creation date of the event.
+   * @param index - The optional index of the event.
+   * @returns A Promise that resolves to the processed event or null if the event is not valid.
+   */
   async processTransferEvent(
     hashId: string,
     txn: Transaction,
@@ -423,6 +513,19 @@ export class ProcessingService {
     };
   }
 
+  /**
+   * Processes a contract transfer event.
+   *
+   * @param txn - The transaction object.
+   * @param createdAt - The creation date of the event.
+   * @param from - The address of the sender.
+   * @param to - The address of the recipient.
+   * @param hashId - The hash ID of the event.
+   * @param log - The log object.
+   * @param value - The value of the transfer (optional).
+   * @param prevOwner - The previous owner of the event (optional).
+   * @returns A Promise that resolves to an Event object or null.
+   */
   async processContractTransferEvent(
     txn: Transaction,
     createdAt: Date,
@@ -464,6 +567,14 @@ export class ProcessingService {
     };
   }
 
+  /**
+   * Processes ESIP1 transfers and returns the corresponding events.
+   *
+   * @param ethscriptionTransfers - An array of ESIP1 transfer logs.
+   * @param transaction - The transaction associated with the transfers.
+   * @param createdAt - The creation date of the transaction.
+   * @returns An array of events.
+   */
   async processEsip1(
     ethscriptionTransfers: any[],
     transaction: Transaction,
@@ -498,6 +609,14 @@ export class ProcessingService {
     return events;
   }
 
+  /**
+   * Processes the ESIP2 events and returns an array of Event objects.
+   *
+   * @param previousOwnerTransfers - An array of previous owner transfers.
+   * @param transaction - The transaction object.
+   * @param createdAt - The creation date of the transaction.
+   * @returns A promise that resolves to an array of Event objects.
+   */
   async processEsip2(
     previousOwnerTransfers: any[],
     transaction: Transaction,
@@ -534,6 +653,12 @@ export class ProcessingService {
     return events;
   }
 
+  /**
+   * Processes an ESIP5 (batch calldata) transaction and returns the corresponding events.
+   * @param txn - The transaction to process.
+   * @param createdAt - The creation date of the transaction.
+   * @returns A promise that resolves to an array of events.
+   */
   async processEsip5(
     txn: Transaction,
     createdAt: Date
@@ -547,7 +672,7 @@ export class ProcessingService {
     if (!validHashes.length) return [];
 
     const events = [];
-    Logger.debug(`Processing batch transfer (${this.web3Svc.chain})`, txn.hash);
+    Logger.debug(`Processing batch transfer (${l1Chain})`, txn.hash);
     for (let i = 0; i < validHashes.length; i++) {
       try {
         const hashId = validHashes[i].toLowerCase();
@@ -560,6 +685,14 @@ export class ProcessingService {
     return events;
   }
 
+  /**
+   * Processes the EtherPhunk marketplace contract events.
+   *
+   * @param marketplaceLogs - The array of marketplace logs.
+   * @param transaction - The transaction object.
+   * @param createdAt - The creation date of the events.
+   * @returns A promise that resolves to an array of events.
+   */
   async processEtherPhunkMarketplaceEvents(
     marketplaceLogs: any[],
     transaction: Transaction,
@@ -568,7 +701,7 @@ export class ProcessingService {
 
     const events = [];
     for (const log of marketplaceLogs) {
-      if (!this.web3Svc.marketAddress.includes(log.address?.toLowerCase())) continue;
+      if (!marketAddress.includes(log.address?.toLowerCase())) continue;
 
       let decoded: DecodeEventLogReturnType;
       try {
@@ -595,6 +728,15 @@ export class ProcessingService {
     return events;
   }
 
+  /**
+   * Processes an individual EtherPhunk marketplace event.
+   *
+   * @param txn - The transaction object.
+   * @param createdAt - The timestamp when the event was created.
+   * @param decoded - The decoded event log.
+   * @param log - The log object.
+   * @returns A promise that resolves to an Event object.
+   */
   async processEtherPhunkMarketplaceEvent(
     txn: Transaction,
     createdAt: Date,
@@ -619,12 +761,8 @@ export class ProcessingService {
     if (eventName === 'PhunkBought') {
       const { phunkId: hashId, fromAddress, toAddress, value } = args;
 
-      const bid = await this.sbSvc.getBid(hashId);
-      if (bid && bid.fromAddress?.toLowerCase() === toAddress.toLowerCase()) {
-        await this.sbSvc.removeBid(hashId);
-      }
-
-      await this.sbSvc.removeListing(hashId);
+      const removedListing = await this.sbSvc.removeListing(hashId);
+      if (!removedListing) return;
 
       return {
         txId: txn.hash + log.logIndex,
@@ -643,7 +781,9 @@ export class ProcessingService {
 
     if (eventName === 'PhunkNoLongerForSale') {
       const { phunkId: hashId } = args;
-      await this.sbSvc.removeListing(hashId);
+
+      const removedListing = await this.sbSvc.removeListing(hashId);
+      if (!removedListing) return;
 
       if (txn.from === phunk.prevOwner) {
         return {
@@ -669,7 +809,10 @@ export class ProcessingService {
       // transfer of ownership. If the listing was NOT created
       // by the previous owner, we should ignore it.
       if (phunk.prevOwner && (phunk.prevOwner !== txn.from)) {
-        await writeFile(`./${hashId}.json`, JSON.stringify({ txn: txn.hash, phunk }));
+
+        // Write the failed listing to a file
+        try { await mkdir('./failed'); } catch (error) {}
+        await writeFile(`./failed/${hashId}.json`, JSON.stringify({ txn: txn.hash, phunk }));
         Logger.error('Listing not created by previous owner', `${hashId.toLowerCase()}`);
 
         // Since this listing will STILL overwrite existing listings

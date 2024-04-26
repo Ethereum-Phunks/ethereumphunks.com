@@ -4,20 +4,17 @@ import { InjectQueue } from '@nestjs/bull';
 
 import Bull, { Queue } from 'bull';
 
-import dotenv from 'dotenv';
-dotenv.config();
-
-const chain: 'mainnet' | 'sepolia' = process.env.CHAIN_ID === '1' ? 'mainnet' : 'sepolia';
+import { l1Chain } from '@/constants/ethereum';
 
 @Injectable()
 export class BlockProcessingService {
 
   constructor(
-    @InjectQueue(`blockProcessingQueue_${chain}`) private readonly blockQueue: Queue
+    @InjectQueue(`blockProcessingQueue_${l1Chain}`) private readonly blockQueue: Queue
   ) {}
 
   async addBlockToQueue(blockNum: number, timestamp: number) {
-    const jobId = `block_${blockNum}__${chain}`;
+    const jobId = `block_${blockNum}__${l1Chain}`;
     const maxRetries = 69;
 
     const existingJob = await this.blockQueue.getJob(jobId);
@@ -27,14 +24,14 @@ export class BlockProcessingService {
     }
 
     await this.blockQueue.add(
-      `blockNumQueue_${chain}`,
-      { blockNum, chain, timestamp, retryCount: 0, maxRetries, },
+      `blockNumQueue_${l1Chain}`,
+      { blockNum, l1Chain, timestamp, retryCount: 0, maxRetries, },
       { jobId, removeOnComplete: true, removeOnFail: true, }
     );
     if (blockNum % 1000 === 0) Logger.debug(`Added block ${blockNum} to queue`);
   }
 
-  async pauseQueue() {
+  async pauseQueue(): Promise<void> {
     await this.blockQueue.pause();
   }
 

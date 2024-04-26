@@ -11,6 +11,7 @@ import { VerificationService } from '@/modules/bridge/services/verification.serv
 
 import { SupabaseService } from '@/services/supabase.service';
 import { Web3Service } from '@/services/web3.service';
+import { UtilityService } from '@/utils/utility.service';
 
 @Module({
   imports: [
@@ -26,7 +27,8 @@ import { Web3Service } from '@/services/web3.service';
     SupabaseService,
     Web3Service,
     MintService,
-    ImageUriService
+    ImageUriService,
+    UtilityService
   ],
   exports: [],
 })

@@ -25,10 +25,7 @@ import { ImageService } from '@/modules/notifs/services/image.service';
 import { MintService } from '@/modules/bridge/services/mint.service';
 import { ImageUriService } from '@/modules/bridge/services/image.service';
 
-import dotenv from 'dotenv';
-dotenv.config();
-
-const chain: 'mainnet' | 'sepolia' = process.env.CHAIN_ID === '1' ? 'mainnet' : 'sepolia';
+import { l1Chain } from '@/constants/ethereum';
 
 @Module({
   imports: [
@@ -41,10 +38,10 @@ const chain: 'mainnet' | 'sepolia' = process.env.CHAIN_ID === '1' ? 'mainnet' : 
     }),
     BullModule.registerQueue(
       {
-        name: `blockProcessingQueue_${chain}`
+        name: `blockProcessingQueue_${l1Chain}`
       },
       {
-        name: `bridgeProcessingQueue_${chain}`
+        name: `bridgeProcessingQueue_${l1Chain}`
       }
     ),
   ],

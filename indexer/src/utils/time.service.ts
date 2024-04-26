@@ -2,9 +2,13 @@ import { Injectable } from '@nestjs/common';
 
 @Injectable()
 export class TimeService {
+
   private lastProcessedTime: Date | null = null;
   private processingTimes: number[] = [];
 
+  /**
+   * Logs the processing time of a block.
+   */
   logBlockProcessed() {
     const now = new Date();
 
@@ -17,6 +21,12 @@ export class TimeService {
     this.lastProcessedTime = now;
   }
 
+  /**
+   * Calculates the estimated time remaining based on the current block and total blocks.
+   * @param currentBlock The current block number.
+   * @param totalBlocks The total number of blocks.
+   * @returns A string representing the estimated time remaining.
+   */
   getTimeRemainingEstimate(currentBlock: number, totalBlocks: number): string {
     const avgProcessingTime = this.getAverageProcessingTime();
     const blocksRemaining = totalBlocks - currentBlock;
@@ -25,11 +35,22 @@ export class TimeService {
     return this.millisecondsToHumanReadable(timeRemainingInMilliseconds);
   }
 
+  /**
+   * Calculates the average processing time based on the recorded processing times.
+   * If there are no recorded processing times, it returns 0.
+   *
+   * @returns The average processing time.
+   */
   private getAverageProcessingTime(): number {
     if (!this.processingTimes.length) return 0;
     return this.processingTimes.reduce((acc, curr) => acc + curr, 0) / this.processingTimes.length;
   }
 
+  /**
+   * Converts milliseconds to a human-readable format.
+   * @param milliseconds - The number of milliseconds to convert.
+   * @returns A string representing the converted time in the format "X days, X hours, X minutes, X seconds".
+   */
   private millisecondsToHumanReadable(milliseconds: number): string {
     const seconds = Math.floor(milliseconds / 1000);
     const minutes = Math.floor(seconds / 60);

@@ -19,9 +19,6 @@ const prefix = process.env.CHAIN_ID === '1' ? '' : 'sepolia-';
 @Injectable()
 export class VerificationService {
 
-  chain: 'mainnet' | 'sepolia' = process.env.CHAIN_ID === '1' ? 'mainnet' : 'sepolia';
-  rpcURL: string = this.chain === 'mainnet' ? process.env.RPC_URL_MAINNET : process.env.RPC_URL_SEPOLIA;
-
   constructor(
     private readonly sbSvc: SupabaseService,
     private readonly nonceSvc: NonceService,
@@ -29,13 +26,29 @@ export class VerificationService {
     private readonly mintSvc: MintService
   ) {}
 
-  async verifySignature(body: SignatureBody) {
+  /**
+   * Verifies the signature of an asset ownership by comparing the signer's address with the sender's address,
+   * and checking if the provided hashId and SHA match the existing records.
+   *
+   * @param body - The signature body containing the address, hashId, SHA, and signature.
+   * @returns An object containing the contract signature, prefix, hashId, owner, prevOwner, and gasEstimate.
+   * @throws BadRequestException if the signer does not match the sender, the hashId doesn't exist,
+   * the signer doesn't match the owner, or the SHA doesn't match.
+   */
+  async verifySignature(body: SignatureBody): Promise<{
+    signature: any,
+    prefix: string,
+    hashId: string,
+    owner: string,
+    prevOwner: string,
+    gasEstimate: number
+  }> {
 
-    const { address, hashId, sha, signature } = body;
+    const { address, hashId, sha, signature, chainId } = body;
 
     // Fetch the nonce for the user
     const userNonce = await this.nonceSvc.fetchUserNonce(address);
-    const message = `Sign this message to verify ownership of the asset.\n\nAddress: ${address.toLowerCase()}\nEthscription ID: ${hashId}\nSHA: ${sha}\nNonce: ${userNonce}`;
+    const message = `Sign this message to verify ownership of the asset.\n\nAddress: ${address.toLowerCase()}\nEthscription ID: ${hashId}\nSHA: ${sha}\nNonce: ${userNonce}\nChain ID: ${chainId}`;
     const messageHash = hashMessage(message);
 
     // Recover the signing address from the signature
@@ -62,7 +75,7 @@ export class VerificationService {
 
     // Get the gas estimate
     const gasEstimate = await this.estimateGas(hashId, address);
-    // console.log({ gasEstimate });
+    console.log({ gasEstimate });
 
     // get signature for contract verification
     const nonce = await this.web3Svc.fetchNonce(address);
@@ -79,16 +92,25 @@ export class VerificationService {
       hashId,
       owner: item.owner,
       prevOwner: item.prevOwner,
-      // gasEstimate
+      gasEstimate
     };
   }
 
-  async signMessage(
+  /**
+   * Signs a message for smart contract verification.
+   * @param data - The data object containing the message details.
+   * @param data.prefix - The prefix for the chain.
+   * @param data.hashId - The hash ID of the token.
+   * @param data.owner - The owner of the token.
+   * @param data.nonce - The nonce of the owner.
+   * @returns An object containing the signature components.
+   */
+  private async signMessage(
     data: {
       prefix: string,
       hashId: `0x${string}`,
       owner: `0x${string}`,
-      nonce: bigint,
+      nonce: bigint
     }
   ): Promise<any> {
     // Define the message to sign for the smart contract verification
@@ -108,12 +130,16 @@ export class VerificationService {
     const s = '0x' + signature.substring(66, 130);
     const v = signature.substring(130, 132);
     const vPadded = '0x' + v.padStart(64, '0');
-
-    console.log({ r, s, v: vPadded, nonce, owner, hashId });
-
     return { r, s, v: vPadded };
   }
 
+  /**
+   * Estimates the gas cost for minting a token on L2.
+   *
+   * @param hashId - The hash ID of the token.
+   * @param owner - The owner of the token.
+   * @returns The estimated gas cost in wei.
+   */
   async estimateGas(
     hashId: string,
     owner: string,
@@ -121,11 +147,9 @@ export class VerificationService {
     const request = await this.mintSvc.createMintRequest(hashId, owner);
 
     const [gasUsedWei, stats] = await Promise.all([
-      this.mintSvc.estimateContractGas(request),
+      this.web3Svc.estimateContractGasL2(request),
       this.mintSvc.fetchL2Fees()
     ]);
-
-    // console.log({ gasUsedWei, stats });
 
     const usdValue = Number(stats.coin_price);
     const gasPriceWei = Number(stats.gas_prices.fast) * 1e9;
