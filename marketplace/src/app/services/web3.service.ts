@@ -24,7 +24,7 @@ import { magma } from '@/constants/magmaChain';
 
 import { Web3Modal } from '@web3modal/wagmi/dist/types/src/client';
 import { createWeb3Modal } from '@web3modal/wagmi';
-import { Account, Log, TransactionReceipt, WatchBlockNumberReturnType, WatchContractEventReturnType, decodeFunctionData, formatEther, isAddress, parseEther, zeroAddress } from 'viem';
+import { Account, Log, PublicClient, TransactionReceipt, WatchBlockNumberReturnType, WatchContractEventReturnType, createPublicClient, decodeFunctionData, formatEther, isAddress, parseEther, zeroAddress } from 'viem';
 
 const marketAddress = environment.marketAddress;
 const pointsAddress = environment.pointsAddress;
@@ -57,6 +57,9 @@ export class Web3Service {
   web3Connecting: boolean = false;
   connectedState!: Observable<any>;
 
+  l1Client!: PublicClient;
+  l2Client!: PublicClient;
+
   config!: Config;
   modal!: Web3Modal;
 
@@ -64,8 +67,17 @@ export class Web3Service {
     private store: Store<GlobalState>,
     private ngZone: NgZone
   ) {
-
     const chains: [Chain, ...Chain[]] = environment.chainId === 1 ? [mainnet] : [sepolia, magma];
+
+    this.l1Client = createPublicClient({
+      chain: chains[0],
+      transport: http(environment.rpcHttpProvider)
+    });
+
+    this.l2Client = createPublicClient({
+      chain: chains[1],
+      transport: http(chains[1]?.rpcUrls.default.http[0] || environment.magmaRpcHttpProvider)
+    });
 
     this.config = createConfig({
       chains,
@@ -117,7 +129,7 @@ export class Web3Service {
   blockWatcher!: WatchBlockNumberReturnType | undefined;
   startBlockWatcher(): void {
     if (this.blockWatcher) return;
-    this.blockWatcher = getPublicClient(this.config)?.watchBlockNumber({
+    this.blockWatcher = this.l1Client.watchBlockNumber({
       emitOnBegin: true,
       onBlockNumber: (blockNumber) => {
         const currentBlock = Number(blockNumber);
@@ -129,8 +141,7 @@ export class Web3Service {
   pointsWatcher!: WatchContractEventReturnType | undefined;
   startPointsWatcher(): void {
     if (this.pointsWatcher) return;
-
-    this.pointsWatcher = getPublicClient(this.config)?.watchContractEvent({
+    this.pointsWatcher = this.l1Client.watchContractEvent({
       address: pointsAddress as `0x${string}`,
       abi: PointsAbi,
       onLogs: (logs) => {
@@ -161,8 +172,6 @@ export class Web3Service {
   }
 
   async switchNetwork(l: string): Promise<void> {
-    // 'l1' | 'l2'
-
     const walletClient = await getWalletClient(this.config);
     const chainId = getChainId(this.config);
 
@@ -173,12 +182,6 @@ export class Web3Service {
       if (chainId === magma.id) return;
       await walletClient?.switchChain({ id: magma.id });
     }
-
-    // const chainId = getChainId(this.config);
-    // if (!chainId) return;
-    // if (chainId !== environment.chainId) {
-    //   await switchChain(this.config, { chainId: environment.chainId });
-    // }
   }
 
   async getActiveWalletClient(): Promise<GetWalletClientReturnType> {
@@ -264,30 +267,23 @@ export class Web3Service {
   }
 
   async readMarketContract(functionName: any, args: (string | undefined)[]): Promise<any> {
-    const publicClient = getPublicClient(this.config);
-    if (!publicClient) throw new Error('No public client');
-
-    const call: any = await publicClient.readContract({
+    const call: any = await this.l1Client.readContract({
       address: marketAddress as `0x${string}`,
       abi: EtherPhunksMarketABI,
       functionName,
       args: args as any,
     });
-
     return call;
   }
 
   async waitForTransaction(hash: string): Promise<TransactionReceipt> {
     const publicClient = getPublicClient(this.config);
     if (!publicClient) throw new Error('No public client');
-
     const transaction = await publicClient.waitForTransactionReceipt({ hash: hash as `0x${string}` });
     return transaction;
   }
 
   async offerPhunkForSale(hashId: string, value: number, toAddress?: string | null): Promise<string | undefined> {
-    // console.log('offerPhunkForSale', tokenId, value, toAddress);
-
     const weiValue = value * 1e18;
     if (toAddress) {
       if (!isAddress(toAddress)) throw new Error('Invalid address');
@@ -415,8 +411,7 @@ export class Web3Service {
   }
 
   async getUserPoints(address: string): Promise<number> {
-    const publicClient = getPublicClient(this.config);
-    const points = await publicClient?.readContract({
+    const points = await this.l1Client.readContract({
       address: pointsAddress as `0x${string}`,
       abi: PointsAbi,
       functionName: 'points',
@@ -426,8 +421,7 @@ export class Web3Service {
   }
 
   async getMultiplier(): Promise<any> {
-    const publicClient = getPublicClient(this.config);
-    const multiplier = await publicClient?.readContract({
+    const multiplier = await this.l1Client.readContract({
       address: pointsAddress as `0x${string}`,
       abi: PointsAbi,
       functionName: 'multiplier',
@@ -436,16 +430,19 @@ export class Web3Service {
     return multiplier;
   }
 
+  /**
+   * Fetches on-chain escrow and listing information for a given previous owner and hash ID.
+   * @param prevOwner The previous owner's address.
+   * @param hashId The hash ID of the item.
+   * @returns A Promise that resolves to the escrow and listing information.
+   */
   async fetchEscrowAndListing(prevOwner: string, hashId: string): Promise<any> {
-    const publicClient = getPublicClient(this.config);
-    if (!publicClient) throw new Error('No public client');
-
     const contract = {
       address: marketAddress as `0x${string}`,
       abi: EtherPhunksMarketABI as any
     };
 
-    const multicall = await publicClient.multicall({
+    const multicall = await this.l1Client.multicall({
       contracts: [{
         ...contract,
         functionName: 'userEthscriptionPossiblyStored',
@@ -457,16 +454,15 @@ export class Web3Service {
         args: [hashId as `0x${string}`],
       }]
     });
-
-    // console.log({multicall});
-
     return multicall;
   }
 
+  /**
+   * Fetches multiple on-chain escrow and listing information for an array of Phunks.
+   * @param phunks - An array of Phunks for which to fetch the information.
+   * @returns A Promise that resolves to an object containing the combined escrow and listing information.
+   */
   async fetchMultipleEscrowAndListing(phunks: Phunk[]): Promise<any> {
-    const publicClient = getPublicClient(this.config);
-    if (!publicClient) throw new Error('No public client');
-
     const contract = {
       address: marketAddress as `0x${string}`,
       abi: EtherPhunksMarketABI
@@ -486,7 +482,7 @@ export class Web3Service {
       });
     }
 
-    const res = await publicClient.multicall({ contracts: calls });
+    const res = await this.l1Client.multicall({ contracts: calls });
 
     // console.log({res})
 
@@ -506,15 +502,13 @@ export class Web3Service {
   // TXNS //////////////////////////
   //////////////////////////////////
 
-  async getTransaction(hash: string): Promise<any> {
-    const publicClient = getPublicClient(this.config);
-    const transaction = await publicClient?.getTransaction({ hash: hash as `0x${string}` });
+  async getTransactionL1(hash: string): Promise<any> {
+    const transaction = await this.l1Client.getTransaction({ hash: hash as `0x${string}` });
     return transaction;
   }
 
-  async getTransactionReceipt(hash: string): Promise<TransactionReceipt | undefined> {
-    const publicClient = getPublicClient(this.config);
-    const receipt = await publicClient?.getTransactionReceipt({ hash: hash as `0x${string}` });
+  async getTransactionReceiptL1(hash: string): Promise<TransactionReceipt | undefined> {
+    const receipt = await this.l1Client.getTransactionReceipt({ hash: hash as `0x${string}` });
     return receipt;
   }
 
@@ -536,12 +530,6 @@ export class Web3Service {
     });
   }
 
-  async getActiveWalletAddress(): Promise<string | null> {
-    const walletClient = await getWalletClient(this.config);
-    const address = walletClient?.account?.address as `0x${string}`;
-    return address;
-  }
-
   //////////////////////////////////
   // UTILS /////////////////////////
   //////////////////////////////////
@@ -551,11 +539,8 @@ export class Web3Service {
     return account.address;
   }
 
-  async getCurrentBlock(): Promise<number> {
-    const publicClient = getPublicClient(this.config);
-    if (!publicClient) throw new Error('No public client');
-
-    const blockNum = await publicClient.getBlockNumber();
+  async getCurrentBlockL1(): Promise<number> {
+    const blockNum = await this.l1Client.getBlockNumber();
     return Number(blockNum);
   }
 
@@ -596,20 +581,13 @@ export class Web3Service {
   }
 
   async getEnsOwner(name: string) {
-    const publicClient = getPublicClient(this.config);
-    if (!publicClient) throw new Error('No public client');
-
-    return await publicClient.getEnsAddress({ name });
+    return await this.l1Client.getEnsAddress({ name });
   }
 
   async getEnsFromAddress(address: string | null | undefined): Promise<string | null> {
     if (!address) return null;
     try {
-      const publicClient = getPublicClient(this.config);
-      if (!publicClient) throw new Error('No public client');
-
-      const ens = await publicClient.getEnsName({ address: address as `0x${string}` });
-      return ens;
+      return await this.l1Client.getEnsName({ address: address as `0x${string}` });
     } catch (err) {
       return null;
     }
@@ -617,8 +595,6 @@ export class Web3Service {
 
   async getEnsAvatar(name: string): Promise<string | null> {
     if (!name) return null;
-    const publicClient = getPublicClient(this.config);
-    if (!publicClient) return null;
-    return await publicClient.getEnsAvatar({ name });
+    return await this.l1Client.getEnsAvatar({ name });
   }
 }

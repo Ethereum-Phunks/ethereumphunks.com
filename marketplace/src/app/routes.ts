@@ -6,9 +6,11 @@ export const routes: Routes = [
     loadComponent: () => import('./routes/index/index.component').then(mod => mod.IndexComponent),
   },
   {
-    path: 'curated/ethereum-phunks',
-    redirectTo: '/',
-    pathMatch: 'full',
+    path: 'curated/:slug',
+    redirectTo: ({ params, queryParams, url, fragment }) => {
+      if (url.length === 2 && params['slug'] === 'ethereum-phunks') return '/';
+      return url.join('/');
+    },
   },
   // {
   //   // create a redirect

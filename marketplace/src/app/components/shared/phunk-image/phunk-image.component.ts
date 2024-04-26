@@ -39,6 +39,7 @@ export class PhunkImageComponent {
         this.getPhunkByHashId(this.hashId()!);
       }
 
+      if (this.shaPrevValue && !this.sha()) this.phunkImgSrc = null;
       if (this.sha() && this.sha() !== this.shaPrevValue) {
         this.getPhunkBySha(this.sha()!);
       }
@@ -67,7 +68,7 @@ export class PhunkImageComponent {
   }
 
   async getPhunkByHashId(hashId: string): Promise<any> {
-    const tx = await this.web3Svc.getTransaction(hashId);
+    const tx = await this.web3Svc.getTransactionL1(hashId);
     this.phunkImgSrc = hexToString(tx.input);
   }
 }

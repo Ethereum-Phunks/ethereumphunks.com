@@ -108,3 +108,8 @@ export const selectModalActive = createSelector(
   selectAppState,
   (appState: AppState) => appState.modalActive
 );
+
+export const selectCollectionsMenuActive = createSelector(
+  selectAppState,
+  (appState: AppState) => appState.collectionsMenuActive
+);

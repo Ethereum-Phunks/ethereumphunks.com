@@ -1,7 +1,5 @@
 <section #menuMain class="main" [style]="{ 'opacity': '0' }">
 
-  <!-- {{ activeCollection$ | async | json }} -->
-
   @if (address$ | async; as address) {
     <div class="user-actions">
       <button
@@ -16,16 +14,6 @@
   }
 
   <div class="menu-items">
-    <div
-      class="curated-button"
-      (click)="navigateMenu('curated')">
-      <span>Curated Collections</span>
-
-      <div class="arrow">
-        <ng-template [ngTemplateOutlet]="arrowIcon" />
-      </div>
-    </div>
-
     @if (leaderboard$ | async; as leaderboard) {
       @if (leaderboard.length) {
         <div
@@ -54,6 +42,15 @@
         </div>
       }
     }
+    <div
+      class="curated-button"
+      (click)="navigateMenu('curated')">
+      <span>Curated Collections</span>
+
+      <div class="arrow">
+        <ng-template [ngTemplateOutlet]="arrowIcon" />
+      </div>
+    </div>
   </div>
 
   @if (address$ | async; as address) {

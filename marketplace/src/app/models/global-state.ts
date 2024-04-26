@@ -42,6 +42,7 @@ export interface AppState {
   isSearchResult: boolean;
 
   modalActive: boolean;
+  collectionsMenuActive: boolean;
 }
 
 export interface ChatState {

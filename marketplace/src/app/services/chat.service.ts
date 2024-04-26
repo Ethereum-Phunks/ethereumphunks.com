@@ -36,7 +36,7 @@ export class ChatService {
       const signer = await this.web3Svc.getActiveWalletClient();
       const address = signer?.account.address;
 
-      console.log({ address });
+      // console.log({ address });
       if (!address) throw new Error('No address found');
 
       let keys = this.loadKeys(address);
@@ -117,7 +117,7 @@ export class ChatService {
       (conv) => conv.peerAddress.toLowerCase() === user.toLowerCase()
     )[0];
 
-    console.log({ user, message, conversation, conversations });
+    // console.log({ user, message, conversation, conversations });
     await this.sendMessageToConversation(conversation, message);
   }
 

@@ -160,3 +160,8 @@ export const setModalActive = createAction(
   '[App State] Set Modal Active',
   props<{ modalActive: boolean }>()
 );
+
+export const setCollectionsMenuActive = createAction(
+  '[App State] Set Collections Menu Active',
+  props<{ collectionsMenuActive: boolean }>()
+);

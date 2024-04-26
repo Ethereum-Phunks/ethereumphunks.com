@@ -30,6 +30,7 @@ export class AppStateEffects {
       appStateActions.setMenuActive({ menuActive: false }),
       appStateActions.setSlideoutActive({ slideoutActive: false }),
       appStateActions.setActiveMenuNav({ activeMenuNav: 'main' }),
+      appStateActions.setCollectionsMenuActive({ collectionsMenuActive: false }),
     ])
   ));
 
@@ -138,6 +139,7 @@ export class AppStateEffects {
       const menu = document.querySelector('app-menu') as HTMLElement;
       const header = document.querySelector('app-header') as HTMLElement;
       const search = document.querySelector('app-search') as HTMLElement;
+      const collectionsMenu = document.querySelector('app-collections-dropdown') as HTMLElement;
       const target = action.event.target as HTMLElement;
 
       if (
@@ -160,6 +162,12 @@ export class AppStateEffects {
         !search?.contains(target)
       ) {
         this.store.dispatch(appStateActions.setSearchHistoryActive({ searchHistoryActive: false }));
+      }
+
+      if (
+        !collectionsMenu?.contains(target)
+      ) {
+        this.store.dispatch(appStateActions.setCollectionsMenuActive({ collectionsMenuActive: false }));
       }
     }),
   ), { dispatch: false });

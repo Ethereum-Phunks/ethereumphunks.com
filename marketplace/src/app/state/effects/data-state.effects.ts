@@ -84,6 +84,8 @@ export class DataStateEffects {
 
   fetchSingle$ = createEffect(() => this.actions$.pipe(
     ofType(dataStateActions.fetchSinglePhunk),
+    // Reset the single phunk
+    tap(() => this.store.dispatch(dataStateActions.setSinglePhunk({ phunk: null }))),
     switchMap((action) => this.dataSvc.fetchSinglePhunk(action.phunkId)),
     mergeMap((phunk) => [
       dataStateActions.setSinglePhunk({ phunk }),

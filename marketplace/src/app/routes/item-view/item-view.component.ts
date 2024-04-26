@@ -281,10 +281,10 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
         type: 'error',
         detail: err,
       };
+    } finally {
+      this.store.dispatch(upsertNotification({ notification }));
+      this.clearAll();
     }
-
-    this.store.dispatch(upsertNotification({ notification }));
-    this.clearAll();
   }
 
   async sendToEscrow(phunk: Phunk): Promise<void> {
@@ -334,9 +334,9 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
         type: 'error',
         detail: err,
       };
+    } finally {
+      this.store.dispatch(upsertNotification({ notification }));
     }
-
-    this.store.dispatch(upsertNotification({ notification }));
   }
 
   async phunkNoLongerForSale(phunk: Phunk): Promise<void> {
@@ -383,9 +383,9 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
         type: 'error',
         detail: err,
       };
+    } finally {
+      this.store.dispatch(upsertNotification({ notification }));
     }
-
-    this.store.dispatch(upsertNotification({ notification }));
   }
 
   async buyPhunk(phunk: Phunk): Promise<void> {
@@ -435,9 +435,9 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
         type: 'error',
         detail: err,
       };
+    } finally {
+      this.store.dispatch(upsertNotification({ notification }));
     }
-
-    this.store.dispatch(upsertNotification({ notification }));
   }
 
   async transferPhunk(phunk: Phunk, address?: string): Promise<void> {
@@ -487,10 +487,10 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
         type: 'error',
         detail: err,
       };
+    } finally {
+      this.store.dispatch(upsertNotification({ notification }));
+      this.clearAll();
     }
-
-    this.store.dispatch(upsertNotification({ notification }));
-    this.clearAll();
   }
 
   async withdrawPhunk(phunk: Phunk): Promise<void> {
@@ -616,7 +616,9 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
         detail: err,
       };
       this.store.dispatch(upsertNotification({ notification }));
-    };
+    } finally {
+      this.closeBridge();
+    }
   }
 
   getItemQueryParams(item: any): any {

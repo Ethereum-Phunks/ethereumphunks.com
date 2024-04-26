@@ -119,7 +119,7 @@ export class MarketComponent {
   deselected: Phunk[] = [];
   selectedValue: string = '';
 
-  selectMutipleActive: boolean = false;
+  selectMultipleActive: boolean = false;
   selectAll: boolean = false;
 
   isListingBulk: boolean = false;
@@ -605,16 +605,16 @@ export class MarketComponent {
   }
 
   setSelectActive() {
-    this.selectMutipleActive = !this.selectMutipleActive;
+    this.selectMultipleActive = !this.selectMultipleActive;
     this.selectAll = false;
-    if (!this.selectMutipleActive) {
+    if (!this.selectMultipleActive) {
       this.selected = {};
       this.deselected = [];
     }
   }
 
   clearSelectedAndClose() {
-    this.selectMutipleActive = false;
+    this.selectMultipleActive = false;
     this.selectAll = false;
     this.selected = {};
     this.actionsState = defaultActionState;
@@ -685,7 +685,7 @@ export class MarketComponent {
   }
 
   async filterOwnedItems(phunks: Phunk[]): Promise<[Phunk[], Phunk[]]> {
-    const walletAddress = (await this.web3Svc.getActiveWalletAddress())?.toLowerCase();
+    const walletAddress = (await this.web3Svc.getCurrentAddress())?.toLowerCase();
     const marketAddress = environment.marketAddress.toLowerCase();
     let validItems: Phunk[] = [];
     let invalidItems: Phunk[] = [];

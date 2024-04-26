@@ -32,7 +32,7 @@ export const fetchSinglePhunk = createAction(
 
 export const setSinglePhunk = createAction(
   '[Data State] Set Single Phunk',
-  props<{ phunk: Phunk }>()
+  props<{ phunk: GlobalState['dataState']['singlePhunk'] }>()
 );
 
 export const refreshSinglePhunk = createAction(

@@ -33,6 +33,7 @@ export const initialState: AppState = {
   isSearchResult: false,
 
   modalActive: false,
+  collectionsMenuActive: false,
 };
 
 export const appStateReducer: ActionReducer<AppState, Action> = createReducer(
@@ -199,5 +200,12 @@ export const appStateReducer: ActionReducer<AppState, Action> = createReducer(
       modalActive
     };
     return setModalActive
+  }),
+  on(actions.setCollectionsMenuActive, (state, { collectionsMenuActive }) => {
+    const setCollectionsMenuActive = {
+      ...state,
+      collectionsMenuActive
+    };
+    return setCollectionsMenuActive
   }),
 );

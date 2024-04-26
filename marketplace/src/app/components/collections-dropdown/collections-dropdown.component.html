@@ -1,0 +1,30 @@
+<div class="curated-wrapper" [class.active]="(dropdownActive$ | async)">
+  <button class="curated-button" (click)="toggleDropdown()">
+    <span>Curated Collections</span>
+
+    <div class="arrow">
+      <ng-template [ngTemplateOutlet]="arrowIcon" />
+    </div>
+  </button>
+
+  <div class="curated-dropdown">
+    @for (item of (collections$ | async); track item.slug) {
+      @if ((activeCollection$ | async)?.slug; as activeSlug) {
+        <a
+          [routerLink]="['/curated', item.slug]"
+          [class.active]="activeSlug === item.slug">
+
+          <div class="image-wrapper">
+            <img [src]="item.image" />
+          </div>
+
+          <span>{{ item.name }}</span>
+        </a>
+      }
+    }
+  </div>
+</div>
+
+<ng-template #arrowIcon>
+  <svg height="15" viewBox="0 0 25 15" width="25" xmlns="http://www.w3.org/2000/svg"><path d="m10 5v5h5v5h-5v-5h-5v-5zm-5-5v5h-5v-5zm15 5v5h-5v-5zm5-5v5h-5v-5z"/></svg>
+</ng-template>

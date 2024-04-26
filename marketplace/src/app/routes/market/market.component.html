@@ -63,12 +63,11 @@
               @if (
                 (
                   (marketType === 'owned' && (route.snapshot.queryParams.address | lowercase) === walletAddress)
-                  || marketType === 'listings'
                 )
               ) {
                 <!-- || marketType === 'listings' -->
                 <div class="select-buttons">
-                  @if (selectMutipleActive && marketType !== 'listings') {
+                  @if (selectMultipleActive) {
                     <!--  && marketType !== 'listings' -->
                     <button
                       class="all-none"
@@ -81,7 +80,7 @@
                   <button
                     class="select"
                     (click)="setSelectActive()"
-                    [class.active]="selectMutipleActive">
+                    [class.active]="selectMultipleActive">
 
                     Select
                   </button>
@@ -93,7 +92,7 @@
 
         @if ((walletAddress$ | async); as walletAddress) {
           @if (
-            selectMutipleActive
+            selectMultipleActive
             && (((marketType === 'owned')
             && (route.snapshot.queryParams.address | lowercase) === walletAddress) || marketType === 'listings')
           ) {
@@ -148,7 +147,7 @@
           [selectAll]="selectAll"
           [walletAddress]="(walletAddress$ | async)"
           [selectable]="
-            selectMutipleActive
+            selectMultipleActive
             && (((marketType === 'owned')
             && (route.snapshot.queryParams.address | lowercase) === (walletAddress$ | async)) || marketType === 'listings')
           "

@@ -256,7 +256,7 @@ export class DataService {
         });
         return result;
       }),
-      tap((res) => console.log('fetchEvents', res)),
+      // tap((res) => console.log('fetchEvents', res)),
     );
   }
 
@@ -470,7 +470,7 @@ export class DataService {
 
     return from(query).pipe(
       map((res: any) => res.data),
-      tap((res) => console.log('fetchCollections', res)),
+      // tap((res) => console.log('fetchCollections', res)),
     );
   }
 
@@ -483,7 +483,7 @@ export class DataService {
 
     return from(query).pipe(
       map((res: any) => res.data.map((item: any) => ({ ...item.ethscription }))),
-      tap((res) => console.log('fetchCollectionsWithAssets', res)),
+      // tap((res) => console.log('fetchCollectionsWithAssets', res)),
     );
   }
 
