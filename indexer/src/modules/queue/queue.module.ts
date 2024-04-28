@@ -11,7 +11,7 @@ import { BridgeQueueService } from '@/modules/queue/services/bridge-queue.servic
 
 import { TelegramService } from '@/modules/notifs/services/telegram.service';
 
-import { ProcessingService } from '@/services/processing.service';
+import { ProcessingServiceL1 } from '@/services/processing.service';
 import { Web3Service } from '@/services/web3.service';
 import { SupabaseService } from '@/services/supabase.service';
 import { DataService } from '@/services/data.service';
@@ -52,7 +52,7 @@ import { l1Chain } from '@/constants/ethereum';
     BridgeQueueService,
     BridgeProcessingService,
 
-    ProcessingService,
+    ProcessingServiceL1,
     MintService,
     Web3Service,
     SupabaseService,

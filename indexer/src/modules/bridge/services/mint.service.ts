@@ -1,17 +1,15 @@
 import { Injectable } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 
-import { WriteContractParameters, hexToString, parseEventLogs } from 'viem';
+import { WriteContractParameters, parseEventLogs } from 'viem';
 import { catchError, firstValueFrom, map, of } from 'rxjs';
-
-import EtherPhunksTokenMagma from '@/abi/EtherPhunksTokenMagma.json';
 
 import { ImageUriService } from '@/modules/bridge/services/image.service';
 import { SupabaseService } from '@/services/supabase.service';
 import { Web3Service } from '@/services/web3.service';
 import { UtilityService } from '@/utils/utility.service';
 
-import { l1Client, l2Client, l2WalletClient } from '@/constants/ethereum';
+import { bridgeAbiL2, l1Client, l2Client, l2WalletClient } from '@/constants/ethereum';
 
 @Injectable()
 export class MintService {
@@ -51,7 +49,7 @@ export class MintService {
     console.log({ receipt });
 
     const logs = parseEventLogs({
-      abi: EtherPhunksTokenMagma,
+      abi: bridgeAbiL2,
       logs: receipt.logs,
     })
 
@@ -86,7 +84,7 @@ export class MintService {
     const { request } = await l2Client.simulateContract({
       account: l2WalletClient.account,
       address: process.env.BRIDGE_ADDRESS_SEPOLIA_L2 as `0x${string}`,
-      abi: EtherPhunksTokenMagma,
+      abi: bridgeAbiL2,
       functionName: 'mintToken',
       args: [
         owner,
@@ -108,7 +106,7 @@ export class MintService {
     const { request } = await l2Client.simulateContract({
       account: l2WalletClient.account,
       address: process.env.BRIDGE_ADDRESS_L2 as `0x${string}`,
-      abi: EtherPhunksTokenMagma,
+      abi: bridgeAbiL2,
       functionName: 'tokenURIByHashId',
       args: [hashId]
     });

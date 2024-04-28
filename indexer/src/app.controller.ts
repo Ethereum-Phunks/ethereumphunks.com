@@ -1,13 +1,13 @@
 import { Body, Controller, Post } from '@nestjs/common';
 
-import { ProcessingService } from './services/processing.service';
+import { ProcessingServiceL1 } from './services/processing.service';
 import { BlockProcessingService } from './modules/queue/services/block-processing.service';
 
 @Controller()
 export class AppController {
 
   constructor(
-    private readonly processingSvc: ProcessingService,
+    private readonly processingSvc: ProcessingServiceL1,
     private readonly queue: BlockProcessingService,
   ) {}
 

@@ -13,13 +13,9 @@ import { TimeService } from '@/utils/time.service';
 
 import { esip1Abi, esip2Abi } from '@/abi/EthscriptionsProtocol';
 
-import etherPhunksMarketProxyAbi from '@/abi/EtherPhunksMarketProxy.json';
-import pointsAbi from '@/abi/Points.json';
-import bridgeMainnetAbi from '@/abi/EtherPhunksBridgeMainnet.json';
-
 import * as esips from '@/constants/EthscriptionsProtocol';
 
-import { bridgeAddressMainnet, l1Chain, l1Client, marketAddress, pointsAddress } from '@/constants/ethereum';
+import { bridgeAbiL1, bridgeAddressL1, l1Chain, l1Client, marketAbiL1, marketAddressL1, pointsAbiL1, pointsAddressL1 } from '@/constants/ethereum';
 
 import { Ethscription, Event, PhunkSha } from '@/models/db';
 
@@ -35,7 +31,7 @@ dotenv.config();
 const SEGMENT_SIZE = 64;
 
 @Injectable()
-export class ProcessingService {
+export class ProcessingServiceL1 {
 
   startTime: Date;
 
@@ -294,7 +290,7 @@ export class ProcessingService {
 
     // Filter logs for EtherPhunk Marketplace events
     const marketplaceLogs = receipt.logs.filter(
-      (log: any) => marketAddress.filter(
+      (log: any) => marketAddressL1.filter(
         (addr) => addr.toLowerCase() === log.address.toLowerCase()
       )?.length
     );
@@ -318,7 +314,7 @@ export class ProcessingService {
     }
 
     const bridgeMainnetLogs = receipt.logs.filter(
-      (log: any) =>  log.address.toLowerCase() === bridgeAddressMainnet.toLowerCase()
+      (log: any) =>  log.address.toLowerCase() === bridgeAddressL1.toLowerCase()
     );
     if (bridgeMainnetLogs.length) {
       Logger.debug(
@@ -330,7 +326,7 @@ export class ProcessingService {
     }
 
     const pointsLogs = receipt.logs.filter(
-      (log: any) => pointsAddress.toLowerCase() === log.address.toLowerCase()
+      (log: any) => pointsAddressL1.toLowerCase() === log.address.toLowerCase()
     );
     if (pointsLogs.length) {
       Logger.debug(
@@ -387,7 +383,7 @@ export class ProcessingService {
   async processBridgeMainnetEvents(bridgeMainnetLogs: any[]): Promise<void> {
     for (const log of bridgeMainnetLogs) {
       const decoded = decodeEventLog({
-        abi: bridgeMainnetAbi,
+        abi: bridgeAbiL1,
         data: log.data,
         topics: log.topics,
       });
@@ -403,7 +399,7 @@ export class ProcessingService {
         if (!locked) throw new Error('Failed to lock ethscription');
 
         // Bridge the ethscription
-        this.bridgeSvc.addBridgeToQueue(hashId, prevOwner);
+        this.bridgeSvc.addHashLockedToQueue(hashId, prevOwner);
 
         // args
         // address prevOwner,
@@ -414,8 +410,8 @@ export class ProcessingService {
 
       if (eventName === 'HashUnlocked') {
         const { hashId, prevOwner } = args;
-        const locked = await this.sbSvc.unlockEthscription(hashId);
-        if (locked) throw new Error('Failed to unlock ethscription');
+        // const locked = await this.sbSvc.unlockEthscription(hashId);
+        // if (locked) throw new Error('Failed to unlock ethscription');
 
         // args
         // address prevOwner,
@@ -435,7 +431,7 @@ export class ProcessingService {
 
     for (const log of pointsLogs) {
       const decoded = decodeEventLog({
-        abi: pointsAbi,
+        abi: pointsAbiL1,
         data: log.data,
         topics: log.topics,
       });
@@ -701,12 +697,12 @@ export class ProcessingService {
 
     const events = [];
     for (const log of marketplaceLogs) {
-      if (!marketAddress.includes(log.address?.toLowerCase())) continue;
+      if (!marketAddressL1.includes(log.address?.toLowerCase())) continue;
 
       let decoded: DecodeEventLogReturnType;
       try {
         decoded = decodeEventLog({
-          abi: etherPhunksMarketProxyAbi,
+          abi: marketAbiL1,
           data: log.data,
           topics: log.topics,
         });

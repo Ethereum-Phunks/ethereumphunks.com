@@ -1,0 +1,9 @@
+{
+    "fixes": {
+        "incompleteTypes": true
+    },
+    "include": [
+        "src/**/*.{ts,tsx}"
+    ],
+    "projectPath": "tsconfig.json"
+}

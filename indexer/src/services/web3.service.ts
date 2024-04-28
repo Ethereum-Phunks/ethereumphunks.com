@@ -2,11 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 
 import { FormattedTransaction, GetBlockReturnType, TransactionReceipt, WriteContractParameters } from 'viem';
 
-import { bridgeAddressMainnet, l1Client, l2Client, pointsAddress } from '@/constants/ethereum';
-
-import punkDataAbi from '@/abi/PunkData.json';
-import pointsAbi from '@/abi/Points.json';
-import bridgeAbi from '@/abi/EtherPhunksBridgeMainnet.json';
+import { bridgeAbiL1, bridgeAddressL1, l1Client, l2Client, marketAbiL1, pointsAbiL1, pointsAddressL1 } from '@/constants/ethereum';
 
 import dotenv from 'dotenv';
 dotenv.config();
@@ -110,8 +106,8 @@ export class Web3Service {
 
   async getPoints(address: `0x${string}`): Promise<number> {
     const points = await l1Client.readContract({
-      address: pointsAddress as `0x${string}`,
-      abi: pointsAbi,
+      address: pointsAddressL1 as `0x${string}`,
+      abi: pointsAbiL1,
       functionName: 'points',
       args: [`${address}`],
     });
@@ -121,8 +117,8 @@ export class Web3Service {
   async fetchNonce(address: string): Promise<bigint> {
     // return BigInt(0);
     const nonce = await l1Client.readContract({
-      address: bridgeAddressMainnet as `0x${string}`,
-      abi: bridgeAbi,
+      address: bridgeAddressL1 as `0x${string}`,
+      abi: bridgeAbiL1,
       functionName: 'expectedNonce',
       args: [`${address}`],
     });
@@ -136,21 +132,11 @@ export class Web3Service {
   async getPunkImage(tokenId: number): Promise<any> {
     const punkImage = await l1Client.readContract({
       address: '0x16F5A35647D6F03D5D3da7b35409D65ba03aF3B2' as `0x${string}`,
-      abi: punkDataAbi,
+      abi: marketAbiL1,
       functionName: 'punkImageSvg',
       args: [`${tokenId}`],
     });
     return punkImage as any;
-  }
-
-  async getPunkAttributes(tokenId: number): Promise<any> {
-    const punkAttributes = await l1Client.readContract({
-      address: '0x16F5A35647D6F03D5D3da7b35409D65ba03aF3B2' as `0x${string}`,
-      abi: punkDataAbi,
-      functionName: 'punkAttributes',
-      args: [`${tokenId}`],
-    });
-    return punkAttributes as any;
   }
 
   async getEnsFromAddress(address: string): Promise<string> {

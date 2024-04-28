@@ -3,7 +3,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { BlockProcessingService } from '@/modules/queue/services/block-processing.service';
 
 import { SupabaseService } from '@/services/supabase.service';
-import { ProcessingService } from '@/services/processing.service';
+import { ProcessingServiceL1 } from '@/services/processing.service';
 
 import { UtilityService } from '@/utils/utility.service';
 import { l1Chain } from './constants/ethereum';
@@ -16,7 +16,7 @@ export class AppService {
 
   constructor(
     private readonly blockSvc: BlockProcessingService,
-    private readonly processSvc: ProcessingService,
+    private readonly processSvc: ProcessingServiceL1,
     private readonly sbSvc: SupabaseService,
     private readonly utilSvc: UtilityService
   ) {

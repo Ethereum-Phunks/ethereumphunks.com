@@ -3,7 +3,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { InjectQueue } from '@nestjs/bull';
 import { Queue } from 'bull';
 
-import { l1Chain } from '@/constants/ethereum';
+import { l1Chain, l2Chain } from '@/constants/ethereum';
 
 import dotenv from 'dotenv';
 dotenv.config();
@@ -15,7 +15,7 @@ export class BridgeProcessingService {
     @InjectQueue(`bridgeProcessingQueue_${l1Chain}`) private readonly bridgeQueue: Queue
   ) {}
 
-  async addBridgeToQueue(
+  async addHashLockedToQueue(
     hashId: string,
     owner: string
   ) {
@@ -35,6 +35,27 @@ export class BridgeProcessingService {
     );
     Logger.debug(`Added bridge job to queue`, `${hashId}`);
   }
+
+  // async addBridgedOutToQueue(
+  //   hashId: string,
+  //   owner: string
+  // ) {
+  //   const jobId = `bridge_${hashId}__${l2Chain}`;
+  //   const maxRetries = 69;
+
+  //   const existingJob = await this.bridgeQueue.getJob(jobId);
+  //   if (existingJob) {
+  //     await existingJob.remove();
+  //     Logger.error('⚠️', `Updated existing job for hashId ${hashId}`);
+  //   }
+
+  //   await this.bridgeQueue.add(
+  //     `bridgeQueue_${l1Chain}`,
+  //     { hashId, owner, retryCount: 0, maxRetries, },
+  //     { jobId, removeOnComplete: true, removeOnFail: false, }
+  //   );
+  //   Logger.debug(`Added bridge job to queue`, `${hashId}`);
+  // }
 
   async pauseQueue() {
     // pause queue

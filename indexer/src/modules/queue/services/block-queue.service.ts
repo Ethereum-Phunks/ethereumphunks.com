@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { InjectQueue, OnQueueActive, OnQueueCompleted, OnQueueError, OnQueueEvent, OnQueueFailed, OnQueuePaused, OnQueueResumed, OnQueueWaiting, Process, Processor } from '@nestjs/bull';
 
 // import { UtilityService } from '@/services/utility.service';
-import { ProcessingService } from '@/services/processing.service';
+import { ProcessingServiceL1 } from '@/services/processing.service';
 import { UtilityService } from '@/utils/utility.service';
 
 import { l1Chain } from '@/constants/ethereum';
@@ -73,7 +73,7 @@ export class BlockQueueService {
   constructor(
     @InjectQueue(`blockProcessingQueue_${l1Chain}`) private readonly queue: Queue,
     private readonly utilSvc: UtilityService,
-    private readonly processSvc: ProcessingService
+    private readonly processSvc: ProcessingServiceL1
     // private readonly appSvc: AppService
   ) {}
 }

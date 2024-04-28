@@ -16,9 +16,10 @@ import { AppController } from '@/app.controller';
 import { Web3Service } from '@/services/web3.service';
 import { DataService } from '@/services/data.service';
 import { SupabaseService } from '@/services/supabase.service';
-import { ProcessingService } from '@/services/processing.service';
+import { ProcessingServiceL1 } from '@/services/processing.service';
 
 import { UtilityService } from '@/utils/utility.service';
+import { LayerTwoModule } from './modules/layer-two/layer-two.module';
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import { UtilityService } from '@/utils/utility.service';
     QueueModule,
     BridgeModule,
     NotifsModule,
+    LayerTwoModule,
   ],
   controllers: [
     AppController
@@ -39,7 +41,7 @@ import { UtilityService } from '@/utils/utility.service';
     // Supabase Service handles all interactions with the Supabase database
     SupabaseService,
     // Processing Service handles the logic of processing transactions
-    ProcessingService,
+    ProcessingServiceL1,
     // Data Service handles the logic of processing data
     DataService,
     TelegramService,
@@ -49,7 +51,7 @@ import { UtilityService } from '@/utils/utility.service';
     ImageUriService,
 
     // Utility Service handles utility functions
-    UtilityService
+    UtilityService,
   ],
 })
 
