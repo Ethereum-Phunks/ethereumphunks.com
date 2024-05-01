@@ -7,6 +7,7 @@ import { ImageService } from '@/modules/notifs/services/image.service';
 
 import { Web3Service } from '@/services/web3.service';
 import { SupabaseService } from '@/services/supabase.service';
+import { UtilityService } from '@/utils/utility.service';
 
 @Module({
   imports: [
@@ -17,7 +18,8 @@ import { SupabaseService } from '@/services/supabase.service';
     DiscordService,
     SupabaseService,
     ImageService,
-    Web3Service
+    Web3Service,
+    UtilityService
   ],
 })
 export class NotifsModule {}

@@ -31,4 +31,11 @@ export class UtilityService {
   public toTitleCase(str: string) {
     return str?.split('-')?.map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())?.join(' ');
   }
+
+  shorten(
+    addressOrHashId: string,
+    length: number = 6
+  ): string {
+    return `${addressOrHashId.slice(0, length + 2)}...${addressOrHashId.slice(-length)}`;
+  }
 }

@@ -27,6 +27,8 @@
     "@nestjs/common": "^10.2.8",
     "@nestjs/core": "^10.2.8",
     "@nestjs/platform-express": "^10.2.8",
+    "@nestjs/platform-socket.io": "^10.3.8",
+    "@nestjs/websockets": "^10.3.8",
     "@openzeppelin/merkle-tree": "^1.0.5",
     "@supabase/supabase-js": "^2.32.0",
     "axios": "^1.6.3",
@@ -43,6 +45,7 @@
     "reflect-metadata": "^0.1.13",
     "rimraf": "^3.0.2",
     "rxjs": "^7.8.1",
+    "socket.io": "^4.7.5",
     "svgson": "^5.3.1",
     "tinycolor2": "^1.6.0",
     "viem": "^2.9.23"

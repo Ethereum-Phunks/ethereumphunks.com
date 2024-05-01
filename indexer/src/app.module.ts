@@ -12,6 +12,7 @@ import { MintService } from '@/modules/bridge/services/mint.service';
 
 import { AppService } from '@/app.service';
 import { AppController } from '@/app.controller';
+import { AppGateway } from './app.gateway';
 
 import { Web3Service } from '@/services/web3.service';
 import { DataService } from '@/services/data.service';
@@ -20,6 +21,7 @@ import { ProcessingServiceL1 } from '@/services/processing.service';
 
 import { UtilityService } from '@/utils/utility.service';
 import { LayerTwoModule } from './modules/layer-two/layer-two.module';
+import { CustomLogger } from './services/logger.service';
 
 @Module({
   imports: [
@@ -34,8 +36,9 @@ import { LayerTwoModule } from './modules/layer-two/layer-two.module';
     AppController
   ],
   providers: [
-    // App Service handles the main logic of the indexer
+
     AppService,
+    AppGateway,
     // Web3 Service handles all interactions with the Ethereum network
     Web3Service,
     // Supabase Service handles all interactions with the Supabase database
@@ -52,6 +55,7 @@ import { LayerTwoModule } from './modules/layer-two/layer-two.module';
 
     // Utility Service handles utility functions
     UtilityService,
+    CustomLogger,
   ],
 })
 

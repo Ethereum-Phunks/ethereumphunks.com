@@ -106,7 +106,10 @@ export class ProcessingServiceL1 {
 
     // Log the block
     const timeAgo = this.timeSvc.howLongAgo(createdAt as any);
-    Logger.log(`Processing block ${blockNum} (${l1Chain}) ➖  ${timeAgo}`);
+    Logger.log(
+      `Processing block ${blockNum} (${l1Chain})`,
+      `${timeAgo.trim()}`
+    );
 
     // Process the transactions & get the events
     const events = await this.processTransactions(txns, createdAt);
@@ -124,7 +127,9 @@ export class ProcessingServiceL1 {
    */
   async retryBlock(blockNum: number): Promise<void> {
     try {
-      Logger.debug(`Retrying block ${blockNum} (${l1Chain})`);
+      Logger.debug(
+        `Retrying block ${blockNum} (${l1Chain})`
+      );
       await this.utilSvc.delay(5000);
       // Get the transactions from the block
       const { txns, createdAt } = await this.web3Svc.getBlockTransactions(blockNum);
@@ -227,7 +232,10 @@ export class ProcessingServiceL1 {
       const isDuplicate = await this.sbSvc.checkEthscriptionExistsBySha(sha);
       if (isDuplicate) return
 
-      Logger.debug('Processing ethscription', transaction.hash);
+      Logger.debug(
+        'Processing ethscription',
+        this.utilSvc.shorten(transaction.hash)
+      );
       const event = await this.processEtherPhunkCreationEvent(transaction as Transaction, createdAt, phunkSha);
       return [event];
     }
@@ -235,8 +243,6 @@ export class ProcessingServiceL1 {
     // Check if possible transfer
     const possibleTransfer = input.substring(2).length === SEGMENT_SIZE;
     if (possibleTransfer) {
-      // console.log({ possibleTransfer });
-      Logger.debug(`Processing transfer (${l1Chain})`, transaction.hash);
       const event = await this.processTransferEvent(
         input,
         transaction as Transaction,
@@ -263,7 +269,7 @@ export class ProcessingServiceL1 {
     if (esip1Transfers.length) {
       Logger.debug(
         `Processing marketplace event (esip1) (${l1Chain})`,
-        transaction.hash
+        this.utilSvc.shorten(transaction.hash)
       );
       const eventArr = await this.processEsip1(
         esip1Transfers,
@@ -281,7 +287,7 @@ export class ProcessingServiceL1 {
     if (esip2Transfers.length) {
       Logger.debug(
         `Processing marketplace event (esip2) (${l1Chain})`,
-        transaction.hash
+        this.utilSvc.shorten(transaction.hash)
       );
       const eventArr = await this.processEsip2(esip2Transfers, transaction, createdAt);
       this.discordSvc.postMessage(eventArr);
@@ -297,7 +303,7 @@ export class ProcessingServiceL1 {
     if (marketplaceLogs.length) {
       Logger.debug(
         `Processing EtherPhunk Marketplace event (${l1Chain})`,
-        transaction.hash
+        this.utilSvc.shorten(transaction.hash)
       );
       const eventArr = await this.processEtherPhunkMarketplaceEvents(
         marketplaceLogs,
@@ -319,7 +325,7 @@ export class ProcessingServiceL1 {
     if (bridgeMainnetLogs.length) {
       Logger.debug(
         `Processing Points event (${l1Chain})`,
-        transaction.hash
+        this.utilSvc.shorten(transaction.hash)
       );
       await this.processBridgeMainnetEvents(bridgeMainnetLogs);
       return events;
@@ -331,7 +337,7 @@ export class ProcessingServiceL1 {
     if (pointsLogs.length) {
       Logger.debug(
         `Processing Points event (${l1Chain})`,
-        transaction.hash
+        this.utilSvc.shorten(transaction.hash)
       );
       await this.processPointsEvent(pointsLogs);
     }
@@ -460,7 +466,10 @@ export class ProcessingServiceL1 {
     try {
       const points = await this.web3Svc.getPoints(fromAddress);
       await this.sbSvc.updateUserPoints(fromAddress, Number(points));
-      Logger.log(`Updated user points to ${points}`, fromAddress);
+      Logger.log(
+        `Updated user points for ${this.utilSvc.shorten(fromAddress)}`,
+        points.toString()
+      );
     } catch (error) {
       console.log(error);
     }
@@ -490,9 +499,17 @@ export class ProcessingServiceL1 {
 
     if (!isMatchedHashId || !transferrerIsOwner) return null;
 
+    Logger.debug(
+      `Processing transfer (${l1Chain})`,
+      this.utilSvc.shorten(txn.hash)
+    );
+
     // Update the eth phunk owner
     await this.sbSvc.updateEthscriptionOwner(hashId, ethscript.owner, txn.to);
-    Logger.log('Updated ethscript owner (transfer event)', `Hash: ${ethscript.hashId} -- To: ${to.toLowerCase()}`);
+    Logger.log(
+      `Updated ethscript owner to ${this.utilSvc.shorten(txn.to)} (transfer event)`,
+      this.utilSvc.shorten(ethscript.hashId)
+    );
 
     return {
       txId: txn.hash + (index || txn.transactionIndex),
@@ -546,7 +563,10 @@ export class ProcessingServiceL1 {
 
     // Update the eth phunk owner
     await this.sbSvc.updateEthscriptionOwner(ethscript.hashId, ethscript.owner, to);
-    Logger.log('Updated ethscript owner (contract event)', `Hash: ${ethscript.hashId} -- To: ${to.toLowerCase()}`);
+    Logger.log(
+      `Updated ethscript owner to ${this.utilSvc.shorten(txn.to)} (contract event)`,
+      this.utilSvc.shorten(ethscript.hashId)
+    );
 
     return {
       txId: txn.hash + (log?.logIndex || txn.transactionIndex || new Date().getTime()),
@@ -668,7 +688,10 @@ export class ProcessingServiceL1 {
     if (!validHashes.length) return [];
 
     const events = [];
-    Logger.debug(`Processing batch transfer (${l1Chain})`, txn.hash);
+    Logger.debug(
+      `Processing batch transfer (${l1Chain})`,
+      this.utilSvc.shorten(txn.hash)
+    );
     for (let i = 0; i < validHashes.length; i++) {
       try {
         const hashId = validHashes[i].toLowerCase();
@@ -809,7 +832,10 @@ export class ProcessingServiceL1 {
         // Write the failed listing to a file
         try { await mkdir('./failed'); } catch (error) {}
         await writeFile(`./failed/${hashId}.json`, JSON.stringify({ txn: txn.hash, phunk }));
-        Logger.error('Listing not created by previous owner', `${hashId.toLowerCase()}`);
+        Logger.error(
+          'Listing not created by previous owner',
+          this.utilSvc.shorten(hashId)
+        );
 
         // Since this listing will STILL overwrite existing listings
         // on the smart contract, we must delete it from the database

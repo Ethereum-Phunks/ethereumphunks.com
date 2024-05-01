@@ -4,6 +4,8 @@ import { createClient } from '@supabase/supabase-js';
 import { Transaction, hexToString, zeroAddress } from 'viem';
 import { writeFile } from 'fs/promises';
 
+import { UtilityService } from '@/utils/utility.service';
+
 import {
   Event,
   ShaResponse,
@@ -30,6 +32,10 @@ const supabase = createClient(supabaseUrl, serviceRole);
 @Injectable()
 export class SupabaseService {
   suffix = process.env.CHAIN_ID === '1' ? '' : '_sepolia';
+
+  constructor(
+    private readonly utilSvc: UtilityService
+  ) {}
 
   async updateLastBlock(blockNumber: number, createdAt: Date): Promise<void> {
     const response = await supabase
@@ -122,7 +128,10 @@ export class SupabaseService {
 
     const { error } = response;
     if (error) return Logger.error(error.details, error.message);
-    Logger.log('Listing created', hashId);
+    Logger.log(
+      'Listing created',
+      this.utilSvc.shorten(hashId)
+    );
   }
 
   async removeListing(hashId: string): Promise<boolean> {
@@ -138,7 +147,10 @@ export class SupabaseService {
     const { data, error } = response;
     if (error) throw error;
 
-    Logger.log('Removed listing', hashId);
+    Logger.log(
+      'Removed listing',
+      this.utilSvc.shorten(hashId)
+    );
     return true;
   }
 
@@ -305,7 +317,10 @@ export class SupabaseService {
 
     const { error } = response;
     if (error) throw error.message;
-    Logger.log(`${events.length} events created`, `Block ${events[0].blockNumber.toString()}`);
+    Logger.log(
+      `${events.length} events created}`,
+      `Block ${events[0].blockNumber.toString()}`
+    );
   }
 
   async getOrCreateUser(address: string, createdAt?: Date): Promise<User> {
