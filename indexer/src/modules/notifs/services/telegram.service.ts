@@ -4,9 +4,9 @@ import { AxiosResponse } from 'axios';
 import { HttpService } from '@nestjs/axios';
 
 import { catchError, firstValueFrom, map } from 'rxjs';
+import FormData from 'form-data';
 
 import dotenv from 'dotenv';
-import FormData from 'form-data';
 dotenv.config();
 
 @Injectable()

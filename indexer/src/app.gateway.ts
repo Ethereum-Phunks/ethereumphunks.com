@@ -5,6 +5,9 @@ import { OnGatewayConnection, OnGatewayDisconnect, OnGatewayInit, WebSocketGatew
 
 import { CustomLogger } from './services/logger.service';
 
+import dotenv from 'dotenv';
+dotenv.config();
+
 const chain = process.env.CHAIN_ID === '1' ? 'mainnet' : 'sepolia';
 
 @WebSocketGateway({cors: {
