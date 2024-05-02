@@ -1,9 +1,11 @@
-import { Inject, Logger } from '@nestjs/common';
+import { Logger } from '@nestjs/common';
 
 import { Server, Socket } from 'socket.io';
-import { ConnectedSocket, MessageBody, OnGatewayConnection, OnGatewayDisconnect, OnGatewayInit, SubscribeMessage, WebSocketGateway, WebSocketServer } from '@nestjs/websockets';
+import { OnGatewayConnection, OnGatewayDisconnect, OnGatewayInit, WebSocketGateway, WebSocketServer } from '@nestjs/websockets';
 
 import { CustomLogger } from './services/logger.service';
+
+const chain = process.env.CHAIN_ID === '1' ? 'mainnet' : 'sepolia';
 
 @WebSocketGateway({cors: {
   origin: '*', // [] or '*' for all origins
@@ -24,17 +26,17 @@ export class AppGateway implements OnGatewayInit, OnGatewayConnection, OnGateway
     if (!this.server) return;
 
     this.logger.singleLog$.subscribe((logItem) => {
-      if (logItem) this.server.emit('log', logItem);
+      if (logItem) this.server.emit(`log_${chain}`, logItem);
     });
 
     this.logger.logCollection$.subscribe((logItems) => {
-      if (logItems?.length) this.server.emit('logs', logItems);
+      if (logItems?.length) this.server.emit(`logs_${chain}`, logItems);
     });
   }
 
   handleConnection(client: Socket, ...args: any[]) {
     Logger.verbose(client.id, 'Client connected');
-    client.emit('logs', this.logger.getLogs());
+    client.emit(`logs_${chain}`, this.logger.getLogs());
   }
 
   handleDisconnect(client: Socket, ...args: any[]) {
