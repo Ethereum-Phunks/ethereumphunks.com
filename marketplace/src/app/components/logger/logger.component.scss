@@ -1,0 +1,54 @@
+@import 'abstracts/variables';
+@import 'abstracts/mixins';
+
+@font-face {
+  font-family: 'Color Basic';
+  src: url('/assets/fonts/color-basic.woff2') format('woff2'),
+       url('/assets/fonts/color-basic.woff') format('woff');
+  font-weight: normal;
+  font-style: normal;
+}
+
+:host {
+  display: block;
+  width: 100%;
+  height: 100%;
+
+  font-size: .8rem;
+  font-family: 'Color Basic', monospace;
+  font-weight: 400;
+  text-transform: uppercase;
+}
+
+.scroller-wrapper {
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+
+  padding: .5rem 2rem .5rem .5rem;
+
+  background-color: rgba(var(--dark-grey), 1);
+  border: .2rem solid rgba(var(--base-color), 1);
+}
+
+.log-item {
+  padding: .15rem .5rem;
+  word-break: break-all;
+
+  &.log {
+    color: rgba(var(--transferred-color), 1);
+  }
+
+  &.debug {
+    color: rgba(var(--pink), 1);
+  }
+
+  .timestamp {
+    color: rgba(var(--base-color), 1);
+    padding-right: .5rem;
+  }
+
+  .param {
+    color: rgba(var(--escrow-color), 1);
+  }
+}

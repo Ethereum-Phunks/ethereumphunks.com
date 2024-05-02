@@ -156,8 +156,6 @@ export class MenuComponent {
     const males = traitCounts?.['Sex:Male'] || 0;
     const females = traitCounts?.['Sex:Female'] || 0;
 
-    // console.log(`Males: ${males}, Females: ${females}`);
-
     // Remove the counts for "Male" and "Female" to get rare traits excluding "Sex"
     delete traitCounts?.['Sex:Male'];
     delete traitCounts?.['Sex:Female'];

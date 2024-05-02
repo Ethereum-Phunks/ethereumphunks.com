@@ -23,24 +23,6 @@
     "paths": {
       "@/*": [
         "src/app/*"
-      ],
-      "stream": [
-        "./node_modules/readable-stream"
-      ],
-      "crypto": [
-        "./node_modules/crypto-browserify"
-      ],
-      "assert": [
-        "./node_modules/assert"
-      ],
-      "http": [
-        "./node_modules/stream-http"
-      ],
-      "https": [
-        "./node_modules/https-browserify"
-      ],
-      "os": [
-        "./node_modules/os-browserify"
       ]
     },
     "lib": [

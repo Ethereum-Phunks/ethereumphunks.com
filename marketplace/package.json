@@ -1,5 +1,5 @@
 {
-  "name": "ether-phunks-market",
+  "name": "etherphunks-market",
   "version": "2.1.0",
   "scripts": {
     "ng": "ng",
@@ -8,7 +8,7 @@
     "build:sepolia": "ng build --configuration sepolia",
     "build:mainnet": "ng build --configuration mainnet",
     "test": "ng test",
-    "run-built": "http-server dist/ether-phunks-market -p 8000",
+    "run-built": "http-server dist/etherphunks-market -p 8000",
     "translate": "ng extract-i18n --output-path src/locale",
     "translate:json": "ng extract-i18n --output-path src/locale --format=json"
   },
@@ -44,6 +44,7 @@
     "ng-lazyload-image": "^9.1.3",
     "ngforage": "^10.0.0",
     "ngx-pagination": "^6.0.3",
+    "ngx-socket-io": "^4.6.1",
     "ngx-timeago": "^3.0.0",
     "rxjs": "^7.4.0",
     "svgson": "^5.3.1",

@@ -3,7 +3,7 @@
   "version": 1,
   "newProjectRoot": "projects",
   "projects": {
-    "ether-phunks-market": {
+    "etherphunks-market": {
       "projectType": "application",
       "schematics": {
         "@schematics/angular:component": {
@@ -21,7 +21,7 @@
           "builder": "@angular-devkit/build-angular:browser-esbuild",
           "options": {
             "optimization": true,
-            "outputPath": "dist/ether-phunks-market",
+            "outputPath": "dist/etherphunks-market",
             "index": "src/index.html",
             "main": "src/main.ts",
             "polyfills": "src/polyfills.ts",
@@ -77,6 +77,7 @@
               ]
             },
             "sepolia": {
+              "outputPath": "dist/etherphunks-market-sepolia",
               "budgets": [
                 {
                   "type": "initial",
@@ -95,9 +96,14 @@
                   "with": "src/environments/environment.sepolia.ts"
                 }
               ],
+              "index": {
+                "input": "src/index.sepolia.html",
+                "output": "index.html"
+              },
               "outputHashing": "all"
             },
             "mainnet": {
+              "outputPath": "dist/etherphunks-market-mainnet",
               "budgets": [
                 {
                   "type": "initial",
@@ -116,6 +122,10 @@
                   "with": "src/environments/environment.mainnet.ts"
                 }
               ],
+              "index": {
+                "input": "src/index.mainnet.html",
+                "output": "index.html"
+              },
               "outputHashing": "all"
             }
           },
@@ -125,16 +135,16 @@
           "builder": "@angular-devkit/build-angular:dev-server",
           "configurations": {
             "dev-sepolia": {
-              "buildTarget": "ether-phunks-market:build:dev-sepolia"
+              "buildTarget": "etherphunks-market:build:dev-sepolia"
             },
             "dev-mainnet": {
-              "buildTarget": "ether-phunks-market:build:dev-mainnet"
+              "buildTarget": "etherphunks-market:build:dev-mainnet"
             },
             "sepolia": {
-              "buildTarget": "ether-phunks-market:build:sepolia"
+              "buildTarget": "etherphunks-market:build:sepolia"
             },
             "mainnet": {
-              "buildTarget": "ether-phunks-market:build:mainnet"
+              "buildTarget": "etherphunks-market:build:mainnet"
             }
           },
           "defaultConfiguration": "development"
@@ -142,7 +152,7 @@
         "extract-i18n": {
           "builder": "@angular-devkit/build-angular:extract-i18n",
           "options": {
-            "buildTarget": "ether-phunks-market:build"
+            "buildTarget": "etherphunks-market:build"
           }
         }
       }

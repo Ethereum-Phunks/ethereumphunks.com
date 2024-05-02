@@ -18,7 +18,10 @@
 
 <app-footer />
 <app-notifications />
-<app-status-bar />
+
+<div class="status-wrapper">
+  <app-status-bar />
+</div>
 
 @if ((chatActive$ | async); as active) {
   <app-modal

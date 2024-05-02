@@ -1,21 +1,46 @@
+@if ((logs$ | async); as logs) {
+  @if (expanded) {
+    <app-logger [logs]="logs" />
+  }
+}
+
 @if (blocks$ | async; as blocks) {
   <div
     class="blocks-wrapper"
-    [title]="(blocks[0] - blocks[1]) ? (blocks[0] - blocks[1]) + ' blocks behind' : 'synced'">
+    [class.active]="expanded"
+    [title]="(blocks[0] - blocks[1]) ? (blocks[0] - blocks[1]) + ' blocks behind' : 'synced'"
+    (click)="expandCollapse()">
 
-    <div class="block">
-      <div class="label">Current</div>
-      <div class="value">{{ blocks[0] || 'waiting..' }}</div>
+    @if ((gasSvc.gas$ | async); as gas) {
+      <div class="gas">
+        {{ gas.ProposeGasPrice }} Gwei
+      </div>
+    }
+
+    <div class="indexer">
+      <div class="block">
+        <div class="label">Current</div>
+        <div class="value">{{ blocks[0] || 'waiting..' }}</div>
+      </div>
+
+      <div
+        class="block"
+        [class]="(blocks[0] - blocks[1]) < 4 ? levels[(blocks[0] - blocks[1])] : blocks[1] ? 'bad' : ''">
+
+        <div class="label">Indexer</div>
+        <div class="value">{{ blocks[1] || 'waiting..' }}</div>
+      </div>
     </div>
 
-    <div class="block" [class]="(blocks[0] - blocks[1]) < 4 ? levels[(blocks[0] - blocks[1])] : blocks[1] ? 'bad' : ''">
-      <div class="label">Indexer</div>
-      <div class="value">{{ blocks[1] || 'waiting..' }}</div>
-    </div>
+    <button
+      class="expand-button"
+      [class.active]="expanded">
 
-    <!-- <div class="block">
-      <div class="label">Behind</div>
-      <div class="value">{{ blocks[2] }}</div>
-    </div> -->
+      <ng-template [ngTemplateOutlet]="arrowIcon" />
+    </button>
   </div>
 }
+
+<ng-template #arrowIcon>
+  <svg height="15" viewBox="0 0 25 15" width="25" xmlns="http://www.w3.org/2000/svg"><path d="m10 5v5h5v5h-5v-5h-5v-5zm-5-5v5h-5v-5zm15 5v5h-5v-5zm5-5v5h-5v-5z"/></svg>
+</ng-template>

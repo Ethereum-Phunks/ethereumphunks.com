@@ -20,3 +20,10 @@ main {
   background-color: rgba(var(--base-color), 1);
   pointer-events: none;
 }
+
+.status-wrapper {
+  position: fixed;
+  z-index: 993;
+  bottom: 0;
+  right: 0;
+}

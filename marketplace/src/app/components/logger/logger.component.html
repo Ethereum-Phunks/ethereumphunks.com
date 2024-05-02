@@ -1,0 +1,8 @@
+<div #scroller class="scroller-wrapper">
+  @for (log of logs(); track log.timestamp) {
+    <div class="log-item" [class]="log.type | lowercase">
+      <span class="timestamp">{{ log.timestamp | date : 'HH:mm:ss' }}</span>
+      <span class="param">{{ log.optionalParams[0] ? '[' + log.optionalParams[0] + ']' : '' }}</span> {{ log.message }}
+    </div>
+  }
+</div>

@@ -16,10 +16,13 @@ import { StatusBarComponent } from '@/components/status-bar/status-bar.component
 import { ModalComponent } from '@/components/shared/modal/modal.component';
 import { ChatComponent } from '@/components/chat/chat.component';
 import { CollectionsComponent } from '@/components/collections/collections.component';
+import { LoggerComponent } from './components/logger/logger.component';
 
 import { Web3Service } from '@/services/web3.service';
 import { DataService } from '@/services/data.service';
 import { ThemeService } from '@/services/theme.service';
+import { SocketService } from '@/services/socket.service';
+import { GasService } from './services/gas.service';
 
 import { selectChatActive } from '@/state/selectors/chat.selectors';
 
@@ -38,6 +41,7 @@ import { asyncScheduler, fromEvent } from 'rxjs';
     LazyLoadImageModule,
     IntersectionObserverModule,
 
+    LoggerComponent,
     MenuComponent,
     CollectionsComponent,
     HeaderComponent,
@@ -62,8 +66,11 @@ export class AppComponent {
     public dataSvc: DataService,
     public web3Svc: Web3Service,
     public themeSvc: ThemeService,
-    private router: Router
+    private router: Router,
+    private socketSvc: SocketService,
+    private gasSvc: GasService,
   ) {
+
     this.store.dispatch(appStateActions.setTheme({ theme: 'initial' }));
 
     this.store.dispatch(dataStateActions.fetchCollections());
