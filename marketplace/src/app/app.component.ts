@@ -16,7 +16,8 @@ import { StatusBarComponent } from '@/components/status-bar/status-bar.component
 import { ModalComponent } from '@/components/shared/modal/modal.component';
 import { ChatComponent } from '@/components/chat/chat.component';
 import { CollectionsComponent } from '@/components/collections/collections.component';
-import { LoggerComponent } from './components/logger/logger.component';
+import { LoggerComponent } from '@/components/status-bar/logger/logger.component';
+import { BrbComponent } from '@/components/brb/brb.component';
 
 import { Web3Service } from '@/services/web3.service';
 import { DataService } from '@/services/data.service';
@@ -32,6 +33,7 @@ import * as marketStateActions from '@/state/actions/market-state.actions';
 
 import { debounceTime, filter, observeOn, scan, tap } from 'rxjs/operators';
 import { asyncScheduler, fromEvent } from 'rxjs';
+import { environment } from 'src/environments/environment';
 
 @Component({
   standalone: true,
@@ -49,7 +51,9 @@ import { asyncScheduler, fromEvent } from 'rxjs';
     NotificationsComponent,
     StatusBarComponent,
     ModalComponent,
-    ChatComponent
+    ChatComponent,
+
+    BrbComponent
   ],
   selector: 'app-root',
   templateUrl: './app.component.html',
@@ -57,6 +61,8 @@ import { asyncScheduler, fromEvent } from 'rxjs';
 })
 
 export class AppComponent {
+
+  env = environment;
 
   chatActive$ = this.store.select(selectChatActive);
 
@@ -70,13 +76,10 @@ export class AppComponent {
     private socketSvc: SocketService,
     private gasSvc: GasService,
   ) {
-
     this.store.dispatch(appStateActions.setTheme({ theme: 'initial' }));
-
     this.store.dispatch(dataStateActions.fetchCollections());
     this.store.dispatch(dataStateActions.fetchLeaderboard());
     this.store.dispatch(appStateActions.fetchActiveMultiplier());
-
     this.store.dispatch(marketStateActions.fetchMarketData());
 
     this.router.events.pipe(
@@ -125,6 +128,10 @@ export class AppComponent {
     ).subscribe();
 
     this.setIsMobile();
+
+    if (this.env.maintenanceMode) {
+      document.body.style.overflow = 'hidden';
+    }
   }
 
   setIsMobile(): void {

@@ -28,8 +28,6 @@ import { Account, Log, PublicClient, TransactionReceipt, WatchBlockNumberReturnT
 
 const marketAddress = environment.marketAddress;
 const pointsAddress = environment.pointsAddress;
-// const auctionAddress = environment.auctionAddress;
-// const donationsAddress = environment.donationsAddress;
 
 const projectId = 'd183619f342281fd3f3ff85716b6016a';
 
@@ -245,11 +243,10 @@ export class Web3Service {
     if (!publicClient) throw new Error('No public client');
 
     const paused = await this.readMarketContract('paused', []);
+    const maintenance = environment.maintenanceMode;
 
-    // console.log({ paused, whitelist, functionName });
-    // const whitelist = ['batchOfferPhunkForSale', 'offerPhunkForSale', 'phunkNoLongerForSale', 'withdrawPhunk'];
-    // if (paused && whitelist.indexOf(functionName) === -1) throw new Error('Contract is paused');
     if (paused) throw new Error('Contract is paused');
+    if (maintenance) throw new Error('In maintenance mode');
 
     const tx: any = {
       address: marketAddress as `0x${string}`,
@@ -261,8 +258,6 @@ export class Web3Service {
     if (value) tx.value = value;
 
     const { request, result } = await publicClient.simulateContract(tx);
-    // console.log(request, result);
-
     return await walletClient?.writeContract(request);
   }
 

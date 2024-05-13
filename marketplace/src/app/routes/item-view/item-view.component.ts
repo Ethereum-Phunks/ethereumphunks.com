@@ -630,10 +630,4 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
     const res = await this.dataSvc.checkConsensus([phunk]);
     if (!res[0]?.consensus) throw new Error('Consensus not reached. Contact Support @etherphunks');
   }
-
-  // async sendToAuction(hashId: string) {
-  //   const proof = await firstValueFrom(this.dataSvc.fetchProofs(hashId));
-  //   console.log(proof);
-  //   await this.web3Svc.transferPhunk(proof, environment.auctionAddress);
-  // }
 }

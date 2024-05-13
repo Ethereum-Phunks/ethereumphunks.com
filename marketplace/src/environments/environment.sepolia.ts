@@ -2,6 +2,8 @@ export const environment = {
   env: 'sepolia',
   production: true,
   chainId: 11155111,
+  maintenanceMode: false,
+
   rpcHttpProvider: 'https://eth-sepolia.g.alchemy.com/v2/yPJzT7r3rcFmI4ekjA9S7S1SP688b-au',
   explorerUrl: 'https://sepolia.etherscan.io',
 
@@ -10,15 +12,10 @@ export const environment = {
   pointsAddress: '0x2a953aa14e986b0595a0c5201dd267391bf7d39d'.toLowerCase(),
   donationsAddress: '0x26e8fd77346b4b006c5df61f9706581933560f12'.toLowerCase(),
   marketAddress: '0x3dfbc8c62d3ce0059bdaf21787ec24d5d116fe1e'.toLowerCase(),
-  // auctionAddress: '0xc6a824D8cce7c946A3F35879694b9261A36fc823'.toLowerCase(),
   bridgeAddress: '0xE492425712642c560a8dAa8dCa333FA34Dd51C6c'.toLowerCase(),
 
   relayUrl: 'http://localhost:3069',
   staticUrl: 'https://kcbuycbhynlmsrvoegzp.supabase.co/storage/v1/object/public',
-
-  // Local
-  // supabaseUrl: 'http://localhost:8000',
-  // supabaseKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyAgCiAgICAicm9sZSI6ICJhbm9uIiwKICAgICJpc3MiOiAic3VwYWJhc2UtZGVtbyIsCiAgICAiaWF0IjogMTY0MTc2OTIwMCwKICAgICJleHAiOiAxNzk5NTM1NjAwCn0.dc_X5iR_VP_qT0zsiyj_I_OZ2T9FtRU2BBNWN8Bu4GE',
 
   // Prod
   supabaseUrl: 'https://kcbuycbhynlmsrvoegzp.supabase.co',

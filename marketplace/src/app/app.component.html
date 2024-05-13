@@ -31,3 +31,7 @@
     <app-chat />
   </app-modal>
 }
+
+@if (env.maintenanceMode) {
+  <app-brb />
+}
