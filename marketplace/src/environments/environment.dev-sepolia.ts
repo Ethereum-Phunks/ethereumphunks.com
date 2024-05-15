@@ -2,7 +2,6 @@ export const environment = {
   env: 'dev-sepolia',
   production: false,
   chainId: 11155111,
-  maintenanceMode: true,
 
   rpcHttpProvider: 'http://geth.sepolia-geth.dappnode:8545',
   explorerUrl: 'https://sepolia.etherscan.io',
@@ -14,7 +13,7 @@ export const environment = {
   marketAddress: '0x3dfbc8c62d3ce0059bdaf21787ec24d5d116fe1e'.toLowerCase(),
   bridgeAddress: '0xE492425712642c560a8dAa8dCa333FA34Dd51C6c'.toLowerCase(),
 
-  relayUrl: 'http://localhost:3003',
+  relayUrl: 'http://localhost:3069',
   staticUrl: 'https://kcbuycbhynlmsrvoegzp.supabase.co/storage/v1/object/public',
 
   // Prod

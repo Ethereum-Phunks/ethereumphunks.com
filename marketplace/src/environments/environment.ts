@@ -2,7 +2,6 @@ export const environment = {
   env: 'dev-sepolia',
   production: false,
   chainId: 11155111,
-  maintenanceMode: false,
 
   rpcHttpProvider: 'http://geth.sepolia-geth.dappnode:8545',
   explorerUrl: 'https://sepolia.etherscan.io',

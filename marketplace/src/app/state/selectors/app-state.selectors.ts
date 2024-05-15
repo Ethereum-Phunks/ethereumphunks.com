@@ -113,3 +113,8 @@ export const selectCollectionsMenuActive = createSelector(
   selectAppState,
   (appState: AppState) => appState.collectionsMenuActive
 );
+
+export const selectAdminState = createSelector(
+  selectAppState,
+  (appState: AppState) => appState.admin
+);

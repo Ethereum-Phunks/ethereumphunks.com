@@ -7,7 +7,7 @@ import { environment } from 'src/environments/environment';
 import { GlobalState } from '@/models/global-state';
 import { Phunk } from '@/models/db';
 
-import { Observable, catchError, filter, of, tap } from 'rxjs';
+import { Observable, catchError, filter, firstValueFrom, of, tap } from 'rxjs';
 
 import PointsAbi from '@/abi/Points.json';
 import DonationsAbi from '@/abi/Contributions.json';
@@ -60,6 +60,8 @@ export class Web3Service {
 
   config!: Config;
   modal!: Web3Modal;
+
+  adminState$ = this.store.select(state => state.appState.admin);
 
   constructor(
     private store: Store<GlobalState>,
@@ -243,7 +245,7 @@ export class Web3Service {
     if (!publicClient) throw new Error('No public client');
 
     const paused = await this.readMarketContract('paused', []);
-    const maintenance = environment.maintenanceMode;
+    const { maintenance } = await firstValueFrom(this.adminState$);
 
     if (paused) throw new Error('Contract is paused');
     if (maintenance) throw new Error('In maintenance mode');

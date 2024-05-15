@@ -148,7 +148,7 @@
                   }
 
                   <!-- Bridge button -->
-                  <!-- @if ((owner | lowercase) === (address | lowercase)) {
+                  @if ((owner | lowercase) === (address | lowercase)) {
                     <button class="bridge" [class.active]="bridgeActive" (click)="bridgePhunkAction()">
                       <span>Bridge</span>
                       <ng-container *ngTemplateOutlet="pending; context:{ $implicit: 'bridgePhunk' }" />
@@ -157,7 +157,7 @@
 
                   @if (bridgeActive) {
                     <ng-container *ngTemplateOutlet="bridgeForm; context:{ $implicit: phunk }" />
-                  } -->
+                  }
                 }
 
               } @else {

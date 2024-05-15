@@ -59,6 +59,9 @@ export class DataService {
   ) {
 
     this.createListeners();
+    this.listenForBlocks();
+    this.listenAdmin();
+
     this.fetchUSDPrice();
 
     // this.fetchStats().subscribe((res: any) => {
@@ -85,11 +88,43 @@ export class DataService {
           this.store.dispatch(dataStateActions.dbEventTriggered({ payload }));
         },
       ).subscribe();
+  }
 
-    this.listenForBlocks();
+  listenAdmin() {
+    supabase
+      .from('admin')
+      .select('*')
+      .eq('network', environment.chainId)
+      .limit(1)
+      .then(({ data, error }) => {
+        console.log({ data, error })
+        if (error) return;
+        this.store.dispatch(appStateActions.setAdmin({ admin: data[0] }));
+      });
+
+    supabase
+      .channel('admin')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'admin' },
+        (payload) => {
+          const admin: any = payload.new;
+          if (admin.network !== environment.chainId) return;
+          this.store.dispatch(appStateActions.setAdmin({ admin }));
+        },
+      ).subscribe();
   }
 
   listenForBlocks() {
+    supabase
+      .from('blocks')
+      .select('blockNumber')
+      .eq('network', environment.chainId)
+      .then((res: any) => {
+        const blockNumber = res.data[0]?.blockNumber || 0;
+        this.store.dispatch(appStateActions.setIndexerBlock({ indexerBlock: blockNumber }));
+      })
+
     supabase
       .channel('blocks')
       .on(
@@ -100,15 +135,6 @@ export class DataService {
           this.store.dispatch(appStateActions.setIndexerBlock({ indexerBlock: payload.new.blockNumber }));
         },
       ).subscribe();
-
-    supabase
-      .from('blocks')
-      .select('blockNumber')
-      .eq('network', environment.chainId)
-      .then((res: any) => {
-        const blockNumber = res.data[0]?.blockNumber || 0;
-        this.store.dispatch(appStateActions.setIndexerBlock({ indexerBlock: blockNumber }));
-      })
   }
 
   getFloor(): number {

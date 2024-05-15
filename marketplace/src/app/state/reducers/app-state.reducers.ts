@@ -34,6 +34,10 @@ export const initialState: AppState = {
 
   modalActive: false,
   collectionsMenuActive: false,
+
+  admin: {
+    maintenance: false,
+  }
 };
 
 export const appStateReducer: ActionReducer<AppState, Action> = createReducer(
@@ -208,4 +212,11 @@ export const appStateReducer: ActionReducer<AppState, Action> = createReducer(
     };
     return setCollectionsMenuActive
   }),
+  on(actions.setAdmin, (state, { admin }) => {
+    const setAdmin = {
+      ...state,
+      admin
+    };
+    return setAdmin
+  })
 );

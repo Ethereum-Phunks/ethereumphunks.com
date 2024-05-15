@@ -24,6 +24,7 @@ import { GlobalState } from '@/models/global-state';
 import * as dataStateSelectors from '@/state/selectors/data-state.selectors';
 import * as appStateSelectors from '@/state/selectors/app-state.selectors';
 import * as marketStateSelectors from '@/state/selectors/market-state.selectors';
+import { BrbComponent } from '@/components/brb/brb.component';
 
 @Component({
   standalone: true,
@@ -37,6 +38,7 @@ import * as marketStateSelectors from '@/state/selectors/market-state.selectors'
     SplashComponent,
     PhunkGridComponent,
     RecentActivityComponent,
+    BrbComponent,
 
     WeiToEthPipe,
     CalcPipe,
@@ -60,6 +62,8 @@ export class IndexComponent {
 
   isMobile$ = this.store.select(appStateSelectors.selectIsMobile);
   usd$ = this.store.select(dataStateSelectors.selectUsd);
+
+  adminState$ = this.store.select(appStateSelectors.selectAdminState);
 
   constructor(
     private store: Store<GlobalState>,

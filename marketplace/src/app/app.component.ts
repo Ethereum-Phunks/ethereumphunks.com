@@ -17,7 +17,6 @@ import { ModalComponent } from '@/components/shared/modal/modal.component';
 import { ChatComponent } from '@/components/chat/chat.component';
 import { CollectionsComponent } from '@/components/collections/collections.component';
 import { LoggerComponent } from '@/components/status-bar/logger/logger.component';
-import { BrbComponent } from '@/components/brb/brb.component';
 
 import { Web3Service } from '@/services/web3.service';
 import { DataService } from '@/services/data.service';
@@ -52,8 +51,6 @@ import { environment } from 'src/environments/environment';
     StatusBarComponent,
     ModalComponent,
     ChatComponent,
-
-    BrbComponent
   ],
   selector: 'app-root',
   templateUrl: './app.component.html',
@@ -128,10 +125,6 @@ export class AppComponent {
     ).subscribe();
 
     this.setIsMobile();
-
-    if (this.env.maintenanceMode) {
-      document.body.style.overflow = 'hidden';
-    }
   }
 
   setIsMobile(): void {

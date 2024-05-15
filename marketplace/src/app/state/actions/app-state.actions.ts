@@ -165,3 +165,8 @@ export const setCollectionsMenuActive = createAction(
   '[App State] Set Collections Menu Active',
   props<{ collectionsMenuActive: boolean }>()
 );
+
+export const setAdmin = createAction(
+  '[App State] Set Admin State',
+  props<{ admin: any }>()
+);

@@ -2,7 +2,6 @@ export const environment = {
   env: 'dev-mainnet',
   production: false,
   chainId: 1,
-  maintenanceMode: false,
 
   rpcHttpProvider: 'http://nethermind.public.dappnode:8545',
   explorerUrl: 'https://etherscan.io',

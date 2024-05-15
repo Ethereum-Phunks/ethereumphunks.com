@@ -2,7 +2,6 @@ export const environment = {
   env: 'sepolia',
   production: true,
   chainId: 11155111,
-  maintenanceMode: true,
 
   rpcHttpProvider: 'https://eth-sepolia.g.alchemy.com/v2/yPJzT7r3rcFmI4ekjA9S7S1SP688b-au',
   explorerUrl: 'https://sepolia.etherscan.io',

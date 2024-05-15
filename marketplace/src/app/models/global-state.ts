@@ -43,6 +43,10 @@ export interface AppState {
 
   modalActive: boolean;
   collectionsMenuActive: boolean;
+
+  admin: {
+    maintenance: boolean;
+  }
 }
 
 export interface ChatState {
