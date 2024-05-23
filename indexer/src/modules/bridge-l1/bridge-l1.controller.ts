@@ -1,8 +1,8 @@
 import { Body, Controller, Get, Post, Query } from '@nestjs/common';
 
-import { NonceService } from '@/modules/bridge/services/nonce.service';
-import { VerificationService } from '@/modules/bridge/services/verification.service';
-import { SignatureBody } from '@/modules/bridge/models/bridge.model';
+import { NonceService } from '@/modules/bridge-l1/services/nonce.service';
+import { VerificationService } from '@/modules/bridge-l1/services/verification.service';
+import { SignatureBody } from '@/modules/bridge-l1/models/bridge.model';
 
 @Controller()
 export class BridgeController {

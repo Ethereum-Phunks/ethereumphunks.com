@@ -1,15 +1,15 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 
 import { WriteContractParameters, parseEventLogs } from 'viem';
 import { catchError, firstValueFrom, map, of } from 'rxjs';
 
-import { ImageUriService } from '@/modules/bridge/services/image.service';
+import { ImageUriService } from '@/modules/bridge-l1/services/image-uri.service';
 import { SupabaseService } from '@/services/supabase.service';
-import { Web3Service } from '@/services/web3.service';
-import { UtilityService } from '@/utils/utility.service';
+import { Web3Service } from '@/modules/shared/services/web3.service';
+import { UtilityService } from '@/modules/shared/services/utility.service';
 
-import { bridgeAbiL2, l1Client, l2Client, l2WalletClient } from '@/constants/ethereum';
+import { bridgeAbiL2, l2Client, l2WalletClient } from '@/constants/ethereum';
 
 import dotenv from 'dotenv';
 dotenv.config();
@@ -17,10 +17,14 @@ dotenv.config();
 @Injectable()
 export class MintService {
 
+  private mintQueue: { hashId: string; owner: string }[] = [];
+  private isProcessing = false;
+
   constructor(
+    @Inject('WEB3_SERVICE_L1') private readonly web3SvcL1: Web3Service,
+    @Inject('WEB3_SERVICE_L2') private readonly web3SvcL2: Web3Service,
     private readonly http: HttpService,
     private readonly sbSvc: SupabaseService,
-    private readonly web3Svc: Web3Service,
     private readonly imageSvc: ImageUriService,
     private readonly utilSvc: UtilityService
   ) {}
@@ -37,28 +41,27 @@ export class MintService {
     owner: string
   ): Promise<void> {
     try {
-      await this.web3Svc.waitNBlocks(10);
-      const request = await this.createMintRequest(hashId, owner);
-      await this.mintToken(request);
+      await this.web3SvcL1.waitNBlocks(Number(process.env.BRIDGE_L1_BLOCK_DELAY));
+      await this.addMintRequest(hashId, owner);
     } catch (error) {
       console.error(error);
     }
   }
 
   async mintToken(request: WriteContractParameters) {
-    const hash = await l2WalletClient.writeContract(request);
-    console.log({ hash });
-    const receipt = await this.web3Svc.waitForTransactionReceiptL2(hash);
-    console.log({ receipt });
+    try {
+      const hash = await l2WalletClient.writeContract(request);
+      const receipt = await this.web3SvcL2.waitForTransactionReceipt(hash);
 
-    const logs = parseEventLogs({
-      abi: bridgeAbiL2,
-      logs: receipt.logs,
-    })
+      const logs = parseEventLogs({
+        abi: bridgeAbiL2,
+        logs: receipt.logs,
+      });
 
-    logs.forEach((log: any) => {
-      console.log(log.args);
-    });
+      logs.forEach((log: any) => console.log(log.args));
+    } catch (error) {
+      console.error(error);
+    }
   }
 
   /**
@@ -82,7 +85,7 @@ export class MintService {
     const imageUri = await this.imageSvc.createImageUri(sha);
     const metadata = this.createMetadata(hashId, tokenId, name, singleName, imageUri, values);
 
-    console.log({ hashId, owner, tokenId });
+    // console.log({ hashId, owner, tokenId });
 
     const { request } = await l2Client.simulateContract({
       account: l2WalletClient.account,
@@ -114,7 +117,7 @@ export class MintService {
       args: [hashId]
     });
 
-    const response = await l1Client.readContract(request);
+    const response = await l2Client.readContract(request);
     return response;
   }
 
@@ -195,5 +198,29 @@ export class MintService {
         })
       )
     );
+  }
+
+  private async addMintRequest(hashId: string, owner: string) {
+    this.mintQueue.push({ hashId, owner });
+    if (!this.isProcessing) this.processNext();
+  }
+
+  private async processNext() {
+    if (this.mintQueue.length === 0) {
+      this.isProcessing = false;
+      return;
+    }
+
+    this.isProcessing = true;
+    const { hashId, owner } = this.mintQueue.shift();
+
+    try {
+      const request = await this.createMintRequest(hashId, owner);
+      await this.mintToken(request);
+    } catch (error) {
+      console.error('Error processing mint request:', error);
+    } finally {
+      setTimeout(() => this.processNext(), 2000);
+    }
   }
 }

@@ -2,32 +2,31 @@ import { Injectable, Logger } from '@nestjs/common';
 import { InjectQueue, OnQueueActive, OnQueueCompleted, OnQueueError, OnQueueFailed, OnQueuePaused, OnQueueResumed, OnQueueWaiting, Process, Processor } from '@nestjs/bull';
 import { Job, Queue } from 'bull';
 
-import { MintService } from '@/modules/bridge/services/mint.service';
-import { l1Chain } from '@/constants/ethereum';
+import { MintService } from '@/modules/bridge-l1/services/mint.service';
+import { chain } from '@/constants/ethereum';
 
 import dotenv from 'dotenv';
 dotenv.config();
 
 @Injectable()
-@Processor(`bridgeProcessingQueue_${l1Chain}`)
+@Processor(`${chain}__BridgeProcessingQueue`)
 export class BridgeQueueService {
 
-  @Process({ name: `bridgeQueue_${l1Chain}`, concurrency: 1 })
-  async handleBlockNumberQueue(job: Job<any>) {
+  @Process({ name: `${chain}__BridgeQueue`, concurrency: 5 })
+  async handleBridgeQueue(job: Job<any>) {
     Logger.debug(`Processing job ${job.id}`);
     // if (!Number(process.env.QUEUE)) return;
     const { hashId, owner } = job.data;
-
     await this.mintSvc.processLayer2Mint(hashId, owner);
   }
 
-  @OnQueueCompleted({ name: `bridgeQueue_${l1Chain}` })
+  @OnQueueCompleted({ name: `${chain}__BridgeQueue` })
   async onCompleted(job: Job<any>) {
     // if (!Number(process.env.QUEUE)) return;
     Logger.debug(`Completed job ${job.id}`);
   }
 
-  @OnQueueFailed({ name: `bridgeQueue_${l1Chain}` })
+  @OnQueueFailed({ name: `${chain}__BridgeQueue` })
   async onBlockFailed(job: Job<any>, error: Error) {
     // if (!Number(process.env.QUEUE)) return;
 
@@ -37,12 +36,12 @@ export class BridgeQueueService {
     // this.queue.resume();
   }
 
-  @OnQueueError({ name: `bridgeQueue_${l1Chain}` })
+  @OnQueueError({ name: `${chain}__BridgeQueue` })
   async onBlockError(error: Error) {
     // Logger.error(`Error ${error}`);
   }
 
-  @OnQueueActive({ name: `bridgeQueue_${l1Chain}` })
+  @OnQueueActive({ name: `${chain}__BridgeQueue` })
   async onBlockActive(job: Job<any>) {
     // When a job is processing
     // Logger.debug(`Active job ${job.id}`);
@@ -68,7 +67,7 @@ export class BridgeQueueService {
   }
 
   constructor(
-    @InjectQueue(`bridgeProcessingQueue_${l1Chain}`) private readonly queue: Queue,
+    @InjectQueue(`${chain}__BridgeProcessingQueue`) private readonly bridgeQueue: Queue,
     private mintSvc: MintService
   ) {}
 }

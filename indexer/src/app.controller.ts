@@ -1,14 +1,14 @@
 import { Body, Controller, Post } from '@nestjs/common';
 
-import { ProcessingServiceL1 } from './services/processing.service';
-import { BlockProcessingService } from './modules/queue/services/block-processing.service';
+import { ProcessingService } from '@/services/processing.service';
+import { BlockProcessingQueue } from '@/modules/queue/queues/block-processing.queue';
 
-@Controller()
+@Controller('admin')
 export class AppController {
 
   constructor(
-    private readonly processingSvc: ProcessingServiceL1,
-    private readonly queue: BlockProcessingService,
+    private readonly processingSvc: ProcessingService,
+    private readonly blockQueue: BlockProcessingQueue,
   ) {}
 
   /**
@@ -29,7 +29,7 @@ export class AppController {
    */
   @Post('pause-block-queue')
   async pauseQueue(): Promise<void> {
-    return await this.queue.pauseQueue();
+    return await this.blockQueue.pauseQueue();
   }
 
   /**
@@ -39,6 +39,6 @@ export class AppController {
    */
   @Post('resume-block-queue')
   async resumeQueue(): Promise<void> {
-    return await this.queue.resumeQueue();
+    return await this.blockQueue.resumeQueue();
   }
 }

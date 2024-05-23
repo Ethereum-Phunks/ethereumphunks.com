@@ -30,10 +30,13 @@ export class CustomLogger extends ConsoleLogger {
   }
 
   log(message: any, ...optionalParams: [...any, string?, string?]): void {
-    // console.log('CustomLogger.log', message, optionalParams);
+
+    const shortenedMessage = this.shortenHexStrings(message) as string;
+    const shortenedOptionalParams = optionalParams.map((param) => this.shortenHexStrings(param));
+
     this.singleLog.next({
-      message,
-      optionalParams,
+      message: shortenedMessage,
+      optionalParams: shortenedOptionalParams,
       timestamp: new Date().toISOString(),
       type: 'log',
     });
@@ -42,9 +45,13 @@ export class CustomLogger extends ConsoleLogger {
   }
 
   debug(message: any, ...optionalParams: [...any, string?, string?]): void {
+
+    const shortenedMessage = this.shortenHexStrings(message) as string;
+    const shortenedOptionalParams = optionalParams.map((param) => this.shortenHexStrings(param));
+
     this.singleLog.next({
-      message,
-      optionalParams,
+      message: shortenedMessage,
+      optionalParams: shortenedOptionalParams,
       timestamp: new Date().toISOString(),
       type: 'debug',
     });
@@ -53,9 +60,13 @@ export class CustomLogger extends ConsoleLogger {
   }
 
   error(message: any, ...optionalParams: [...any, string?, string?]): void {
+
+    const shortenedMessage = this.shortenHexStrings(message) as string;
+    const shortenedOptionalParams = optionalParams.map((param) => this.shortenHexStrings(param));
+
     this.singleLog.next({
-      message,
-      optionalParams,
+      message: shortenedMessage,
+      optionalParams: shortenedOptionalParams,
       timestamp: new Date().toISOString(),
       type: 'error',
     });
@@ -67,4 +78,17 @@ export class CustomLogger extends ConsoleLogger {
     return this.logCollection.getValue() || [];
   }
 
+  shortenHexStrings(message: string): string {
+    try {
+      return message?.replace(/0x[a-fA-F0-9]+/g, (match) => {
+        if (match.length > 10) {
+          return match.substring(0, 6) + '...' + match.substring(match.length - 4);
+        } else {
+          return match;
+        }
+      });
+    } catch (error) {
+      return message;
+    }
+  }
 }

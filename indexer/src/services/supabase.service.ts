@@ -1,10 +1,9 @@
 import { Injectable, Logger } from '@nestjs/common';
 
 import { createClient } from '@supabase/supabase-js';
+
 import { Transaction, hexToString, zeroAddress } from 'viem';
 import { writeFile } from 'fs/promises';
-
-import { UtilityService } from '@/utils/utility.service';
 
 import {
   Event,
@@ -26,16 +25,11 @@ dotenv.config();
 
 const supabaseUrl = process.env.SUPABASE_URL;
 const serviceRole = process.env.SUPABASE_SERVICE_ROLE;
-
 const supabase = createClient(supabaseUrl, serviceRole);
 
 @Injectable()
 export class SupabaseService {
   suffix = process.env.CHAIN_ID === '1' ? '' : '_sepolia';
-
-  constructor(
-    private readonly utilSvc: UtilityService
-  ) {}
 
   async updateLastBlock(blockNumber: number, createdAt: Date): Promise<void> {
     const response = await supabase
@@ -112,7 +106,7 @@ export class SupabaseService {
     createdAt: Date,
     hashId: string,
     toAddress: string,
-    minValue: bigint
+    minValue: bigint,
   ): Promise<void> {
     const response: ListingResponse = await supabase
       .from('listings' + this.suffix)
@@ -130,7 +124,7 @@ export class SupabaseService {
     if (error) return Logger.error(error.details, error.message);
     Logger.log(
       'Listing created',
-      this.utilSvc.shorten(hashId)
+      hashId
     );
   }
 
@@ -149,7 +143,7 @@ export class SupabaseService {
 
     Logger.log(
       'Removed listing',
-      this.utilSvc.shorten(hashId)
+      hashId
     );
     return true;
   }
@@ -318,7 +312,7 @@ export class SupabaseService {
     const { error } = response;
     if (error) throw error.message;
     Logger.log(
-      `${events.length} events created}`,
+      `${events.length} events added (L1)`,
       `Block ${events[0].blockNumber.toString()}`
     );
   }
@@ -655,6 +649,19 @@ export class SupabaseService {
     // await writeFile('tree.json', JSON.stringify(cleanPhunks));
   }
 
+  async getEventByHashId(hashId: string): Promise<Event> {
+    const response: EventResponse = await supabase
+      .from('events' + this.suffix)
+      .select('*')
+      .order('blockTimestamp', { ascending: false })
+      .eq('hashId', hashId.toLowerCase());
+
+    const { data, error } = response;
+
+    if (error) throw error;
+    if (data?.length) return data[0];
+  }
+
   ////////////////////////////////////////////////////////////////////////////////
   // Bridge //////////////////////////////////////////////////////////////////////
   ////////////////////////////////////////////////////////////////////////////////
@@ -685,6 +692,57 @@ export class SupabaseService {
     const { data, error } = response;
     if (error) throw error;
     return data[0].locked;
+  }
+
+  ////////////////////////////////////////////////////////////////////////////////
+  // L2 //////////////////////////////////////////////////////////////////////////
+  ////////////////////////////////////////////////////////////////////////////////
+
+  async addNftL2(
+    tokenId: number,
+    owner: string,
+    hashId: string,
+  ): Promise<void> {
+    const response: EventResponse = await supabase
+      .from('nfts' + this.suffix)
+      .upsert({
+        tokenId,
+        owner: owner.toLowerCase(),
+        hashId: hashId.toLowerCase(),
+      });
+
+    const { error } = response;
+    if (error) throw error;
+  }
+
+  async updateNftL2(tokenId: number, owner: string): Promise<void> {
+    const response: EventResponse = await supabase
+      .from('nfts' + this.suffix)
+      .update({ owner: owner.toLowerCase() })
+      .eq('tokenId', tokenId);
+
+    const { error } = response;
+    if (error) throw error;
+  }
+
+  async removeNftL2(tokenId: number, hashId: string): Promise<void> {
+    const response: EventResponse = await supabase
+      .from('nfts' + this.suffix)
+      .delete()
+      .eq('hashId', hashId)
+      .eq('tokenId', tokenId);
+
+    const { error } = response;
+    if (error) throw error;
+  }
+
+  async addEventL2(event: any): Promise<void> {
+    const response: EventResponse = await supabase
+      .from('l2_events' + this.suffix)
+      .upsert(event);
+
+    const { error } = response;
+    if (error) throw error;
   }
 
 }

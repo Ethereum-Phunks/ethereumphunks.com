@@ -1,25 +1,36 @@
 import { Module } from '@nestjs/common';
 import { HttpModule } from '@nestjs/axios';
 
+import { SharedModule } from '@/modules/shared/shared.module';
+
 import { TelegramService } from '@/modules/notifs/services/telegram.service';
 import { DiscordService } from '@/modules/notifs/services/discord.service';
 import { ImageService } from '@/modules/notifs/services/image.service';
 
-import { Web3Service } from '@/services/web3.service';
 import { SupabaseService } from '@/services/supabase.service';
-import { UtilityService } from '@/utils/utility.service';
+
+import { NotifsService } from './notifs.service';
+import { NotifsController } from './notifs.controller';
 
 @Module({
+  controllers: [
+    NotifsController
+  ],
   imports: [
-    HttpModule
+    HttpModule,
+    SharedModule
   ],
   providers: [
+    NotifsService,
+
     TelegramService,
     DiscordService,
-    SupabaseService,
     ImageService,
-    Web3Service,
-    UtilityService
+
+    SupabaseService
   ],
+  exports: [
+    NotifsService
+  ]
 })
 export class NotifsModule {}

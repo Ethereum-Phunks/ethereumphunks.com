@@ -3,34 +3,34 @@ import { Injectable, Logger } from '@nestjs/common';
 import { InjectQueue } from '@nestjs/bull';
 import { Queue } from 'bull';
 
-import { l1Chain, l2Chain } from '@/constants/ethereum';
+import { chain, l2Chain } from '@/constants/ethereum';
 
 import dotenv from 'dotenv';
 dotenv.config();
 
 @Injectable()
-export class BridgeProcessingService {
+export class BridgeProcessingQueue {
 
   constructor(
-    @InjectQueue(`bridgeProcessingQueue_${l1Chain}`) private readonly bridgeQueue: Queue
+    @InjectQueue(`${chain}__BridgeProcessingQueue`) private readonly bridgeQueue: Queue
   ) {}
 
   async addHashLockedToQueue(
     hashId: string,
-    owner: string
+    owner: string,
   ) {
-    const jobId = `bridge_${hashId}__${l1Chain}`;
+    const jobId = `${chain}__hash_${hashId}`.toUpperCase();
     const maxRetries = 69;
 
     const existingJob = await this.bridgeQueue.getJob(jobId);
     if (existingJob) {
       await existingJob.remove();
-      Logger.error('⚠️', `Updated existing job for hashId ${hashId}`);
+      Logger.warn('⚠️', `Updated existing job for hashId ${hashId}`);
     }
 
     await this.bridgeQueue.add(
-      `bridgeQueue_${l1Chain}`,
-      { hashId, owner, retryCount: 0, maxRetries, },
+      `${chain}__BridgeQueue`,
+      { hashId, owner, retryCount: 0, maxRetries, delay: 2000 },
       { jobId, removeOnComplete: true, removeOnFail: false, }
     );
     Logger.debug(`Added bridge job to queue`, `${hashId}`);
@@ -40,7 +40,7 @@ export class BridgeProcessingService {
   //   hashId: string,
   //   owner: string
   // ) {
-  //   const jobId = `bridge_${hashId}__${l2Chain}`;
+  //   const jobId = `l1Bridge_${hashId}__${l2Chain}`;
   //   const maxRetries = 69;
 
   //   const existingJob = await this.bridgeQueue.getJob(jobId);
@@ -50,7 +50,7 @@ export class BridgeProcessingService {
   //   }
 
   //   await this.bridgeQueue.add(
-  //     `bridgeQueue_${l1Chain}`,
+  //     `${chain}__BridgeQueue`,
   //     { hashId, owner, retryCount: 0, maxRetries, },
   //     { jobId, removeOnComplete: true, removeOnFail: false, }
   //   );

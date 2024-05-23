@@ -1,27 +1,36 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 
-import { BlockProcessingService } from '@/modules/queue/services/block-processing.service';
+import { BlockProcessingQueue } from '@/modules/queue/queues/block-processing.queue';
+import { BridgeProcessingQueue } from '@/modules/queue/queues/bridge-processing.queue';
 
 import { SupabaseService } from '@/services/supabase.service';
-import { ProcessingServiceL1 } from '@/services/processing.service';
 
-import { UtilityService } from '@/utils/utility.service';
-import { l1Chain } from './constants/ethereum';
+import { UtilityService } from '@/modules/shared/services/utility.service';
+import { Web3Service } from '@/modules/shared/services/web3.service';
+
+import { chain, l1Client } from '@/constants/ethereum';
 
 import dotenv from 'dotenv';
 dotenv.config();
+
+const chainId = Number(process.env.CHAIN_ID);
 
 @Injectable()
 export class AppService {
 
   constructor(
-    private readonly blockSvc: BlockProcessingService,
-    private readonly processSvc: ProcessingServiceL1,
+    @Inject('WEB3_SERVICE_L1') private readonly web3SvcL1: Web3Service,
+    private readonly blockQueue: BlockProcessingQueue,
+    private readonly bridgeQueue: BridgeProcessingQueue,
     private readonly sbSvc: SupabaseService,
     private readonly utilSvc: UtilityService
   ) {
-    this.blockSvc.clearQueue().then(() => {
-      Logger.debug('Queue Cleared', l1Chain.toUpperCase());
+
+    Promise.all([
+      this.blockQueue.clearQueue(),
+      this.bridgeQueue.clearQueue()
+    ]).then(() => {
+      Logger.debug('Queue Cleared', chain.toUpperCase());
       this.startIndexer();
     });
   }
@@ -35,37 +44,85 @@ export class AppService {
   async startIndexer(): Promise<void> {
     try {
       await this.utilSvc.delay(10000);
-      await this.blockSvc.pauseQueue();
+      await this.blockQueue.pauseQueue();
 
-      const startBlock = (await this.sbSvc.getLastBlock(Number(process.env.CHAIN_ID)));
-
-      Logger.debug('Starting Backfill', l1Chain.toUpperCase());
-      await this.processSvc.startBackfill(startBlock);
-      await this.blockSvc.resumeQueue();
-
-      Logger.debug('Starting Block Watcher', l1Chain.toUpperCase());
-      await this.processSvc.startPolling();
+      const startBlock = (await this.sbSvc.getLastBlock(chainId));
+      await this.startBackfill(startBlock);
+      await this.blockQueue.resumeQueue();
+      await this.startPolling();
 
     } catch (error) {
       Logger.error(error);
       this.startIndexer();
     }
   }
+
+  /**
+   * Starts the backfill process from a specified block number.
+   *
+   * @param startBlock - The block number to start the backfill from.
+   * @returns A Promise that resolves when the backfill process is complete.
+   * @throws An error if the start block is greater than the latest block.
+   */
+  async startBackfill(startBlock: number): Promise<void> {
+    const latestBlock = await this.web3SvcL1.getBlock();
+
+    Logger.debug('Starting Backfill', chain.toUpperCase());
+
+    const latestBlockNum = Number(latestBlock.number);
+    if (startBlock > latestBlockNum) throw new Error('RPC Error: Start block is greater than latest block');
+
+    while (startBlock < latestBlockNum) {
+      await this.addBlockToQueue(startBlock, new Date().getTime());
+      startBlock++;
+    }
+  }
+
+  /**
+   * Starts polling for new blocks and adds them to the queue.
+   *
+   * @returns A promise that resolves when the polling is started.
+   * @throws If an error occurs while polling.
+   */
+  async startPolling(): Promise<void> {
+    Logger.debug('Starting Block Watcher', chain.toUpperCase());
+
+    return new Promise((resolve, reject) => {
+      // Watch for new blocks and add them to the queue
+      const unwatch = l1Client.watchBlocks({
+        // blockTag: 'safe',
+        emitMissed: true,
+        includeTransactions: false,
+        onBlock: async (block) => {
+          try {
+            const blockNum = Number(block.number);
+            const timestamp = new Date(Number(block.timestamp) * 1000).getTime();
+            await this.addBlockToQueue(blockNum, timestamp);
+          } catch (error) {
+            unwatch();
+            reject(error); // Reject the promise on error
+          }
+        },
+        onError: (error) => {
+          console.log(error);
+          unwatch(); // Unwatch the blocks
+          reject(error); // Reject the promise on error
+        }
+      });
+    });
+  }
+
+  /**
+   * Adds a block to the processing queue.
+   *
+   * @param blockNum - The block number to add to the queue.
+   * @param blockTimestamp - The timestamp of the block to add to the queue.
+   * @returns A Promise that resolves when the block is added to the queue.
+   */
+  async addBlockToQueue(
+    blockNum: number,
+    blockTimestamp: number
+  ): Promise<void> {
+    await this.blockQueue.addBlockToQueue(blockNum, blockTimestamp);
+  }
 }
-
-// this.bridgeSvc.addBridgeToQueue(
-//   '0xeca65bfbdffbbe9274911599351d12df8575a95da14d65719e3d6da3b1fd65d5',
-//   '0xf1aa941d56041d47a9a18e99609a047707fe96c7',
-//   Number(process.env.CHAIN_ID)
-// );
-
-// this.mintSvc.createMintRequest(
-//   '0xfbb90d955f2ad3e3a0e77ac6fce322e3fff60ff6684b872b26c2b81f5daf4031',
-//   '0xf1aa941d56041d47a9a18e99609a047707fe96c7'
-// ).then((req) => {
-//   // console.log(req);
-// });
-
-// this.mintSvc.validateTokenMint(
-//   '0xa9080447f05810063ec35075898aa5813b53b8866ba5e509199bd5cb7883fe24'
-// );

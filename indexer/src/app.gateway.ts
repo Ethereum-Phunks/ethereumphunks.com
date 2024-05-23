@@ -3,15 +3,15 @@ import { Logger } from '@nestjs/common';
 import { Server, Socket } from 'socket.io';
 import { OnGatewayConnection, OnGatewayDisconnect, OnGatewayInit, WebSocketGateway, WebSocketServer } from '@nestjs/websockets';
 
-import { CustomLogger } from './services/logger.service';
+import { CustomLogger } from '@/modules/shared/services/logger.service';
+
+import { chain } from '@/constants/ethereum';
 
 import dotenv from 'dotenv';
 dotenv.config();
 
-const chain = process.env.CHAIN_ID === '1' ? 'mainnet' : 'sepolia';
-
 @WebSocketGateway({cors: {
-  origin: '*', // [] or '*' for all origins
+  origin: '*',
   methods: ['GET'],
 }})
 export class AppGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect {

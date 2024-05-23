@@ -1,31 +1,26 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { HttpModule } from '@nestjs/axios';
-
 import { BullModule } from '@nestjs/bull';
 
-import { BlockProcessingService } from '@/modules/queue/services/block-processing.service';
+import { SharedModule } from '@/modules/shared/shared.module';
+import { BridgeL1Module } from '@/modules/bridge-l1/bridge-l1.module';
+
+import { BlockProcessingQueue } from '@/modules/queue/queues/block-processing.queue';
 import { BlockQueueService } from '@/modules/queue/services/block-queue.service';
 
-import { BridgeProcessingService } from '@/modules/queue/services/bridge-processing.service';
+import { BridgeProcessingQueue } from '@/modules/queue/queues/bridge-processing.queue';
 import { BridgeQueueService } from '@/modules/queue/services/bridge-queue.service';
 
-import { TelegramService } from '@/modules/notifs/services/telegram.service';
+import { ProcessingService } from '@/services/processing.service';
 
-import { ProcessingServiceL1 } from '@/services/processing.service';
-import { Web3Service } from '@/services/web3.service';
+import { chain } from '@/constants/ethereum';
 import { SupabaseService } from '@/services/supabase.service';
-import { DataService } from '@/services/data.service';
+import { EthscriptionsModule } from '../ethscriptions/ethscriptions.module';
+import { NftModule } from '../nft/nft.module';
 
-import { TimeService } from '@/utils/time.service';
-import { UtilityService } from '@/utils/utility.service';
-
-import { DiscordService } from '@/modules/notifs/services/discord.service';
-import { ImageService } from '@/modules/notifs/services/image.service';
-
-import { MintService } from '@/modules/bridge/services/mint.service';
-import { ImageUriService } from '@/modules/bridge/services/image.service';
-
-import { l1Chain } from '@/constants/ethereum';
+// import { EthscriptionsService } from '../ethscriptions/services/ethscriptions.service';
+// import { DiscordService } from '../notifs/services/discord.service';
+// import { ImageService } from '../notifs/services/image.service';
 
 @Module({
   imports: [
@@ -38,37 +33,35 @@ import { l1Chain } from '@/constants/ethereum';
     }),
     BullModule.registerQueue(
       {
-        name: `blockProcessingQueue_${l1Chain}`
+        name: `${chain}__BlockProcessingQueue`
       },
       {
-        name: `bridgeProcessingQueue_${l1Chain}`
+        name: `${chain}__BridgeProcessingQueue`
       }
     ),
+    SharedModule,
+    BridgeL1Module,
+    NftModule,
+
+    forwardRef(() => EthscriptionsModule),
   ],
   providers: [
     BlockQueueService,
-    BlockProcessingService,
+    BlockProcessingQueue,
 
     BridgeQueueService,
-    BridgeProcessingService,
+    BridgeProcessingQueue,
 
-    ProcessingServiceL1,
-    MintService,
-    Web3Service,
+    ProcessingService,
     SupabaseService,
-    UtilityService,
-    TimeService,
-    DataService,
-    ImageUriService,
 
-    TelegramService,
-    DiscordService,
-    ImageService
+    // EthscriptionsService,
+    // DiscordService,
+    // ImageService,
   ],
   exports: [
-    BlockProcessingService,
-    BridgeProcessingService,
-    TimeService
+    BlockProcessingQueue,
+    BridgeProcessingQueue
   ],
 })
 export class QueueModule {}

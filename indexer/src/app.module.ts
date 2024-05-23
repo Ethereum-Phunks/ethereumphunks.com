@@ -1,62 +1,57 @@
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module, RequestMethod } from '@nestjs/common';
 import { HttpModule } from '@nestjs/axios';
 
+import { SharedModule } from '@/modules/shared/shared.module';
 import { QueueModule } from '@/modules/queue/queue.module';
 import { NotifsModule } from '@/modules/notifs/notifs.module';
-import { BridgeModule } from '@/modules/bridge/bridge.module';
-import { ImageUriService } from '@/modules/bridge/services/image.service';
-import { TelegramService } from '@/modules/notifs/services/telegram.service';
-import { DiscordService } from '@/modules/notifs/services/discord.service';
-import { ImageService } from '@/modules/notifs/services/image.service';
-import { MintService } from '@/modules/bridge/services/mint.service';
+import { BridgeL1Module } from '@/modules/bridge-l1/bridge-l1.module';
+import { CardModule } from '@/modules/card/card.module';
+import { NftModule } from '@/modules/nft/nft.module';
+import { BridgeL2Module } from '@/modules/bridge-l2/bridge-l2.module';
+import { EthscriptionsModule } from '@/modules/ethscriptions/ethscriptions.module';
 
 import { AppService } from '@/app.service';
 import { AppController } from '@/app.controller';
-import { AppGateway } from './app.gateway';
+import { AppGateway } from '@/app.gateway';
 
-import { Web3Service } from '@/services/web3.service';
 import { DataService } from '@/services/data.service';
 import { SupabaseService } from '@/services/supabase.service';
-import { ProcessingServiceL1 } from '@/services/processing.service';
+import { ProcessingService } from '@/services/processing.service';
 
-import { UtilityService } from '@/utils/utility.service';
-import { LayerTwoModule } from './modules/layer-two/layer-two.module';
-import { CustomLogger } from './services/logger.service';
+import { ApiKeyMiddleware } from '@/middleware/api-key.middleware';
 
 @Module({
   imports: [
     HttpModule,
 
-    QueueModule,
-    BridgeModule,
-    NotifsModule,
-    LayerTwoModule,
-  ],
-  controllers: [
-    AppController
-  ],
-  providers: [
+    NftModule,
+    BridgeL2Module,
 
+    EthscriptionsModule,
+    QueueModule,
+    BridgeL1Module,
+
+    NotifsModule,
+    CardModule,
+    SharedModule,
+  ],
+  controllers: [AppController],
+  providers: [
     AppService,
     AppGateway,
-    // Web3 Service handles all interactions with the Ethereum network
-    Web3Service,
-    // Supabase Service handles all interactions with the Supabase database
     SupabaseService,
-    // Processing Service handles the logic of processing transactions
-    ProcessingServiceL1,
-    // Data Service handles the logic of processing data
+    ProcessingService,
     DataService,
-    TelegramService,
-    DiscordService,
-    ImageService,
-    MintService,
-    ImageUriService,
-
-    // Utility Service handles utility functions
-    UtilityService,
-    CustomLogger,
   ],
 })
 
-export class AppModule {}
+export class AppModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer
+      .apply(ApiKeyMiddleware)
+      .forRoutes({
+        path: '/admin/*',
+        method: RequestMethod.ALL
+      });
+  }
+}

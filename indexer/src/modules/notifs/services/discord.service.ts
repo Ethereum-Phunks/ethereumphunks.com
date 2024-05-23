@@ -1,7 +1,7 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 
 import { ImageService } from '@/modules/notifs/services/image.service';
-import { Web3Service } from '@/services/web3.service';
+import { Web3Service } from '@/modules/shared/services/web3.service';
 
 import { SupabaseService } from '@/services/supabase.service';
 import { Event } from '@/models/db';
@@ -19,9 +19,9 @@ export class DiscordService {
   private client: Client;
 
   constructor(
+    @Inject('WEB3_SERVICE_L1') private readonly web3Svc: Web3Service,
     private readonly imgSvc: ImageService,
     private readonly sbSvc: SupabaseService,
-    private readonly web3Svc: Web3Service,
   ) {}
 
   // Initialize the bot
@@ -65,10 +65,12 @@ export class DiscordService {
     if (!fmatAddress) fmatAddress = items[0].owner.slice(0, 6) + '...' + items[0].owner.slice(-4);
     const description = `By ${fmatAddress}\nFor ${value} ETH`;
 
+    const baseUrl = chainId === 1 ? 'https://ethereumphunks.com' : 'https://sepolia.ethereumphunks.com';
+
     const single = items.length === 1;
     const count = items.length;
     const title = `${single ? '' : count} Phunk${single ? (' #' + items[0].tokenId + ' was') : 's were'} flipped`;
-    const link = single ? `https://${chainId === 1 ? 'etherphunks.eth.limo' : 'sepolia.ethereumphunks.com'}/#/details/${items[0].tokenId}` : `https://${chainId === 1 ? 'etherphunks.eth.limo' : 'sepolia.ethereumphunks.com'}`;
+    const link = single ? `${baseUrl}/#/details/${items[0].tokenId}` : `https://${baseUrl}`;
 
     const exampleEmbed = new EmbedBuilder()
       .setColor(0xC3FF00)

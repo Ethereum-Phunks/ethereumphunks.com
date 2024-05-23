@@ -146,6 +146,12 @@
       },
       {
         "indexed": true,
+        "internalType": "address",
+        "name": "owner",
+        "type": "address"
+      },
+      {
+        "indexed": true,
         "internalType": "bytes32",
         "name": "hashId",
         "type": "bytes32"
@@ -657,6 +663,11 @@
       {
         "internalType": "address",
         "name": "prevOwner",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "owner",
         "type": "address"
       }
     ],

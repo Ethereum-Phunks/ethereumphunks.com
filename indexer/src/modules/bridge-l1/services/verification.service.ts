@@ -1,15 +1,15 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Inject, Injectable } from '@nestjs/common';
 
 import { encodePacked, formatEther, hashMessage, keccak256, recoverAddress } from 'viem';
 import { privateKeyToAccount } from 'viem/accounts'
 
 import { SupabaseService } from '@/services/supabase.service';
-import { Web3Service } from '@/services/web3.service';
+import { Web3Service } from '@/modules/shared/services/web3.service';
 
-import { NonceService } from '@/modules/bridge/services/nonce.service';
-import { MintService } from '@/modules/bridge/services/mint.service';
+import { NonceService } from '@/modules/bridge-l1/services/nonce.service';
+import { MintService } from '@/modules/bridge-l1/services/mint.service';
 
-import { SignatureBody } from '@/modules/bridge/models/bridge.model';
+import { SignatureBody } from '@/modules/bridge-l1/models/bridge.model';
 
 import dotenv from 'dotenv';
 dotenv.config();
@@ -20,9 +20,9 @@ const prefix = process.env.CHAIN_ID === '1' ? '' : 'sepolia-';
 export class VerificationService {
 
   constructor(
+    @Inject('WEB3_SERVICE_L1') private readonly web3Svc: Web3Service,
     private readonly sbSvc: SupabaseService,
     private readonly nonceSvc: NonceService,
-    private readonly web3Svc: Web3Service,
     private readonly mintSvc: MintService
   ) {}
 
@@ -75,7 +75,7 @@ export class VerificationService {
 
     // Get the gas estimate
     const gasEstimate = await this.estimateGas(hashId, address);
-    console.log({ gasEstimate });
+    // console.log({ gasEstimate });
 
     // get signature for contract verification
     const nonce = await this.web3Svc.fetchNonce(address);
@@ -156,7 +156,7 @@ export class VerificationService {
     const gasCost = BigInt(gasUsedWei) * BigInt(Math.round(gasPriceWei));
     const etherCost = formatEther(gasCost);
 
-    console.log({ gasUsedWei, usdValue: usdValue * Number(etherCost) });
+    // console.log({ gasUsedWei, usdValue: usdValue * Number(etherCost) });
 
     return gasUsedWei;
   }
