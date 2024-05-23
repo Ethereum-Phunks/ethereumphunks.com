@@ -1,7 +1,6 @@
 import { Component, Input, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
-import { HttpClientModule } from '@angular/common/http';
 
 import { Store } from '@ngrx/store';
 
@@ -30,7 +29,6 @@ type EventLabels = {
   standalone: true,
   imports: [
     CommonModule,
-    HttpClientModule,
     RouterModule,
 
     LazyLoadImageModule,

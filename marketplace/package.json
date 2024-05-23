@@ -14,15 +14,15 @@
   },
   "private": true,
   "dependencies": {
-    "@angular/animations": "^17.3.5",
-    "@angular/common": "^17.3.5",
-    "@angular/compiler": "^17.3.5",
-    "@angular/core": "^17.3.5",
-    "@angular/forms": "^17.3.5",
-    "@angular/platform-browser": "^17.3.5",
-    "@angular/platform-browser-dynamic": "^17.3.5",
-    "@angular/router": "18.0.0-next.5",
-    "@angular/service-worker": "^17.3.5",
+    "@angular/animations": "^18.0.0",
+    "@angular/common": "^18.0.0",
+    "@angular/compiler": "^18.0.0",
+    "@angular/core": "^18.0.0",
+    "@angular/forms": "^18.0.0",
+    "@angular/platform-browser": "^18.0.0",
+    "@angular/platform-browser-dynamic": "^18.0.0",
+    "@angular/router": "18.0.0",
+    "@angular/service-worker": "^18.0.0",
     "@apollo/client": "^3.7.16",
     "@ng-select/ng-select": "^12.0.4",
     "@ng-web-apis/common": "^3.0.6",
@@ -57,16 +57,16 @@
     "zone.js": "~0.14.2"
   },
   "devDependencies": {
-    "@angular-devkit/build-angular": "^17.3.5",
-    "@angular/cli": "^17.3.5",
-    "@angular/compiler-cli": "^17.3.5",
-    "@angular/localize": "^17.3.5",
+    "@angular/build": "^18.0.0",
+    "@angular/cli": "^18.0.0",
+    "@angular/compiler-cli": "^18.0.0",
+    "@angular/localize": "^18.0.0",
     "@types/animejs": "^3.1.10",
     "@types/jasmine": "~3.6.0",
     "@types/node": "^12.11.1",
     "@types/react": "^17.0.15",
     "@types/tinycolor2": "^1.4.3",
     "@types/uuid": "^9.0.8",
-    "typescript": "5.2.2"
+    "typescript": "5.4.5"
   }
 }

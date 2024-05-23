@@ -18,13 +18,16 @@
       "prefix": "app",
       "architect": {
         "build": {
-          "builder": "@angular-devkit/build-angular:browser-esbuild",
+          "builder": "@angular/build:application",
           "options": {
             "optimization": true,
-            "outputPath": "dist/etherphunks-market",
+            "outputPath": {
+              "base": "dist/etherphunks-market"
+            },
             "index": "src/index.html",
-            "main": "src/main.ts",
-            "polyfills": "src/polyfills.ts",
+            "polyfills": [
+              "src/polyfills.ts"
+            ],
             "tsConfig": "tsconfig.app.json",
             "inlineStyleLanguage": "scss",
             "assets": [
@@ -43,15 +46,13 @@
               "src/scss/main.scss"
             ],
             "scripts": [],
-            "serviceWorker": true,
-            "ngswConfigPath": "ngsw-config.json",
-            "webWorkerTsConfig": "tsconfig.worker.json"
+            "serviceWorker": "ngsw-config.json",
+            "webWorkerTsConfig": "tsconfig.worker.json",
+            "browser": "src/main.ts"
           },
           "configurations": {
             "dev-sepolia": {
-              "buildOptimizer": false,
               "optimization": false,
-              "vendorChunk": true,
               "extractLicenses": false,
               "sourceMap": true,
               "namedChunks": true,
@@ -63,9 +64,7 @@
               ]
             },
             "dev-mainnet": {
-              "buildOptimizer": false,
               "optimization": false,
-              "vendorChunk": true,
               "extractLicenses": false,
               "sourceMap": true,
               "namedChunks": true,
@@ -77,7 +76,9 @@
               ]
             },
             "sepolia": {
-              "outputPath": "dist/etherphunks-market-sepolia",
+              "outputPath": {
+                "base": "dist/etherphunks-market-sepolia"
+              },
               "budgets": [
                 {
                   "type": "initial",
@@ -103,7 +104,9 @@
               "outputHashing": "all"
             },
             "mainnet": {
-              "outputPath": "dist/etherphunks-market-mainnet",
+              "outputPath": {
+                "base": "dist/etherphunks-market-mainnet"
+              },
               "budgets": [
                 {
                   "type": "initial",
@@ -132,7 +135,7 @@
           "defaultConfiguration": "production"
         },
         "serve": {
-          "builder": "@angular-devkit/build-angular:dev-server",
+          "builder": "@angular/build:dev-server",
           "configurations": {
             "dev-sepolia": {
               "buildTarget": "etherphunks-market:build:dev-sepolia"
@@ -150,7 +153,7 @@
           "defaultConfiguration": "development"
         },
         "extract-i18n": {
-          "builder": "@angular-devkit/build-angular:extract-i18n",
+          "builder": "@angular/build:extract-i18n",
           "options": {
             "buildTarget": "etherphunks-market:build"
           }

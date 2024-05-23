@@ -1,12 +1,11 @@
 import { importProvidersFrom, isDevMode } from '@angular/core';
 import { RouteReuseStrategy, provideRouter, withHashLocation } from '@angular/router';
-
-import { HttpClientModule } from '@angular/common/http';
+import { provideServiceWorker } from '@angular/service-worker';
+import { provideHttpClient } from '@angular/common/http';
 
 import { TimeagoClock, TimeagoDefaultClock, TimeagoDefaultFormatter, TimeagoFormatter } from 'ngx-timeago';
 
 import { CustomReuseStrategy } from '@/routes/route.strategy';
-
 import { DEFAULT_CONFIG } from 'ngforage';
 
 import { provideStore } from '@ngrx/store';
@@ -61,19 +60,14 @@ export const config = {
       // serialize: false
     }),
     provideRouterStore(),
-    importProvidersFrom(
-      HttpClientModule,
-    ),
+    provideHttpClient(),
     provideRouter(
       routes,
       withHashLocation(),
-      // withInMemoryScrolling({
-      //   scrollPositionRestoration: 'top',
-      // }),
     ),
-    // provideServiceWorker('ngsw-worker.js', {
-    //     enabled: !isDevMode(),
-    //     registrationStrategy: 'registerWhenStable:30000'
-    // })
+    provideServiceWorker('ngsw-worker.js', {
+        enabled: !isDevMode(),
+        registrationStrategy: 'registerWhenStable:30000'
+    })
 ]
 }
