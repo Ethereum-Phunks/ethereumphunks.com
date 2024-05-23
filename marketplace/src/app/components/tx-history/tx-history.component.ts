@@ -3,23 +3,28 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { HttpClientModule } from '@angular/common/http';
 
+import { Store } from '@ngrx/store';
+
 import { LazyLoadImageModule } from 'ng-lazyload-image';
 
 import { WalletAddressDirective } from '@/directives/wallet-address.directive';
 
 import { WeiToEthPipe } from '@/pipes/wei-to-eth.pipe';
 import { FormatCashPipe } from '@/pipes/format-cash.pipe';
-import { CamelCase2TitleCase } from '@/pipes/cc2tc.pipe';
 
 import { DataService } from '@/services/data.service';
+
+import { EventType, GlobalState, TxFunction } from '@/models/global-state';
+import { Phunk } from '@/models/db';
 
 import { environment } from 'src/environments/environment';
 import { ZERO_ADDRESS } from '@/constants/utils';
 
 import { BehaviorSubject, catchError, filter, map, of, switchMap } from 'rxjs';
-import { Store } from '@ngrx/store';
-import { GlobalState } from '@/models/global-state';
-import { Phunk } from '@/models/db';
+
+type EventLabels = {
+  [type in EventType]: string;
+};
 
 @Component({
   standalone: true,
@@ -33,8 +38,7 @@ import { Phunk } from '@/models/db';
     WalletAddressDirective,
 
     WeiToEthPipe,
-    FormatCashPipe,
-    CamelCase2TitleCase
+    FormatCashPipe
   ],
   selector: 'app-tx-history',
   templateUrl: './tx-history.component.html',
@@ -59,6 +63,19 @@ export class TxHistoryComponent implements OnChanges {
       return of([]);
     })
   );
+
+  eventLabels: Partial<EventLabels> = {
+    created: 'Created',
+    transfer: 'Transfer',
+    escrow: 'Escrow',
+    PhunkOffered: 'Offered',
+    PhunkBidEntered: 'Bid Entered',
+    PhunkBidWithdrawn: 'Bid Withdrawn',
+    PhunkBought: 'Bought',
+    PhunkNoLongerForSale: 'Offer Withdrawn',
+    bridgeOut: 'Lock',
+    bridgeIn: 'Unlock',
+  };
 
   constructor(
     private store: Store<GlobalState>,

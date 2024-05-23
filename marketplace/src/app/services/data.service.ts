@@ -286,7 +286,7 @@ export class DataService {
     );
   }
 
-  fetchSingleTokenEvents(hashId: string): Observable<any> {
+  fetchSingleTokenEvents(hashId: string): Observable<(Event & { [key: string]: string })[]> {
     const response = supabase
       .from('events' + this.prefix)
       .select(`
@@ -299,7 +299,7 @@ export class DataService {
     return from(response).pipe(
       map((res: any) => {
         return res.data.map((tx: any) => {
-          let type: string = tx.type;
+          let type: EventType = tx.type;
 
           if (tx.type === 'transfer') {
             if (tx.to.toLowerCase() === environment.marketAddress) type = 'escrow';
@@ -312,7 +312,7 @@ export class DataService {
             ...tx[`ethscriptions${this.prefix}`],
             type,
           };
-        });
+        }) as (Event & { [key: string]: string })[];
       }),
     );
   }
@@ -359,6 +359,17 @@ export class DataService {
   // SINGLE PHUNK //////////////////////////////////////////////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+  async getHashIdFromTokenId(tokenId: string): Promise<string | null> {
+    const query = supabase
+      .from('ethscriptions' + this.prefix)
+      .select('hashId')
+      .eq('tokenId', tokenId);
+
+    const res = await query;
+    if (res?.data?.length) return res.data[0]?.hashId;
+    return null;
+  }
+
   fetchSinglePhunk(tokenId: string): Observable<any> {
 
     let query = supabase
@@ -370,27 +381,38 @@ export class DataService {
         createdAt,
         owner,
         prevOwner,
-        collections${this.prefix}(singleName,slug,name,supply)
+        collections${this.prefix}(singleName,slug,name,supply),
+        nfts${this.prefix}(hashId,tokenId,owner)
       `)
       .limit(1);
 
-    if (tokenId.startsWith('0x')) query = query.eq('hashId', tokenId);
-    else query = query.eq('tokenId', tokenId);
-
-    return from(query).pipe(
+    return from(
+      tokenId.startsWith('0x') ? of(tokenId) : this.getHashIdFromTokenId(tokenId)
+    ).pipe(
+      switchMap((hashId: string | null) => {
+        if (hashId) query = query.eq('hashId', hashId)
+        return from(query);
+      }),
       map((res: any) => (res.data?.length ? res.data[0] : { tokenId })),
       map((phunk: any) => {
-        let collection = phunk[`collections${this.prefix}`];
-        let collectionName = collection?.name;
+
+        const collection = phunk[`collections${this.prefix}`];
+        const collectionName = collection?.name;
+
+        const nft = phunk[`nfts${this.prefix}`][0];
+        if (nft) delete nft?.hashId;
+
+        delete phunk[`nfts${this.prefix}`];
         delete phunk[`collections${this.prefix}`];
 
-        const newPhunk = { ...phunk, ...collection, collectionName } as Phunk;
+        const newPhunk = { ...phunk, ...collection, collectionName, nft } as Phunk;
         newPhunk.isEscrowed = phunk?.owner === environment.marketAddress;
         newPhunk.isBridged = phunk?.owner === environment.bridgeAddress;
         newPhunk.attributes = [];
 
         return newPhunk;
       }),
+      tap((res) => console.log('fetchSinglePhunk', res)),
       switchMap((res: Phunk) => forkJoin([
         this.addAttributes(res.slug, [res]),
         from(this.getListingFromHashId(res.hashId))
@@ -407,7 +429,6 @@ export class DataService {
           }),
         };
       }),
-      // tap((res) => console.log('fetchSinglePhunk', res)),
     );
   }
 
@@ -415,16 +436,21 @@ export class DataService {
     if (!hashId) return null;
 
     try {
-      const call = await this.web3Svc.readMarketContract('phunksOfferedForSale', [hashId]);
-      if (!call[0]) return null;
+      const [ callL1, callL2 ] = await Promise.all([
+        this.web3Svc.readMarketContract('phunksOfferedForSale', [hashId]),
+        this.web3Svc.phunksOfferedForSaleL2(hashId),
+      ]);
+
+      const offer = callL1[0] ? callL1 : callL2;
+      if (!offer[0]) return null;
 
       return {
         createdAt: new Date(),
-        hashId: call[1],
-        minValue: call[3].toString(),
-        listedBy: call[2],
-        toAddress: call[4],
-        listed: call[0],
+        hashId: offer[1],
+        minValue: offer[3].toString(),
+        listedBy: offer[2],
+        toAddress: offer[4],
+        listed: offer[0],
       };
     } catch (error) {
       console.log('getListingFromHashId', error);

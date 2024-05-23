@@ -11,7 +11,9 @@ export const environment = {
   pointsAddress: '0x2a953aa14e986b0595a0c5201dd267391bf7d39d'.toLowerCase(),
   donationsAddress: '0x26e8fd77346b4b006c5df61f9706581933560f12'.toLowerCase(),
   marketAddress: '0x3dfbc8c62d3ce0059bdaf21787ec24d5d116fe1e'.toLowerCase(),
-  bridgeAddress: '0xE492425712642c560a8dAa8dCa333FA34Dd51C6c'.toLowerCase(),
+  marketAddressL2: '0x3Dfbc8C62d3cE0059BDaf21787EC24d5d116fe1e'.toLowerCase(),
+  bridgeAddress: '0x1565f60D2469F18bBCc96B2C29220412F2Fe98Bd'.toLowerCase(),
+  bridgeAddressL2: '0x26e8fD77346b4B006C5Df61f9706581933560F12'.toLowerCase(),
 
   relayUrl: 'http://localhost:3069',
   staticUrl: 'https://kcbuycbhynlmsrvoegzp.supabase.co/storage/v1/object/public',

@@ -10,9 +10,11 @@ import { Phunk } from '@/models/db';
 import { Observable, catchError, filter, firstValueFrom, of, tap } from 'rxjs';
 
 import PointsAbi from '@/abi/Points.json';
-import DonationsAbi from '@/abi/Contributions.json';
+
 import { EtherPhunksMarketABI } from '@/abi/EtherPhunksMarket';
-import AuctionAbi from '@/abi/EtherPhunksAuctionHouse.json';
+import EtherPhunksBridgeL2 from '@/abi/EtherPhunksBridgeL2.json';
+
+import EtherPhunksNftMarket from '@/abi/EtherPhunksNftMarket.json';
 
 import { reconnect, http, createConfig, Config, watchAccount, getPublicClient, getAccount, disconnect, getChainId, getWalletClient, GetWalletClientReturnType, GetAccountReturnType } from '@wagmi/core';
 import { coinbaseWallet, walletConnect, injected } from '@wagmi/connectors';
@@ -24,10 +26,13 @@ import { magma } from '@/constants/magmaChain';
 
 import { Web3Modal } from '@web3modal/wagmi/dist/types/src/client';
 import { createWeb3Modal } from '@web3modal/wagmi';
-import { Account, Log, PublicClient, TransactionReceipt, WatchBlockNumberReturnType, WatchContractEventReturnType, createPublicClient, decodeFunctionData, formatEther, isAddress, parseEther, zeroAddress } from 'viem';
+
+import { PublicClient, TransactionReceipt, WatchBlockNumberReturnType, WatchContractEventReturnType, createPublicClient, decodeFunctionData, formatEther, isAddress, parseEther, zeroAddress } from 'viem';
 
 const marketAddress = environment.marketAddress;
+const marketAddressL2 = environment.marketAddressL2;
 const pointsAddress = environment.pointsAddress;
+const bridgeAddressL2 = environment.bridgeAddressL2;
 
 const projectId = 'd183619f342281fd3f3ff85716b6016a';
 
@@ -83,7 +88,7 @@ export class Web3Service {
       chains,
       transports: {
         [environment.chainId]: http(environment.rpcHttpProvider),
-        // 6969696969: http(environment.magmaRpcHttpProvider)
+        6969696969: http(environment.magmaRpcHttpProvider)
       },
       connectors: [
         walletConnect({ projectId, metadata, showQrModal: false }),
@@ -194,7 +199,7 @@ export class Web3Service {
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  // CONTRACT METHODS //////////////////////////////////////////////////////////////////////////////////////////////////
+  // L1 CONTRACT METHODS ///////////////////////////////////////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   async isInEscrow(tokenId: string): Promise<boolean> {
@@ -240,7 +245,7 @@ export class Web3Service {
 
     const chainId = getChainId(this.config);
     const walletClient = await getWalletClient(this.config, { chainId });
-    const publicClient = getPublicClient(this.config);
+    const publicClient = getPublicClient(this.config, { chainId });
 
     if (!publicClient) throw new Error('No public client');
 
@@ -274,7 +279,8 @@ export class Web3Service {
   }
 
   async waitForTransaction(hash: string): Promise<TransactionReceipt> {
-    const publicClient = getPublicClient(this.config);
+    const chainId = getChainId(this.config);
+    const publicClient = getPublicClient(this.config, { chainId });
     if (!publicClient) throw new Error('No public client');
     const transaction = await publicClient.waitForTransactionReceipt({ hash: hash as `0x${string}` });
     return transaction;
@@ -493,6 +499,127 @@ export class Web3Service {
       };
     }
     return combined;
+  }
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  // L2 CONTRACT METHODS ///////////////////////////////////////////////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  async phunksOfferedForSaleL2(hashId: string): Promise<any> {
+    try {
+      const tokenId = await this.readTokenContractL2('hashToToken', [hashId]);
+      const offer = await this.readMarketContractL2('phunksOfferedForSale', [tokenId]);
+      return offer;
+    } catch (error) {
+      console.log(error);
+      return null;
+    }
+  }
+
+  async offerPhunkForSaleL2(hashId: string, value: number, address?: string): Promise<string | undefined> {
+    const tokenId = await this.readTokenContractL2('hashToToken', [hashId]);
+    const weiValue = this.ethToWei(value);
+
+    const isApproved = await this.readTokenContractL2(
+      'isApprovedForAll',
+      [getAccount(this.config).address, marketAddressL2]
+    );
+
+    if (!isApproved) {
+      await this.writeTokenContractL2('setApprovalForAll', [marketAddressL2, true]);
+    }
+
+    if (address) {
+      if (!isAddress(address)) throw new Error('Invalid address');
+      return this.writeMarketContractL2('offerPhunkForSaleToAddress', [tokenId, weiValue, address]);
+    } else {
+      return this.writeMarketContractL2('offerPhunkForSale', [tokenId, weiValue]);
+    }
+  }
+
+  async phunkNoLongerForSaleL2(hashId: string): Promise<string | undefined> {
+    const tokenId = await this.readTokenContractL2('hashToToken', [hashId]);
+    return this.writeMarketContractL2('phunkNoLongerForSale', [tokenId]);
+  }
+
+  async writeMarketContractL2(
+    functionName: string,
+    args: any[],
+    value?: string
+  ): Promise<string | undefined> {
+    if (!functionName) return;
+    await this.switchNetwork('l2');
+
+    const chainId = getChainId(this.config);
+    const walletClient = await getWalletClient(this.config, { chainId });
+
+    const paused = await this.readMarketContractL2('paused', []);
+    const { maintenance } = await firstValueFrom(this.adminState$);
+
+    if (paused) throw new Error('Contract is paused');
+    if (maintenance) throw new Error('In maintenance mode');
+
+    const tx: any = {
+      address: marketAddressL2 as `0x${string}`,
+      abi: EtherPhunksNftMarket,
+      functionName,
+      args,
+      account: walletClient?.account?.address as `0x${string}`,
+    };
+    if (value) tx.value = value;
+
+    const { request, result } = await this.l2Client.simulateContract(tx);
+    return await walletClient?.writeContract(request);
+  }
+
+  async writeTokenContractL2(
+    functionName: string,
+    args: any[],
+    value?: string
+  ): Promise<string | undefined> {
+    if (!functionName) return;
+    await this.switchNetwork('l2');
+
+    const chainId = getChainId(this.config);
+    const walletClient = await getWalletClient(this.config, { chainId });
+
+    const paused = await this.readMarketContractL2('paused', []);
+    const { maintenance } = await firstValueFrom(this.adminState$);
+
+    if (paused) throw new Error('Contract is paused');
+    if (maintenance) throw new Error('In maintenance mode');
+
+    const tx: any = {
+      address: bridgeAddressL2 as `0x${string}`,
+      abi: EtherPhunksBridgeL2,
+      functionName,
+      args,
+      account: walletClient?.account?.address as `0x${string}`,
+    };
+    if (value) tx.value = value;
+
+    const { request, result } = await this.l2Client.simulateContract(tx);
+    return await walletClient?.writeContract(request);
+  }
+
+  async readMarketContractL2(functionName: any, args: (string | undefined)[]): Promise<any> {
+    const call: any = await this.l2Client.readContract({
+      address: marketAddressL2 as `0x${string}`,
+      abi: EtherPhunksNftMarket,
+      functionName,
+      args: args as any,
+    });
+    return call;
+  }
+
+  async readTokenContractL2(functionName: any, args: (string | undefined)[]): Promise<any> {
+    const call: any = await this.l2Client.readContract({
+      address: bridgeAddressL2 as `0x${string}`,
+      abi: EtherPhunksBridgeL2,
+      functionName,
+      args: args as any,
+    });
+    return call;
   }
 
   //////////////////////////////////

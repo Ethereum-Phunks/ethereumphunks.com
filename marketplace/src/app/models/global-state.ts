@@ -124,6 +124,6 @@ export type EventType =
   | 'PhunkBidEntered'
   | 'PhunkBidWithdrawn'
   | 'PhunkBought'
-  | 'PhunkOfferWithdrawn'
+  | 'PhunkNoLongerForSale'
   | 'bridgeOut'
   | 'bridgeIn';

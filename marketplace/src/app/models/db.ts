@@ -44,6 +44,13 @@ export interface Phunk {
   supply?: number | null
 
   consensus?: boolean
+
+  nft?: {
+    owner: string
+    tokenId: number
+  }
+
+  loading: boolean
 }
 
 export interface Bid {

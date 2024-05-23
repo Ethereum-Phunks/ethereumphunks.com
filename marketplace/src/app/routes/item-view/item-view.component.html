@@ -11,7 +11,7 @@
         <div class="title-wrapper">
           <h1 i18n>{{ phunk.singleName }} {{ phunk.tokenId }}</h1>
           <div class="hash-id">
-            <span>Hash ID: </span>
+            <span>Provenance Hash: </span>
             <a [href]="explorerUrl + '/tx/' + phunk.hashId" target="_blank">
               <app-address [address]="phunk.hashId" />
             </a>
@@ -30,10 +30,9 @@
         </div>
 
         <div class="split">
-          <div
-            class="left"
-            [class.disabled]="blocksBehind$ | async">
+          <div class="left">
 
+            <!-- Status -->
             <div class="market-status">
               <h2 i18n>Market Status</h2>
 
@@ -45,7 +44,12 @@
               } @else if (phunk.isBridged) {
                 <!-- Owner -->
                 @if (phunk.prevOwner; as owner) {
-                  <p i18n>This {{ phunk.singleName }} has been <a [routerLink]="['/', 'curated', phunk.slug, 'market', 'owned']" [queryParams]="{ address: bridgeAddress }">bridged</a> by <a [routerLink]="['/', 'curated', phunk.slug, 'market', 'owned']" [queryParams]="{ address: owner }"><app-address [address]="owner" /></a>.</p>
+                  <p i18n>This {{ phunk.singleName }} has been <a [routerLink]="['/', 'curated', phunk.slug, 'market', 'owned']" [queryParams]="{ address: bridgeAddress }">bridged</a> to L2.</p>
+                }
+
+                <!-- NFT info -->
+                @if (phunk.nft; as nft) {
+                  <p i18n>This {{ phunk.singleName }} is owned by <a [routerLink]="['/', 'curated', phunk.slug, 'market', 'owned']" [queryParams]="{ address: nft.owner}"><app-address [address]="nft.owner" /></a>.</p>
                 }
               } @else {
                 <!-- Owner -->
@@ -62,7 +66,12 @@
               }
             </div>
 
-            <div class="actions-wrapper">
+            <!-- Actions -->
+            <div
+              class="actions-wrapper"
+              [class.disabled]="(blocksBehind$ | async) || phunk.loading">
+
+              <!-- <button></button> -->
 
               @if ((walletAddress$ | async); as address) {
                 @if (phunk.owner; as owner) {
@@ -83,7 +92,8 @@
                   @if (
                     ((owner | lowercase) === (escrowAddress | lowercase) &&
                     (phunk.prevOwner | lowercase) === (address | lowercase)) ||
-                    (owner | lowercase) === (address | lowercase)
+                    (owner | lowercase) === (address | lowercase) ||
+                    (phunk.nft?.owner === address)
                   ) {
                     <button class="sell" (click)="sellPhunk()" [class.active]="sellActive">
                       <span>Sell</span>
@@ -138,8 +148,11 @@
                   <!-- Delist button -->
                   @if (
                     phunk.listing &&
-                    (owner | lowercase) === (escrowAddress | lowercase) &&
-                    (phunk.prevOwner | lowercase) === (address | lowercase)
+                    (
+                      ((owner | lowercase) === (escrowAddress | lowercase) &&
+                      (phunk.prevOwner | lowercase) === (address | lowercase)) ||
+                      (phunk.nft?.owner === address)
+                    )
                   ) {
                     <button class="sell" (click)="phunkNoLongerForSale(phunk)">
                       <span>Delist</span>
@@ -204,7 +217,7 @@
         <div class="title-wrapper">
           <h1 i18n>Loading...</h1>
           <div class="hash-id">
-            <span>Hash ID: </span>
+            <span>Provenance Hash: </span>
             <a><app-address [address]="'0x000000000000000000000'" /></a>
             <h2>&nbsp;</h2>
           </div>
@@ -318,7 +331,9 @@
       <button i18n type="submit" class="submit" (click)="submitListing(phunk)">Offer {{ phunk.singleName }}</button>
     </div>
 
-    <p class="small">Offering your item for sale will send it to our contract to be held in escrow. You can withdraw it at any time.</p>
+    @if (!phunk.nft) {
+      <p class="small">Offering your item for sale will send it to our contract to be held in escrow. You can withdraw it at any time.</p>
+    }
   </form>
 </ng-template>
 

@@ -3,6 +3,9 @@ import { CommonModule } from '@angular/common';
 import { Router, ActivatedRoute, RouterModule } from '@angular/router';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 
+import { signMessage } from '@wagmi/core';
+import { HttpClient } from '@angular/common/http';
+
 import { Store } from '@ngrx/store';
 import { LazyLoadImageModule } from 'ng-lazyload-image';
 
@@ -39,9 +42,6 @@ import * as dataStateSelectors from '@/state/selectors/data-state.selectors';
 
 import { selectNotifications } from '@/state/selectors/notification.selectors';
 import { upsertNotification } from '@/state/actions/notification.actions';
-import { signMessage, signTypedData } from '@wagmi/core';
-import { HttpClient } from '@angular/common/http';
-import { keccak256 } from 'viem';
 
 interface TxStatus {
   title: string;
@@ -114,17 +114,17 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
     )),
   );
 
-  blocksBehind$ = this.store.select(appStateSelectors.selectBlocksBehind).pipe(
-    filter((blocksBehind) => !!blocksBehind),
-    map((blocksBehind) => blocksBehind > 6),
-  );
-
   pendingTx$ = this.store.select(selectNotifications).pipe(
     filter((transactions) => !!transactions),
     switchMap((transactions) => this.singlePhunk$.pipe(
       filter((phunk) => !!phunk),
       map((phunk) => transactions.filter((tx) => tx?.hashId === phunk?.hashId && (tx.type === 'pending' || tx.type === 'wallet'))[0]),
     )),
+  );
+
+  blocksBehind$ = this.store.select(appStateSelectors.selectBlocksBehind).pipe(
+    filter((blocksBehind) => !!blocksBehind),
+    map((blocksBehind) => blocksBehind > 6),
   );
 
   walletAddress$ = this.store.select(appStateSelectors.selectWalletAddress);
@@ -250,6 +250,8 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
       let hash;
       if (phunk.isEscrowed) {
         hash = await this.web3Svc.offerPhunkForSale(hashId, value, address);
+      } else if (phunk.nft) {
+        hash = await this.web3Svc.offerPhunkForSaleL2(hashId, value, address);
       } else {
         hash = await this.web3Svc.escrowAndOfferPhunkForSale(hashId, value, address);
       }
@@ -357,7 +359,13 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
 
     try {
 
-      const hash = await this.web3Svc.phunkNoLongerForSale(hashId);
+      let hash;
+      if (phunk.nft) {
+        hash = await this.web3Svc.phunkNoLongerForSaleL2(hashId);
+      } else {
+        hash = await this.web3Svc.phunkNoLongerForSale(hashId);
+      }
+      if (!hash) throw new Error('Could not process transaction');
 
       notification = {
         ...notification,
@@ -511,7 +519,7 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
       this.store.dispatch(upsertNotification({ notification }));
 
       const hash = await this.web3Svc.withdrawPhunk(hashId);
-      if (!hash) throw new Error('Could not proccess transaction');
+      if (!hash) throw new Error('Could not process transaction');
       notification = {
         ...notification,
         type: 'pending',
@@ -591,7 +599,7 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
       ];
 
       const hash = await this.web3Svc.lockPhunk(hexArr);
-      if (!hash) throw new Error('Could not proccess transaction');
+      if (!hash) throw new Error('Could not process transaction');
       notification = {
         ...notification,
         type: 'pending',

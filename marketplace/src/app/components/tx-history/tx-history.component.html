@@ -20,7 +20,9 @@
 
               <td>
                 <div class="cell-inner type-label">
-                  {{ (event.type | cc2tc) || 'Transferred' }}
+                  @if (event.type) {
+                    {{ eventLabels[event.type] }}
+                  }
                 </div>
               </td>
 
