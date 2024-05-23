@@ -26,10 +26,10 @@ const config: HardhatUserConfig = {
   },
   networks: {
     // hardhat: {
-    //   forking: {
-    //     enabled: true,
-    //     url: 'http://geth.dappnode:8545',
-    //   },
+    //   // forking: {
+    //   //   enabled: true,
+    //   //   url: 'http://geth.dappnode:8545',
+    //   // },
     //   accounts: {
     //     count: 10,
     //     initialIndex: 0,
@@ -47,6 +47,12 @@ const config: HardhatUserConfig = {
       from: process.env.SEPOLIA_ADDRESS as string,
       accounts: [`0x${process.env.SEPOLIA_PK}`],
     },
+    // magma: {
+    //   url: 'https://turbo.magma-rpc.com',
+    //   chainId: 6969696969,
+    //   from: process.env.SEPOLIA_ADDRESS as string,
+    //   accounts: [`0x${process.env.SEPOLIA_PK}`],
+    // },
   },
   etherscan: {
     apiKey: process.env.ETHERSCAN_API_KEY,

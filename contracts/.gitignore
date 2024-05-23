@@ -1,3 +1,5 @@
+.pretrash
+
 # Dependency directories
 node_modules/
 soljson-v0.8.20+commit.8df45f5f.js
