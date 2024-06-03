@@ -1,6 +1,6 @@
 import { BadRequestException, Inject, Injectable } from '@nestjs/common';
 
-import { encodePacked, formatEther, hashMessage, keccak256, recoverAddress } from 'viem';
+import { encodePacked, formatEther, keccak256, recoverTypedDataAddress } from 'viem';
 import { privateKeyToAccount } from 'viem/accounts'
 
 import { SupabaseService } from '@/services/supabase.service';
@@ -41,29 +41,58 @@ export class VerificationService {
     hashId: string,
     owner: string,
     prevOwner: string,
-    gasEstimate: number
+    // gasEstimate: number
   }> {
-
     const { address, hashId, sha, signature, chainId } = body;
 
     // Fetch the nonce for the user
     const userNonce = await this.nonceSvc.fetchUserNonce(address);
-    const message = `Sign this message to verify ownership of the asset.\n\nAddress: ${address.toLowerCase()}\nEthscription ID: ${hashId}\nSHA: ${sha}\nNonce: ${userNonce}\nChain ID: ${chainId}`;
-    const messageHash = hashMessage(message);
+    // const message = `Sign this message to verify ownership of the asset.\n\nAddress: ${address.toLowerCase()}\nEthscription ID: ${hashId}\nSHA: ${sha}\nNonce: ${userNonce}\nChain ID: ${chainId}`;
+    // const messageHash = hashMessage(message);
 
     // Recover the signing address from the signature
-    const signingAddress = await recoverAddress({
-      hash: messageHash,
+    const signingAddress = await recoverTypedDataAddress({
+      domain: {
+        name: 'EtherPhunks',
+        version: '1',
+        chainId: BigInt(chainId),
+      },
+      message: {
+        address: address as `0x${string}`,
+        hashId: hashId,
+        sha: sha,
+        nonce: userNonce,
+        chainId: BigInt(chainId),
+      },
+      types: {
+        EIP712Domain: [
+          { name: 'name', type: 'string' },
+          { name: 'version', type: 'string' },
+          { name: 'chainId', type: 'uint256' },
+        ],
+        Bridge: [
+          { name: 'address', type: 'address' },
+          { name: 'hashId', type: 'string' },
+          { name: 'sha', type: 'string' },
+          { name: 'nonce', type: 'string' },
+          { name: 'chainId', type: 'uint256' },
+        ],
+      },
+      primaryType: 'Bridge',
       signature
     });
+
+    // const signingAddress = await recoverAddress({
+    //   hash: messageHash,
+    //   signature
+    // });
 
     // Check if the signer is the same as the sender
     if (signingAddress.toLowerCase() !== address.toLowerCase())
       throw new BadRequestException('Signer does not match sender');
 
-    const item = await this.sbSvc.checkEthscriptionExistsByHashId(hashId);
-
     // Check if the hashId exists
+    const item = await this.sbSvc.checkEthscriptionExistsByHashId(hashId);
     if (!item)
       throw new BadRequestException(`HashId doesn't exist`);
     // Check if the owner is the same as the signer
@@ -74,7 +103,7 @@ export class VerificationService {
       throw new BadRequestException(`SHA doesn't match`);
 
     // Get the gas estimate
-    const gasEstimate = await this.estimateGas(hashId, address);
+    // const gasEstimate = await this.estimateGas(hashId, address);
     // console.log({ gasEstimate });
 
     // get signature for contract verification
@@ -92,7 +121,7 @@ export class VerificationService {
       hashId,
       owner: item.owner,
       prevOwner: item.prevOwner,
-      gasEstimate
+      // gasEstimate
     };
   }
 

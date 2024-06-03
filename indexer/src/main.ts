@@ -14,7 +14,7 @@ async function bootstrap() {
   app.enableCors({
     origin: '*',
     methods: ['GET', 'POST'],
-    credentials: true,
+    // credentials: true,
   });
 
   const customLogger = app.get(CustomLogger);
