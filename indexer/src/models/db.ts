@@ -32,26 +32,25 @@ export interface BidResponse {
 
 export interface Listing {
   hashId: string
-  blockNum: number
-  createdAt: string
-  isListed: boolean
-  onlySellTo: string | null
-  seller: string
-  transactionHash: string
-  value: number
+  createdAt: Date
+  listed: boolean
+  toAddress: string | null
+  listedBy: string
+  txHash: string
+  minValue: number
 }
 
 export interface Bid {
   hashId: string
   txHash: string
-  createdAt: string;
+  createdAt: Date;
   value: string;
   fromAddress: string;
 }
 
 export interface Ethscription {
   hashId: string;
-  createdAt: string | null;
+  createdAt: Date | null;
   creator: string | null;
   owner: string | null;
   sha: string;
