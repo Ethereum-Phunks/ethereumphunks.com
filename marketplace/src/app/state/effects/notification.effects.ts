@@ -9,7 +9,7 @@ import { Web3Service } from '@/services/web3.service';
 import { GlobalState, Notification } from '@/models/global-state';
 import { Event } from '@/models/db';
 
-import { EMPTY, catchError, concatMap, delay, map, of, switchMap, tap, withLatestFrom } from 'rxjs';
+import { EMPTY, catchError, delay, map, of, switchMap, tap, withLatestFrom } from 'rxjs';
 
 import { environment } from 'src/environments/environment';
 import { DataService } from '@/services/data.service';

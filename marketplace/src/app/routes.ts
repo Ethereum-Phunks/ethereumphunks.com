@@ -30,10 +30,10 @@ export const routes: Routes = [
   //   path: 'tests',
   //   loadComponent: () => import('./routes/tests/tests.component').then(mod => mod.TestsComponent)
   // },
-  {
-    path: 'curated',
-    loadComponent: () => import('./routes/curated/curated.component').then(mod => mod.CuratedComponent)
-  },
+  // {
+  //   path: 'curated',
+  //   loadComponent: () => import('./routes/curated/curated.component').then(mod => mod.CuratedComponent)
+  // },
   {
     path: 'curated/:slug',
     loadComponent: () => import('./routes/index/index.component').then(mod => mod.IndexComponent)
@@ -42,4 +42,8 @@ export const routes: Routes = [
     path: 'curated/:slug/market/:marketType',
     loadComponent: () => import('./routes/market/market.component').then(mod => mod.MarketComponent)
   },
+  {
+    path: '**',
+    redirectTo: '/',
+  }
 ];

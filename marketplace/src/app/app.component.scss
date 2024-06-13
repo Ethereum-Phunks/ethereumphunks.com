@@ -18,6 +18,8 @@ main {
   width: 100%;
   height: var(--header-height);
   background-color: rgba(var(--base-color), 1);
+  // mix-blend-mode: luminosity;
+  // backdrop-filter: blur(1rem);
   pointer-events: none;
 }
 

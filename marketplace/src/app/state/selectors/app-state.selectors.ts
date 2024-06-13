@@ -114,7 +114,7 @@ export const selectCollectionsMenuActive = createSelector(
   (appState: AppState) => appState.collectionsMenuActive
 );
 
-export const selectAdminState = createSelector(
+export const selectConfig = createSelector(
   selectAppState,
-  (appState: AppState) => appState.admin
+  (appState: AppState) => appState.config
 );

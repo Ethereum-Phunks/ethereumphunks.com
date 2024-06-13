@@ -12,6 +12,8 @@ import { LoggerComponent } from '@/components/status-bar/logger/logger.component
 
 import { combineLatest, scan, startWith, switchMap, take } from 'rxjs';
 
+import { environment } from 'src/environments/environment';
+
 @Component({
   selector: 'app-status-bar',
   standalone: true,
@@ -35,13 +37,15 @@ export class StatusBarComponent {
   logs$ = this.socketSvc.logs$.pipe(
     take(1),
     switchMap((logs: LogItem[]) => {
-      console.log('logs', logs);
+      // console.log('logs', logs);
       return this.socketSvc.log$.pipe(
         startWith(...logs),
         scan((acc: LogItem[], log: LogItem) => [...acc, log], []),
       )
     })
   );
+
+  chain = environment.chainId;
 
   levels: any = {
     0: 'sync',

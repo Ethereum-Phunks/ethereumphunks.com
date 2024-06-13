@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, effect, input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
@@ -18,10 +18,9 @@ import { CalcPipe } from '@/pipes/calculate.pipe';
 import { FormatCashPipe } from '@/pipes/format-cash.pipe';
 
 import { EventType, GlobalState, TxFilterItem } from '@/models/global-state';
+import { Event } from '@/models/db';
 
 import * as dataStateSelectors from '@/state/selectors/data-state.selectors';
-import * as dataStateActions from '@/state/actions/data-state.actions';
-
 import * as appStateActions from '@/state/actions/app-state.actions';
 
 @Component({
@@ -47,6 +46,8 @@ import * as appStateActions from '@/state/actions/app-state.actions';
   styleUrls: ['./recent-activity.component.scss']
 })
 export class RecentActivityComponent {
+
+  public events = input.required<Event[] | null>();
 
   txFilters: TxFilterItem[] = [
     { label: 'All', value: 'All' },
@@ -78,13 +79,17 @@ export class RecentActivityComponent {
     // PhunkNoLongerForSale: 'Offer withdrawn',
   };
 
-  events$ = this.store.select(dataStateSelectors.selectEvents);
   usd$ = this.store.select(dataStateSelectors.selectUsd);
 
   constructor(
     private store: Store<GlobalState>,
     public dataSvc: DataService
   ) {
+
+    effect(() => {
+      console.log('RecentActivityComponent: events', this.events());
+    })
+
     this.store.dispatch(appStateActions.setEventTypeFilter({ eventTypeFilter: this._activeTxFilter }));
   }
 

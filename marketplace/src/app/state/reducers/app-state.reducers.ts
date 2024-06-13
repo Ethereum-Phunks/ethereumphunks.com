@@ -35,8 +35,9 @@ export const initialState: AppState = {
   modalActive: false,
   collectionsMenuActive: false,
 
-  admin: {
+  config: {
     maintenance: false,
+    chat: true
   }
 };
 
@@ -212,11 +213,11 @@ export const appStateReducer: ActionReducer<AppState, Action> = createReducer(
     };
     return setCollectionsMenuActive
   }),
-  on(actions.setAdmin, (state, { admin }) => {
-    const setAdmin = {
+  on(actions.setGlobalConfig, (state, { config }) => {
+    const setGlobalConfig = {
       ...state,
-      admin
+      config
     };
-    return setAdmin
+    return setGlobalConfig
   })
 );

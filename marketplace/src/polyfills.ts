@@ -61,6 +61,7 @@ import 'zone.js'; // Included with Angular CLI.
 // import { Buffer } from 'buffer';
 
 (window as any).global = window;
+(window as any).process = { env: { NEXT_PUBLIC_SECURE_SITE_SDK_URL: undefined } };
 
 // global.Buffer = Buffer;
 // global.process = {

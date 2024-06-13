@@ -10,4 +10,10 @@
   @if (activeView === 'conversation') {
     <app-conversation />
   }
+
+  @if (activeView === 'disabled') {
+    <div class="message-wrapper">
+      <p>Chat is currently disabled for maintenance. BRB.</p>
+    </div>
+  }
 }

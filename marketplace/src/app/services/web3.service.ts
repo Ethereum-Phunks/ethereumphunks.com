@@ -7,7 +7,7 @@ import { environment } from 'src/environments/environment';
 import { GlobalState } from '@/models/global-state';
 import { Phunk } from '@/models/db';
 
-import { Observable, catchError, filter, firstValueFrom, of, tap } from 'rxjs';
+import { Observable, catchError, firstValueFrom, map, of, tap } from 'rxjs';
 
 import PointsAbi from '@/abi/Points.json';
 
@@ -66,13 +66,18 @@ export class Web3Service {
   config!: Config;
   modal!: Web3Modal;
 
-  adminState$ = this.store.select(state => state.appState.admin);
+  globalConfig$ = this.store.select(state => state.appState.config).pipe(
+    map((res) => ({
+      ...res,
+      maintenance: environment.production ? res.maintenance : false
+    }))
+  );
 
   constructor(
     private store: Store<GlobalState>,
     private ngZone: NgZone
   ) {
-    const chains: [Chain, ...Chain[]] = environment.chainId === 1 ? [mainnet] : [sepolia, magma];
+    const chains: [Chain, ...Chain[]] = environment.chainId === 1 ? [mainnet] : [sepolia];
 
     this.l1Client = createPublicClient({
       chain: chains[0],
@@ -249,11 +254,15 @@ export class Web3Service {
 
     if (!publicClient) throw new Error('No public client');
 
-    const paused = await this.readMarketContract('paused', []);
-    const { maintenance } = await firstValueFrom(this.adminState$);
+    const alwaysOnFunctions = ['phunkNoLongerForSale', 'withdrawPhunk'];
 
-    if (paused) throw new Error('Contract is paused');
-    if (maintenance) throw new Error('In maintenance mode');
+    const [paused, { maintenance }] = await Promise.all([
+      this.readMarketContract('paused', []),
+      firstValueFrom(this.globalConfig$)
+    ]);
+
+    if (paused && (alwaysOnFunctions.indexOf(functionName) === -1)) throw new Error('Contract is paused');
+    if (maintenance && (alwaysOnFunctions.indexOf(functionName) === -1)) throw new Error('In maintenance mode');
 
     const tx: any = {
       address: marketAddress as `0x${string}`,
@@ -268,14 +277,19 @@ export class Web3Service {
     return await walletClient?.writeContract(request);
   }
 
-  async readMarketContract(functionName: any, args: (string | undefined)[]): Promise<any> {
-    const call: any = await this.l1Client.readContract({
-      address: marketAddress as `0x${string}`,
-      abi: EtherPhunksMarketABI,
-      functionName,
-      args: args as any,
-    });
-    return call;
+  async readMarketContract(functionName: any, args: (string | undefined)[]): Promise<any | null> {
+    try {
+      const call: any = await this.l1Client.readContract({
+        address: marketAddress as `0x${string}`,
+        abi: EtherPhunksMarketABI,
+        functionName,
+        args: args as any,
+      });
+      return call;
+    } catch (error) {
+      console.log({functionName, args, error});
+      return null;
+    }
   }
 
   async waitForTransaction(hash: string): Promise<TransactionReceipt> {
@@ -511,7 +525,7 @@ export class Web3Service {
       const offer = await this.readMarketContractL2('phunksOfferedForSale', [tokenId]);
       return offer;
     } catch (error) {
-      console.log(error);
+      console.log('phunksOfferedForSaleL2', {hashId, error});
       return null;
     }
   }
@@ -554,7 +568,7 @@ export class Web3Service {
     const walletClient = await getWalletClient(this.config, { chainId });
 
     const paused = await this.readMarketContractL2('paused', []);
-    const { maintenance } = await firstValueFrom(this.adminState$);
+    const { maintenance } = await firstValueFrom(this.globalConfig$);
 
     if (paused) throw new Error('Contract is paused');
     if (maintenance) throw new Error('In maintenance mode');
@@ -584,7 +598,7 @@ export class Web3Service {
     const walletClient = await getWalletClient(this.config, { chainId });
 
     const paused = await this.readMarketContractL2('paused', []);
-    const { maintenance } = await firstValueFrom(this.adminState$);
+    const { maintenance } = await firstValueFrom(this.globalConfig$);
 
     if (paused) throw new Error('Contract is paused');
     if (maintenance) throw new Error('In maintenance mode');
@@ -603,6 +617,8 @@ export class Web3Service {
   }
 
   async readMarketContractL2(functionName: any, args: (string | undefined)[]): Promise<any> {
+    console.log('l2client', this.l2Client)
+    if (!this.l2Client?.chain) return null;
     const call: any = await this.l2Client.readContract({
       address: marketAddressL2 as `0x${string}`,
       abi: EtherPhunksNftMarket,
@@ -613,6 +629,8 @@ export class Web3Service {
   }
 
   async readTokenContractL2(functionName: any, args: (string | undefined)[]): Promise<any> {
+    console.log('l2client', this.l2Client)
+    if (!this.l2Client?.chain) return null;
     const call: any = await this.l2Client.readContract({
       address: bridgeAddressL2 as `0x${string}`,
       abi: EtherPhunksBridgeL2,

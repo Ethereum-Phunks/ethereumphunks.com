@@ -1,6 +1,6 @@
 <app-splash [slug]="(activeCollection$ | async)?.slug" />
 
-@if ((adminState$ | async)?.maintenance) {
+@if ((config$ | async)?.maintenance) {
   <app-brb />
 }
 
@@ -10,7 +10,7 @@
 <div class="sections-wrapper">
 
   <section class="overview">
-    <app-recent-activity />
+    <app-recent-activity [events]="events$ | async" />
   </section>
 
   @defer {

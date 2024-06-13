@@ -28,9 +28,18 @@ app-logger {
   font-weight: normal;
   color: rgba(var(--white), .75);
 
-  .gas {
-    font-size: 1.2rem;
-    padding-right: 1rem
+  .network-gas {
+    display: flex;
+    flex-direction: column;
+
+    .gas {
+      font-size: 1.2rem;
+      padding-right: 1rem
+    }
+    .network {
+      font-size: .8rem;
+      color: rgba(var(--white), .75);
+    }
   }
 
   .indexer {}

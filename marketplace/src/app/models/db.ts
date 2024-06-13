@@ -27,8 +27,8 @@ export interface Phunk {
   prevOwner: string | null
   sha: string
 
+  imageUri?: string | null
   creator?: string | null
-  data?: string | null
 
   isEscrowed?: boolean;
   isBridged?: boolean;
@@ -68,13 +68,15 @@ export interface Event {
   hashId: string
   sha: string
   id: number
-  tokenId?: number | null
   to: string
   txHash: string
   txId: string
   txIndex: string | null
-  type: EventType | null
   value: string | null
+  type: EventType | null
+
+  slug?: string
+  tokenId?: number | null
 }
 export interface Listing {
   createdAt: Date
@@ -101,90 +103,3 @@ export interface Attribute {
   k: string;
   v: string;
 }
-
-
-// import { EventType } from './global-state';
-
-// export interface Account {
-//   id: string;
-//   phunks?: Phunk[];
-// }
-
-// export interface Phunk {
-//   id: string;
-//   hashId?: string;
-//   owner?: string;
-//   prevOwner?: string | null;
-//   attributes: Attribute[];
-//   isEscrowed?: boolean;
-//   bid?: Bid | null;
-//   listing?: Listing | null;
-// }
-
-// export interface Attribute {
-//   k: string;
-//   v: string;
-// }
-
-// export interface Listing {
-//   hashId: string;
-//   createdAt: Date;
-//   toAddress: string;
-//   listed: boolean;
-//   minValue: string;
-//   listedBy: string;
-//   txHash?: string;
-//   [key: string]: any;
-// }
-
-// export interface Bid {
-//   hashId: string;
-//   createdAt: Date;
-//   fromAddress: string;
-//   value: string;
-//   txHash?: string;
-//   [key: string]: any;
-// }
-
-// export interface Event {
-
-//   from: string | null;
-//   to: string | null;
-//   txHash: string;
-//   createdAt: string;
-//   phunkId: number;
-
-//   id: string;
-//   type: EventType;
-//   tokenId: string;
-//   fromAccount: Account | null;
-//   toAccount: Account | null;
-//   value: string | null;
-//   usd: string;
-//   blockNumber: string;
-//   blockTimestamp: string;
-//   transactionHash: string;
-// }
-
-// export interface State {
-//   id: string;
-//   timestamp: string;
-//   usd: string;
-//   topBid: Event;
-//   topSale: Event;
-//   listings: string;
-//   delistings: string;
-//   bids: string;
-//   sales: string;
-//   owners: string;
-//   volume: string;
-//   floor: string;
-// }
-
-// export interface Source {
-//   id: string;
-//   domain: string;
-//   name: string;
-//   icon: string;
-//   url: string;
-// }

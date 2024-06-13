@@ -15,4 +15,5 @@ export const magma = defineChain({
       url: 'https://magmascan.org',
     },
   },
+  testnet: true,
 });

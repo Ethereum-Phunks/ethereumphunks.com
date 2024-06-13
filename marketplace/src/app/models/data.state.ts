@@ -1,4 +1,4 @@
-import { Phunk } from './db';
+import { Event, Phunk } from './db';
 
 export interface Collection {
   slug: string;
@@ -19,7 +19,7 @@ export interface CollectionWAssets {
 
 export interface DataState {
   usd: number | null;
-  events: any[] | null;
+  events: Event[] | null;
   singlePhunk: Phunk | null;
   userOpenBids: Phunk[];
 

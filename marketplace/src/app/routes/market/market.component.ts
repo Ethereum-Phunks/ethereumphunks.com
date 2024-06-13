@@ -14,6 +14,7 @@ import { ModalComponent } from '@/components/shared/modal/modal.component';
 import { ChatComponent } from '@/components/chat/chat.component';
 import { SlideoutComponent } from '@/components/slideout/slideout.component';
 import { ConversationComponent } from '@/components/chat/conversation/conversation.component';
+import { UserActivityComponent } from '@/components/user-activity/user-activity.component';
 
 import { WalletAddressDirective } from '@/directives/wallet-address.directive';
 
@@ -31,6 +32,7 @@ import { WeiToEthPipe } from '@/pipes/wei-to-eth.pipe';
 import { CalcPipe } from '@/pipes/calculate.pipe';
 import { FormatCashPipe } from '@/pipes/format-cash.pipe';
 
+import { setChatActive, setToUser } from '@/state/actions/chat.actions';
 import * as appStateSelectors from '@/state/selectors/app-state.selectors';
 import * as appStateActions from '@/state/actions/app-state.actions';
 import * as dataStateSelectors from '@/state/selectors/data-state.selectors';
@@ -40,8 +42,7 @@ import { upsertNotification } from '@/state/actions/notification.actions';
 
 import { environment } from 'src/environments/environment';
 
-import { filter, firstValueFrom, map, tap } from 'rxjs';
-import { setChatActive, setToUser } from '@/state/actions/chat.actions';
+import { filter, map, tap } from 'rxjs';
 
 const defaultActionState = {
   canList: false,
@@ -67,6 +68,7 @@ const defaultActionState = {
     SlideoutComponent,
     ChatComponent,
     ConversationComponent,
+    UserActivityComponent,
 
     WalletAddressDirective,
     WeiToEthPipe,

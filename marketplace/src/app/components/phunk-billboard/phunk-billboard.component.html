@@ -1,16 +1,7 @@
-@if (phunk) {
-  <div class="billboard-wrapper">
-    <div class="image-wrapper">
-      <app-phunk-image [sha]="phunk.sha" />
-    </div>
-  </div>
-} @else {
+<ng-content />
+
+<div class="billboard-wrapper">
   <div class="image-wrapper">
-    <img
-      #tokenImage
-      [src]="'assets/loadingphunk.png'"
-      width="312"
-      height="312"
-    />
+    <app-phunk-image [phunk]="phunk" />
   </div>
-}
+</div>

@@ -11,6 +11,45 @@ app-phunk-billboard {
   top: 0;
   left: 0;
   width: 100%;
+
+  button {
+    position: absolute;
+    bottom: 3rem;
+    right: 3rem;
+
+    background: none;
+    padding: 0;
+    color: rgba(var(--background), 1);
+
+    opacity: .5;
+
+    &:hover {
+      opacity: 1;
+    }
+
+    @media (max-width: $mobile) {
+      // display: none;
+    }
+  }
+
+  &.expanded {
+    button {
+      bottom: calc(4.5rem + 3rem);
+    }
+  }
+
+  @media (max-width: $mobile) {
+    button {
+      bottom: 1rem;
+      right: 1rem;
+    }
+
+    &.expanded {
+      button {
+        bottom: 1rem;
+      }
+    }
+  }
 }
 
 .view-item-wrapper {
@@ -22,6 +61,14 @@ app-phunk-billboard {
   .inner {
     position: relative;
     max-width: 120rem;
+  }
+
+  &.expanded {
+    margin-top: 100vh;
+
+    @media (max-width: $mobile) {
+      margin-top: calc(var(--billboard-height) + 12rem);
+    }
   }
 }
 
@@ -137,7 +184,8 @@ app-phunk-billboard {
     position: relative;
     padding: 2rem 0;
 
-    button {
+    button,
+    .button {
       display: flex;
       align-items: center;
       justify-content: space-between;

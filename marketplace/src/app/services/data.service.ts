@@ -60,13 +60,13 @@ export class DataService {
 
     this.createListeners();
     this.listenForBlocks();
-    this.listenAdmin();
+    this.listenGlobalConfig();
 
     this.fetchUSDPrice();
 
-    // this.fetchStats().subscribe((res: any) => {
-    //   console.log('fetchStats', res);
-    // });
+    this.fetchStats().subscribe((res: any) => {
+      // console.log('fetchStats', res);
+    });
 
     // this.fetchUserEvents(
     //   '0xf1Aa941d56041d47a9a18e99609A047707Fe96c7',
@@ -90,27 +90,27 @@ export class DataService {
       ).subscribe();
   }
 
-  listenAdmin() {
+  listenGlobalConfig() {
     supabase
-      .from('admin')
+      .from('_global_config')
       .select('*')
       .eq('network', environment.chainId)
       .limit(1)
       .then(({ data, error }) => {
-        console.log({ data, error })
+        // console.log('listenGlobalConfig', { data, error })
         if (error) return;
-        this.store.dispatch(appStateActions.setAdmin({ admin: data[0] }));
+        this.store.dispatch(appStateActions.setGlobalConfig({ config: data[0] }));
       });
 
     supabase
-      .channel('admin')
+      .channel('_global_config')
       .on(
         'postgres_changes',
-        { event: '*', schema: 'public', table: 'admin' },
+        { event: '*', schema: 'public', table: '_global_config' },
         (payload) => {
-          const admin: any = payload.new;
-          if (admin.network !== environment.chainId) return;
-          this.store.dispatch(appStateActions.setAdmin({ admin }));
+          const config: any = payload.new;
+          if (config.network !== environment.chainId) return;
+          this.store.dispatch(appStateActions.setGlobalConfig({ config }));
         },
       ).subscribe();
   }
@@ -265,20 +265,21 @@ export class DataService {
     limit: number,
     type?: EventType,
     slug?: string,
-  ): Observable<any> {
+  ): Observable<Event[]> {
     return from(supabase.rpc('fetch_events' + this.prefix, {
       p_limit: limit,
       p_type: type && type !== 'All' ? type : null,
       p_collection_slug: slug
     })).pipe(
       map((res: any) => {
+        // console.log('fetchEvents', res);
         const result = res.data.map((tx: any) => {
           let type = tx.type;
           if (type === 'transfer') {
-            if (tx.toAddress?.toLowerCase() === environment.bridgeAddress) type = 'bridgeOut';
-            if (tx.fromAddress?.toLowerCase() === environment.bridgeAddress) type = 'bridgeIn';
+            if (tx.to?.toLowerCase() === environment.bridgeAddress) type = 'bridgeOut';
+            if (tx.from?.toLowerCase() === environment.bridgeAddress) type = 'bridgeIn';
           }
-          return { ...tx, type, };
+          return { ...tx, type, } as Event;
         });
         return result;
       }),
@@ -297,8 +298,12 @@ export class DataService {
       .order('blockTimestamp', { ascending: false });
 
     return from(response).pipe(
-      map((res: any) => {
-        return res.data.map((tx: any) => {
+      switchMap((res: any) => {
+        if (!res.data.length) return this.fetchUnsupportedTokenEvents(hashId);
+        return of(res.data);
+      }),
+      map((data: any) => {
+        return data.map((tx: any) => {
           let type: EventType = tx.type;
 
           if (tx.type === 'transfer') {
@@ -317,6 +322,43 @@ export class DataService {
     );
   }
 
+  fetchUnsupportedTokenEvents(hashId: string): Observable<(Event & { [key: string]: string })[]> {
+    const prefix = this.prefix.replace('_', '');
+
+    // api-v2.ethscriptions.com
+    // sepolia-api.ethscriptions.com
+    return this.http.get<any>(`https://${prefix ? (prefix + '-') : ''}api.ethscriptions.com/api/ethscriptions/${hashId}`).pipe(
+      map((res) => {
+
+        const { valid_transfers } = res;
+        // console.log('fetchUnsupportedTokenEvents', valid_transfers);
+
+        const events = valid_transfers
+        .sort((a: any, b: any) => a.timestamp > b.timestamp ? -1 : 1)
+        .map((tx: any, i: number) => {
+          const e: Event = {
+            blockHash: tx.block_hash,
+            blockNumber: tx.block_number,
+            blockTimestamp: new Date(tx.timestamp),
+            from: tx.from,
+            to: tx.to,
+            hashId,
+            sha: tx.sha,
+            id: tx.id,
+            txHash: tx.transaction_hash,
+            txId: tx.transaction_hash + '-' + tx.overall_order_number + '-' + tx.transaction_index,
+            txIndex: tx.transaction_index,
+            type: i === valid_transfers.length - 1 ? 'created' : 'transfer',
+            value: tx.sale_price,
+          };
+          return { ...e, ...tx } as (Event & { [key: string]: string });
+        });
+
+        return events;
+      }),
+    );
+  }
+
   fetchUserEvents(
     address: string,
     limit: number,
@@ -324,13 +366,10 @@ export class DataService {
   ): Observable<any> {
 
     const query = supabase
-      .from('events' + this.prefix)
-      .select('*')
-      .or(`from.eq.${address.toLowerCase()},to.eq.${address.toLowerCase()}`)
-      .order('blockNumber', { ascending: false })
-      .limit(limit);
-
-    if (fromBlock) query.gt('blockNumber', fromBlock);
+    .rpc(
+      `fetch_user_events_sepolia`,
+      { p_limit: limit, p_address: address.toLowerCase() }
+    );
 
     return from(query).pipe(
       map((res: any) => res.data),
@@ -370,7 +409,7 @@ export class DataService {
     return null;
   }
 
-  fetchSinglePhunk(tokenId: string): Observable<any> {
+  fetchSinglePhunk(tokenId: string): Observable<Phunk> {
 
     let query = supabase
       .from('ethscriptions' + this.prefix)
@@ -399,7 +438,7 @@ export class DataService {
         const collection = phunk[`collections${this.prefix}`];
         const collectionName = collection?.name;
 
-        const nft = phunk[`nfts${this.prefix}`][0];
+        const nft = phunk[`nfts${this.prefix}`]?.[0];
         if (nft) delete nft?.hashId;
 
         delete phunk[`nfts${this.prefix}`];
@@ -412,13 +451,12 @@ export class DataService {
 
         return newPhunk;
       }),
-      tap((res) => console.log('fetchSinglePhunk', res)),
+      // tap((res) => console.log('fetchSinglePhunk', res)),
       switchMap((res: Phunk) => forkJoin([
         this.addAttributes(res.slug, [res]),
         from(this.getListingFromHashId(res.hashId))
       ])),
       map(([[res], listing]) => {
-        // console.log({res, listing})
         return {
           ...res,
           listing: listing?.listedBy.toLowerCase() === res.prevOwner?.toLowerCase() ? listing : null,
@@ -432,19 +470,103 @@ export class DataService {
     );
   }
 
+  fetchUnsupportedItem(hashId: string): Observable<Phunk> {
+    const prefix = this.prefix.replace('_', '');
+
+    const baseUrl = `https://${prefix ? (prefix + '-') : ''}api-v2.ethscriptions.com`;
+
+    // api-v2.ethscriptions.com
+    // sepolia-api.ethscriptions.com
+    return this.http.get<any>(`${baseUrl}/ethscriptions/${hashId}`).pipe(
+      // tap((res) => console.log('fetchUnsupportedItem', res)),
+      map((res: any) => {
+        const { result } = res;
+        const item: Phunk = {
+          slug: '',
+          hashId: result.transaction_hash,
+          tokenId: result.ethscription_number,
+          createdAt: new Date(+result.block_timestamp * 1000),
+          owner: result.current_owner,
+          prevOwner: result.previous_owner,
+          sha: result.content_sha?.replace('0x', ''),
+          loading: false,
+
+          imageUri: result.attachment_path ? `${baseUrl}${result.attachment_path}` : result.content_uri,
+          creator: result.creator,
+
+          singleName: 'Ethscription',
+          collectionName: 'Ethscriptions',
+        };
+
+        return item;
+      }),
+      catchError((err) => {
+        console.log('fetchUnsupportedItem', err);
+        return of({
+          slug: '',
+          hashId,
+          tokenId: -1,
+          createdAt: new Date(),
+          owner: '',
+          prevOwner: '',
+          sha: '',
+          loading: false,
+          singleName: 'Ethscription',
+          collectionName: 'Ethscriptions',
+        } as Phunk);
+      }),
+    );
+
+
+    // slug: string
+    // hashId: string
+    // tokenId: number
+    // createdAt: Date
+    // owner: string
+    // prevOwner: string | null
+    // sha: string
+
+    // creator?: string | null
+    // data?: string | null
+
+    // isEscrowed?: boolean;
+    // isBridged?: boolean;
+
+    // attributes?: Attribute[]
+    // listing?: Listing | null
+    // bid?: Bid | null
+
+    // auction?: Auction | null
+
+    // singleName?: string | null
+    // collectionName?: string | null
+    // supply?: number | null
+
+    // consensus?: boolean
+
+    // nft?: {
+    //   owner: string
+    //   tokenId: number
+    // }
+
+    // loading: boolean
+  }
+
   async getListingFromHashId(hashId: string | undefined): Promise<Listing | null> {
     if (!hashId) return null;
 
     try {
-      const [ callL1, callL2 ] = await Promise.all([
+      const calls = [
         this.web3Svc.readMarketContract('phunksOfferedForSale', [hashId]),
         this.web3Svc.phunksOfferedForSaleL2(hashId),
-      ]);
+      ];
 
-      const offer = callL1[0] ? callL1 : callL2;
-      if (!offer[0]) return null;
+      const [ callL1, callL2 ] = await Promise.all(calls);
 
-      return {
+      const offer = callL1 || callL2;
+      if (!offer?.[0]) return null;
+
+      const listing = {
         createdAt: new Date(),
         hashId: offer[1],
         minValue: offer[3].toString(),
@@ -452,6 +574,8 @@ export class DataService {
         toAddress: offer[4],
         listed: offer[0],
       };
+
+      return listing;
     } catch (error) {
       console.log('getListingFromHashId', error);
       return null;
@@ -488,7 +612,11 @@ export class DataService {
           const phunk = phunks.find(p => p.hashId === item.transaction_hash);
           const consensus = !!phunk && phunk.owner === item.current_owner && (phunk.prevOwner === item.previous_owner || !phunk.prevOwner);
           return { ...phunk, consensus };
-        }))
+        })),
+        catchError((err) => {
+          console.log('checkConsensus', err);
+          return of(phunks);
+        })
       )
     );
   }
@@ -542,7 +670,7 @@ export class DataService {
   fetchStats(): Observable<any> {
 
     const query = supabase
-      .rpc(`get_collections_stats`);
+      .rpc(`get_total_volume_sepolia`);
 
     return from(query).pipe(
       map((res: any) => res.data[0]),

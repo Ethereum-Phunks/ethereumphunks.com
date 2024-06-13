@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { Router, ActivatedRoute, RouterModule } from '@angular/router';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 
-import { signMessage } from '@wagmi/core';
+import { signMessage, signTypedData } from '@wagmi/core';
 import { HttpClient } from '@angular/common/http';
 
 import { Store } from '@ngrx/store';
@@ -14,6 +14,7 @@ import { TxHistoryComponent } from '@/components/tx-history/tx-history.component
 import { PhunkImageComponent } from '@/components/shared/phunk-image/phunk-image.component';
 import { BreadcrumbsComponent } from '@/components/breadcrumbs/breadcrumbs.component';
 import { AuctionComponent } from '@/components/auction/auction.component';
+import { StepsComponent } from '@/components/steps/steps.component';
 
 import { WalletAddressDirective } from '@/directives/wallet-address.directive';
 
@@ -30,7 +31,7 @@ import { UtilService } from '@/services/util.service';
 import { Phunk } from '@/models/db';
 import { GlobalState, Notification } from '@/models/global-state';
 
-import { Subject, filter, firstValueFrom, map, switchMap, takeUntil, tap } from 'rxjs';
+import { Subject, filter, firstValueFrom, fromEvent, map, switchMap, takeUntil, tap } from 'rxjs';
 
 import { environment } from 'src/environments/environment';
 
@@ -73,6 +74,7 @@ interface TxStatuses {
     PhunkImageComponent,
     BreadcrumbsComponent,
     AuctionComponent,
+    StepsComponent,
 
     TokenIdParsePipe,
     TraitCountPipe,
@@ -96,7 +98,7 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
   withdrawActive: boolean = false;
   transferActive: boolean = false;
   escrowActive: boolean = false;
-  bridgeActive: boolean = false;
+  bridgeActive: boolean = true;
 
   transferAddress = new FormControl<string | null>('');
   listPrice = new FormControl<number | undefined>(undefined);
@@ -133,6 +135,12 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
   usd$ = this.store.select(dataStateSelectors.selectUsd);
 
   private destroy$ = new Subject<void>();
+
+  scrollY$ = fromEvent(document, 'scroll').pipe(
+    map(() => (window.scrollY / 2) * -1),
+  );
+
+  expanded = false;
 
   constructor(
     private store: Store<GlobalState>,
@@ -576,9 +584,41 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
         this.http.get(nonceUrl, { params: { address }, responseType: 'text' })
       );
 
-      const signature = await signMessage(config, {
-        message: `Sign this message to verify ownership of the asset.\n\nAddress: ${address.toLowerCase()}\nEthscription ID: ${phunk.hashId}\nSHA: ${phunk.sha}\nNonce: ${nonceResult}\nChain ID: ${chainId}`,
-      });
+      // const signature = await signMessage(config, {
+      //   message: `Sign this message to verify ownership of the asset.\n\nAddress: ${address.toLowerCase()}\nEthscription ID: ${phunk.hashId}\nSHA: ${phunk.sha}\nNonce: ${nonceResult}\nChain ID: ${chainId}`,
+      // });
+
+      const typedData: any = {
+        domain: {
+          name: 'EtherPhunks',
+          version: '1',
+          chainId: BigInt(chainId),
+        },
+        message: {
+          address: address as `0x${string}`,
+          hashId: phunk.hashId,
+          sha: phunk.sha,
+          nonce: nonceResult,
+          chainId: BigInt(chainId),
+        },
+        types: {
+          EIP712Domain: [
+            { name: 'name', type: 'string' },
+            { name: 'version', type: 'string' },
+            { name: 'chainId', type: 'uint256' },
+          ],
+          Bridge: [
+            { name: 'address', type: 'address' },
+            { name: 'hashId', type: 'string' },
+            { name: 'sha', type: 'string' },
+            { name: 'nonce', type: 'string' },
+            { name: 'chainId', type: 'uint256' },
+          ],
+        },
+        primaryType: 'Bridge',
+      };
+
+      const signature = await signTypedData(config, typedData);
 
       const relayUrl = `${baseUrl}/bridge-phunk`;
       const relayResponse: any = await firstValueFrom(
@@ -588,6 +628,10 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
           sha: phunk.sha,
           signature,
           chainId,
+        }, {
+          headers: {
+            'x-api-key': 'yY.nnrLrRQ_gL.kGWb*QRCYqs3YJNtjVGXfoNLpfwwenH@FL',
+          }
         })
       );
 
@@ -637,5 +681,9 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
   async checkConsenus(phunk: Phunk): Promise<void> {
     const res = await this.dataSvc.checkConsensus([phunk]);
     if (!res[0]?.consensus) throw new Error('Consensus not reached. Contact Support @etherphunks');
+  }
+
+  expand(): void {
+    this.expanded = !this.expanded;
   }
 }

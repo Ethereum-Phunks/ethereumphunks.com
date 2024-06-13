@@ -1,0 +1,217 @@
+@import 'abstracts/variables';
+@import 'abstracts/mixins';
+
+:host {
+  display: block;
+}
+
+h2 {
+  font-size: 2.4rem;
+  font-weight: 700;
+}
+
+section {
+  .events-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    padding: 0 3rem 2rem;
+
+    h2 {
+      padding: 0;
+    }
+
+    ng-select {
+      width: 100%;
+      max-width: 20rem;
+    }
+  }
+
+  .events-items {
+    display: flex;
+    overflow-y: auto;
+    grid-gap: 3rem;
+    padding: 0 3rem 2rem;
+
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+
+    &::-webkit-scrollbar {
+      display: none;
+    }
+  }
+
+  .event-item {
+    position: relative;
+
+    min-width: 12rem;
+    width: 12rem;
+    max-width: 12rem;
+
+    text-decoration: none;
+    color: rgba(var(--text-color), 1);
+
+    .index {
+      position: absolute;
+      top: 0;
+      left: 0;
+
+      padding: 0 .5rem;
+
+      text-align: left;
+      font-size: 3.6rem;
+      line-height: 1;
+      font-weight: 700;
+      color: rgba(var(--white), 1);
+    }
+
+    .image-wrapper {
+
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      width: 100%;
+
+      img {
+        width: 100%;
+        image-rendering: pixelated;
+      }
+
+      &.placeholder {
+        background-color: rgba(var(--base-color), 1);
+      }
+    }
+
+    .labels-wrapper {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+
+      padding: 1rem 0 0;
+
+      .token-id {
+        font-weight: 700;
+        color: rgba(var(--highlight), 1);
+
+        padding-bottom: .5rem;
+      }
+
+      .label {
+        color: rgba(var(--text-color), .9);
+        font-size: 1.4rem;
+        font-weight: 500;
+        display: inline-block;
+        max-width: 12rem;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+
+        // app-address {
+        //   width: 100%;
+        // }
+      }
+
+      .date {
+        font-size: 1.2rem;
+        font-weight: 600;
+        color: rgba(var(--text-color), .65);
+
+        padding-top: .5rem;
+      }
+    }
+
+    &.created {
+      .image-wrapper {
+        background-color: rgba(var(--base-color), 1);
+      }
+    }
+
+    &.transfer {
+      .image-wrapper {
+        background-color: rgba(var(--transferred-color), 1);
+      }
+    }
+
+    &.sale,
+    &.phunkbought {
+      .image-wrapper {
+        background-color: rgba(var(--base-color), 1);
+      }
+    }
+
+    &.offered,
+    &.phunkoffered {
+      .image-wrapper {
+        background-color: rgba(var(--listed-color), 1);
+      }
+    }
+
+    &.phunkofferwithdrawn,
+    &.phunknolongerforsale {
+      .image-wrapper {
+        background-color: rgba(var(--listed-color), 1);
+      }
+    }
+
+    &.phunkbidentered,
+    &.phunkbidwithdrawn {
+      .image-wrapper {
+        background-color: rgba(var(--bid-color), 1);
+      }
+    }
+
+    &.bridgein,
+    &.bridgeout {
+      .image-wrapper {
+        background-color: rgba(var(--magma), 1);
+      }
+    }
+
+    // &.escrow {
+    //   .image-wrapper {
+    //     background-color: rgba(var(--escrow-color), 1);
+    //   }
+    // }
+
+    // &.auctionstarted,
+    // &.auctionended {
+    //   .image-wrapper {
+    //     background-color: #03B8FF;
+    //   }
+    // }
+  }
+
+  @media (max-width: $mobile) {
+
+    .events-header {
+      flex-direction: column;
+      align-items: flex-start;
+      justify-content: flex-start;
+
+      padding: 0 2rem 2rem;
+
+      h2 {
+        padding-bottom: 1rem;
+      }
+
+      ng-select {
+        max-width: 100%;
+        font-size: 1.4rem;
+      }
+    }
+
+    .events-items {
+      display: flex;
+      overflow-y: scroll;
+
+      grid-gap: 2rem;
+      padding: 0 2rem 2rem;
+    }
+
+    .event-item,
+    .sale-item {
+      min-width: 12rem;
+    }
+  }
+}

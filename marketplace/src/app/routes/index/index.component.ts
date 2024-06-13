@@ -10,21 +10,22 @@ import { LazyLoadImageModule } from 'ng-lazyload-image';
 import { PhunkGridComponent } from '@/components/shared/phunk-grid/phunk-grid.component';
 import { RecentActivityComponent } from '@/components/recent-activity/recent-activity.component';
 import { SplashComponent } from '@/components/splash/splash.component';
+import { BrbComponent } from '@/components/brb/brb.component';
 
 import { WeiToEthPipe } from '@/pipes/wei-to-eth.pipe';
+import { CalcPipe } from '@/pipes/calculate.pipe';
+import { TokenIdParsePipe } from '@/pipes/token-id-parse.pipe';
 
 import { DataService } from '@/services/data.service';
 import { ThemeService } from '@/services/theme.service';
-
-import { CalcPipe } from '@/pipes/calculate.pipe';
-import { TokenIdParsePipe } from '@/pipes/token-id-parse.pipe';
 
 import { GlobalState } from '@/models/global-state';
 
 import * as dataStateSelectors from '@/state/selectors/data-state.selectors';
 import * as appStateSelectors from '@/state/selectors/app-state.selectors';
 import * as marketStateSelectors from '@/state/selectors/market-state.selectors';
-import { BrbComponent } from '@/components/brb/brb.component';
+
+import { filter } from 'rxjs';
 
 @Component({
   standalone: true,
@@ -59,11 +60,12 @@ export class IndexComponent {
   listings$ = this.store.select(marketStateSelectors.selectListings);
   bids$ = this.store.select(marketStateSelectors.selectBids);
   all$ = this.store.select(marketStateSelectors.selectAll);
+  events$ = this.store.select(dataStateSelectors.selectEvents);
 
   isMobile$ = this.store.select(appStateSelectors.selectIsMobile);
   usd$ = this.store.select(dataStateSelectors.selectUsd);
 
-  adminState$ = this.store.select(appStateSelectors.selectAdminState);
+  config$ = this.store.select(appStateSelectors.selectConfig);
 
   constructor(
     private store: Store<GlobalState>,

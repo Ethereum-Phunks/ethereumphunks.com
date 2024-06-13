@@ -63,7 +63,7 @@ export const config = {
     provideHttpClient(),
     provideRouter(
       routes,
-      withHashLocation(),
+      // withHashLocation(),
     ),
     provideServiceWorker('ngsw-worker.js', {
         enabled: !isDevMode(),

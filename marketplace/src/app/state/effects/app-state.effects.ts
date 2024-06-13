@@ -1,25 +1,23 @@
 import { Injectable } from '@angular/core';
 
 import { Store } from '@ngrx/store';
-import { ROUTER_NAVIGATION, getRouterSelectors } from '@ngrx/router-store';
+import { ROUTER_NAVIGATION } from '@ngrx/router-store';
 
 import { Actions, createEffect, ofType } from '@ngrx/effects';
 
 import { Web3Service } from '@/services/web3.service';
 import { ThemeService } from '@/services/theme.service';
 
-import { GlobalState, Notification } from '@/models/global-state';
+import { GlobalState } from '@/models/global-state';
 
-import { EMPTY, concatMap, delay, filter, from, map, mergeMap, of, switchMap, tap, withLatestFrom } from 'rxjs';
+import { catchError, filter, from, map, mergeMap, of, switchMap, tap, withLatestFrom } from 'rxjs';
 
 import * as appStateActions from '@/state/actions/app-state.actions';
 import * as appStateSelectors from '@/state/selectors/app-state.selectors';
 
-import * as marketStateActions from '@/state/actions/market-state.actions';
-import * as marketStateSelectors from '@/state/selectors/market-state.selectors';
+import { ChatService } from '@/services/chat.service';
 
 import { environment } from 'src/environments/environment';
-import { ChatService } from '@/services/chat.service';
 
 @Injectable()
 export class AppStateEffects {
@@ -50,9 +48,13 @@ export class AppStateEffects {
     ofType(appStateActions.checkHasWithdrawal),
     withLatestFrom(this.store.select(appStateSelectors.selectWalletAddress)),
     filter(([action, address]) => !!address),
-    switchMap(([action, address]) => from(this.web3Svc.checkHasWithdrawal(address!))),
-    map(has => appStateActions.setHasWithdrawal({ hasWithdrawal: has })
-  )));
+    switchMap(([action, address]) => {
+      return from(this.web3Svc.checkHasWithdrawal(address!)).pipe(
+        catchError(() => of(0)),
+      );
+    }),
+    map(hasWithdrawal => appStateActions.setHasWithdrawal({ hasWithdrawal })),
+  ));
 
   fetchUserPoints$ = createEffect(() => this.actions$.pipe(
     ofType(appStateActions.fetchUserPoints),

@@ -10,8 +10,11 @@ import { Store } from '@ngrx/store';
 
 import { Observable, map, switchMap, withLatestFrom } from 'rxjs';
 import { AsyncPipe } from '@angular/common';
+import { selectConfig } from '@/state/selectors/app-state.selectors';
 
 // import anime from 'animejs';
+
+type View = 'conversations' | 'conversation' | 'login' | 'disabled';
 
 @Component({
   standalone: true,
@@ -28,15 +31,21 @@ import { AsyncPipe } from '@angular/common';
 })
 export class ChatComponent {
 
-  activeView$: Observable<'conversations' | 'conversation' | 'login'> = this.store.select(selectToUser).pipe(
+  activeView$: Observable<View> = this.store.select(selectToUser).pipe(
     switchMap((user) => {
-      return this.store.select(selectChatConnected).pipe(
-        map((chatConnected) => {
-          // console.log({ user, chatConnected });
-          if (chatConnected) return user ? 'conversation' : 'conversations';
-          return 'login';
+      return this.store.select(selectConfig).pipe(
+        switchMap((config) => {
+          return this.store.select(selectChatConnected).pipe(
+            map((connected) => {
+              console.log({ user, connected, config });
+
+              if (!config.chat) return 'disabled';
+              if (connected) return user ? 'conversation' : 'conversations';
+              return 'login';
+            })
+          )
         })
-      )
+      );
     }),
   );
 

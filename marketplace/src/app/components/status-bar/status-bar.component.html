@@ -12,8 +12,13 @@
     (click)="expandCollapse()">
 
     @if ((gasSvc.gas$ | async); as gas) {
-      <div class="gas">
-        {{ gas.ProposeGasPrice }} Gwei
+      <div class="network-gas">
+        <div class="gas">
+          {{ gas.ProposeGasPrice }} Gwei
+        </div>
+        <div class="network">
+          {{ chain === 1 ? 'mainnet' : 'sepolia' }}
+        </div>
       </div>
     }
 

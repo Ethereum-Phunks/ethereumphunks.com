@@ -44,8 +44,9 @@ export interface AppState {
   modalActive: boolean;
   collectionsMenuActive: boolean;
 
-  admin: {
+  config: {
     maintenance: boolean;
+    chat: boolean;
   }
 }
 

@@ -1,26 +1,63 @@
 <section
   class="events-wrapper">
 
-  <div class="events-header">
-    <h2>Recent Activity</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Event</th>
+        <th>Token ID</th>
+        <th>From</th>
+        <th>To</th>
+        <th>Value</th>
+        <th>&nbsp;</th>
+      </tr>
+    </thead>
+    <tbody>
 
-    <ng-select
-      [items]="txFilters"
-      [clearable]="false"
-      [searchable]="false"
-      bindValue="value"
-      bindLabel="label"
-      [(ngModel)]="_activeTxFilter"
-      (change)="setActiveTxFilter($event)">
-    </ng-select>
-  </div>
+      @for (event of (events$ | async);
+        track (event.hashId + '-' + event.type + '-' + event.from + '-' + event.tokenId)
+      ) {
+        <tr>
+          <td>
+            <div class="cell-inner">
+              {{ labels[event.type] }}
+            </div>
+          </td>
+          <td>
+            <div class="cell-inner">
+              #{{ event.tokenId }}
+            </div>
+          </td>
+          <td>
+            <div class="cell-inner">
+              <app-address [address]="event.from" />
+            </div>
+          </td>
+          <td>
+            <div class="cell-inner">
+              <app-address [address]="event.to" />
+            </div>
+          </td>
+          <td>
+            <div class="cell-inner">
+              Ξ{{ event.value | weiToEth }}
+            </div>
+          </td>
+          <td>
+            <div class="cell-inner">
+              {{ event.blockTimestamp | timeago : true }}
+            </div>
+          </td>
+        </tr>
+      }
 
-  <div class="events-items">
-    @for (event of events(); track (event.hashId + '-' + event.type + '-' + event.from + '-' + event.tokenId)) {
-      <a
+    </tbody>
+
+    <!-- <a
         [routerLink]="['/', 'details', event.hashId]"
         class="event-item"
         [class]="event.type | lowercase">
+
         <div class="image-wrapper">
           <img
             [lazyLoad]="dataSvc.staticUrl + '/images/' + event.sha + '.png'"
@@ -68,20 +105,7 @@
             </div>
           </div>
         </div>
-      </a>
-    } @empty {
-      @for (i of [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]; track idx; let idx = $index) {
-        <span class="event-item">
-          <div class="image-wrapper placeholder">
-            <img
-              [lazyLoad]="'assets/loadingphunk.png'"
-              [defaultImage]="'assets/loadingphunk.png'"
-              width="160"
-              height="160"
-            />
-          </div>
-        </span>
-      }
-    }
-  </div>
+      </a> -->
+
+  </table>
 </section>

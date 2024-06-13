@@ -1,5 +1,12 @@
 @if ((marketType$ | async); as marketType) {
   <div class="inner">
+
+    <!-- @if (marketType === 'owned') {
+      @if ((route.queryParams | async)?.address; as address) {
+        <app-user-activity [address]="address" />
+      }
+    } -->
+
     @if ((activeMarketRouteData$ | async); as phunkData) {
 
       @if ((activeCollection$ | async); as collection) {

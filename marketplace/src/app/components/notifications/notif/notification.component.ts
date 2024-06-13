@@ -65,7 +65,7 @@ export class NotificationComponent {
 
     effect(() => {
       if (this.txn()?.type === 'error') {
-        console.log('NotificationComponent', {...this.txn()?.detail});
+        // console.log('NotificationComponent', {...this.txn()?.detail});
       }
     });
 

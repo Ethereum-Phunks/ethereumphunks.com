@@ -166,7 +166,7 @@ export const setCollectionsMenuActive = createAction(
   props<{ collectionsMenuActive: boolean }>()
 );
 
-export const setAdmin = createAction(
-  '[App State] Set Admin State',
-  props<{ admin: any }>()
+export const setGlobalConfig = createAction(
+  '[App State] Set Global Config State',
+  props<{ config: any }>()
 );

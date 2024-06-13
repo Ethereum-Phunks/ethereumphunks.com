@@ -5,3 +5,15 @@
   font-family: $secondary-font-stack;
   font-weight: 400;
 }
+
+.message-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 2rem;
+
+  p {
+    text-align: center;
+  }
+}

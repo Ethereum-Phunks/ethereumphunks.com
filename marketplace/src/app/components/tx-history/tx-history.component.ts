@@ -58,7 +58,7 @@ export class TxHistoryComponent implements OnChanges {
     switchMap((hashId) => this.dataSvc.fetchSingleTokenEvents(hashId!)),
     catchError(error => {
       console.error('Error fetching transaction history', error);
-      return of([]);
+      return of(null);
     })
   );
 

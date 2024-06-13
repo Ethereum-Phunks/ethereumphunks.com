@@ -17,7 +17,7 @@ import * as dataStateSelectors from '@/state/selectors/data-state.selectors';
 import * as marketStateActions from '@/state/actions/market-state.actions';
 import * as marketStateSelectors from '@/state/selectors/market-state.selectors';
 
-import { asyncScheduler, filter, forkJoin, from, map, mergeMap, switchMap, tap, throttleTime, withLatestFrom } from 'rxjs';
+import { asyncScheduler, filter, forkJoin, from, map, mergeMap, of, switchMap, tap, throttleTime, withLatestFrom } from 'rxjs';
 
 @Injectable()
 export class DataStateEffects {
@@ -90,7 +90,15 @@ export class DataStateEffects {
       const cleanPhunk = phunk ? { ...phunk, loading: true } : null;
       this.store.dispatch(dataStateActions.setSinglePhunk({ phunk: cleanPhunk }))
     }),
-    switchMap(([action]) => this.dataSvc.fetchSinglePhunk(action.phunkId)),
+    switchMap(([action]) => this.dataSvc.fetchSinglePhunk(action.phunkId).pipe(
+      switchMap((phunk) => {
+        if (!phunk.collectionName) {
+          return this.dataSvc.fetchUnsupportedItem(action.phunkId)
+        }
+        return of(phunk);
+      })
+    )),
+    // tap((phunk) => console.log('fetchSingle$', phunk)),
     mergeMap((phunk) => [
       dataStateActions.setSinglePhunk({ phunk }),
       marketStateActions.setMarketSlug({ marketSlug: phunk.slug }),

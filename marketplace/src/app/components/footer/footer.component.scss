@@ -21,12 +21,21 @@
 
       a {
         padding: 0 1rem;
+
         svg {
           width: 2.4rem;
           height: auto;
 
           path {
             fill: rgba(var(--text-color), .65);
+          }
+        }
+
+        &:active {
+          svg {
+            path {
+              fill: rgba(var(--text-color), 1);
+            }
           }
         }
       }
