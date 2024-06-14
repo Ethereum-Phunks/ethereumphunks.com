@@ -10,21 +10,58 @@ SET xmloption = content;
 SET client_min_messages = warning;
 SET row_security = off;
 
-CREATE EXTENSION IF NOT EXISTS "pgsodium" WITH SCHEMA "pgsodium";
+CREATE SCHEMA IF NOT EXISTS "public";
+
+ALTER SCHEMA "public" OWNER TO "pg_database_owner";
 
 COMMENT ON SCHEMA "public" IS 'standard public schema';
 
-CREATE EXTENSION IF NOT EXISTS "pg_graphql" WITH SCHEMA "graphql";
+CREATE OR REPLACE FUNCTION "public"."addresses_are_holders"("addresses" "text"[]) RETURNS "jsonb"
+    LANGUAGE "plpgsql"
+    AS $$
+DECLARE
+  market_address text := '0xd3418772623be1a3cc6b6d45cb46420cedd9154a';
+BEGIN
+  RETURN (
+    WITH filtered AS (
+      SELECT
+        CASE
+          WHEN es.owner = market_address THEN es."prevOwner"
+          ELSE es.owner
+        END AS effective_owner,
+        es."tokenId",
+        es."hashId",
+        es.sha,
+        es.owner,
+        es."prevOwner",
+        es."createdAt"
+      FROM ethscriptions es
+      WHERE (es.owner = ANY(addresses) AND es.owner <> market_address)
+         OR (es."prevOwner" = ANY(addresses) AND es.owner = market_address)
+    ),
+    ranked AS (
+      SELECT
+        *,
+        ROW_NUMBER() OVER (PARTITION BY effective_owner ORDER BY "createdAt" ASC) as rn
+      FROM filtered
+    )
+    SELECT jsonb_agg(jsonb_build_object(
+      'address', effective_owner,
+      'item', jsonb_build_object(
+        'tokenId', "tokenId",
+        'hashId', "hashId",
+        'sha', sha,
+        'owner', owner,
+        'prevOwner', "prevOwner"
+      )
+    ))
+    FROM ranked
+    WHERE rn = 1
+  );
+END;
+$$;
 
-CREATE EXTENSION IF NOT EXISTS "pg_stat_statements" WITH SCHEMA "extensions";
-
-CREATE EXTENSION IF NOT EXISTS "pgcrypto" WITH SCHEMA "extensions";
-
-CREATE EXTENSION IF NOT EXISTS "pgjwt" WITH SCHEMA "extensions";
-
-CREATE EXTENSION IF NOT EXISTS "supabase_vault" WITH SCHEMA "vault";
-
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp" WITH SCHEMA "extensions";
+ALTER FUNCTION "public"."addresses_are_holders"("addresses" "text"[]) OWNER TO "postgres";
 
 CREATE OR REPLACE FUNCTION "public"."addresses_are_holders_sepolia"("addresses" "text"[]) RETURNS "jsonb"
     LANGUAGE "plpgsql"
@@ -296,7 +333,7 @@ CREATE OR REPLACE FUNCTION "public"."fetch_ethscriptions_owned_with_listings_and
     AS $$DECLARE
     "marketAddress" CONSTANT TEXT := '0x3dfbc8c62d3ce0059bdaf21787ec24d5d116fe1e';  -- market address
     "auctionAddress" CONSTANT TEXT := ''; -- auction address
-    "bridgeAddressMainnet" CONSTANT TEXT := '0xe492425712642c560a8daa8dca333fa34dd51c6c'; -- bridge address
+    "bridgeAddressMainnet" CONSTANT TEXT := '0x1565f60d2469f18bbcc96b2c29220412f2fe98bd'; -- bridge address
 BEGIN
     RETURN QUERY
     SELECT json_build_object(
@@ -414,7 +451,7 @@ $$;
 
 ALTER FUNCTION "public"."fetch_ethscriptions_with_listings_and_bids_sepolia"("collection_slug" "text") OWNER TO "postgres";
 
-CREATE OR REPLACE FUNCTION "public"."fetch_events"("p_limit" integer, "p_type" "text" DEFAULT NULL::"text", "p_collection_slug" "text" DEFAULT 'ethereum-phunks'::"text") RETURNS TABLE("hashId" "text", "fromAddress" "text", "toAddress" "text", "tokenId" bigint, "blockTimestamp" timestamp with time zone, "type" "text", "value" "text", "slug" "text", "sha" "text")
+CREATE OR REPLACE FUNCTION "public"."fetch_events"("p_limit" integer, "p_type" "text" DEFAULT NULL::"text", "p_collection_slug" "text" DEFAULT 'ethereum-phunks'::"text") RETURNS TABLE("hashId" "text", "from" "text", "to" "text", "tokenId" bigint, "blockTimestamp" timestamp with time zone, "type" "text", "value" "text", "slug" "text", "sha" "text")
     LANGUAGE "plpgsql"
     AS $$
 DECLARE
@@ -424,8 +461,8 @@ BEGIN
     RETURN QUERY EXECUTE
     'SELECT
         e."hashId",
-        e."from",
-        e."to",
+        e.from,
+        e.to,
         eg."tokenId",
         e."blockTimestamp",
         e.type,
@@ -436,10 +473,10 @@ BEGIN
         public.events e
     INNER JOIN public.ethscriptions eg ON e."hashId" = eg."hashId"
     WHERE
-        eg."slug" = ''' || p_collection_slug || '''
-        AND e."to" != ''' || "auctionAddress" || '''
-        AND e."to" != ''' || "marketAddress" || '''
-        AND e."from" != ''' || "auctionAddress" || '''
+        eg.slug = ''' || p_collection_slug || '''
+        AND e.to != ''' || "auctionAddress" || '''
+        AND e.to != ''' || "marketAddress" || '''
+        AND e.from != ''' || "auctionAddress" || '''
         AND e.type != ''PhunkNoLongerForSale''' ||
         (CASE WHEN p_type IS NOT NULL THEN
             ' AND e.type = ''' || p_type || ''''
@@ -453,18 +490,17 @@ $$;
 
 ALTER FUNCTION "public"."fetch_events"("p_limit" integer, "p_type" "text", "p_collection_slug" "text") OWNER TO "postgres";
 
-CREATE OR REPLACE FUNCTION "public"."fetch_events_sepolia"("p_limit" integer, "p_type" "text" DEFAULT NULL::"text", "p_collection_slug" "text" DEFAULT 'ethereum-phunks'::"text") RETURNS TABLE("hashId" "text", "fromAddress" "text", "toAddress" "text", "tokenId" bigint, "blockTimestamp" timestamp with time zone, "type" "text", "value" "text", "slug" "text", "sha" "text")
+CREATE OR REPLACE FUNCTION "public"."fetch_events_sepolia"("p_limit" integer, "p_type" "text" DEFAULT NULL::"text", "p_collection_slug" "text" DEFAULT 'ethereum-phunks'::"text") RETURNS TABLE("hashId" "text", "from" "text", "to" "text", "tokenId" bigint, "blockTimestamp" timestamp with time zone, "type" "text", "value" "text", "slug" "text", "sha" "text")
     LANGUAGE "plpgsql"
-    AS $$
-DECLARE
+    AS $$DECLARE
     "marketAddress" CONSTANT TEXT := '0x3dfbc8c62d3ce0059bdaf21787ec24d5d116fe1e';  -- market address
     "auctionAddress" CONSTANT TEXT := '0xc6a824d8cce7c946a3f35879694b9261a36fc823'; -- auction address
 BEGIN
     RETURN QUERY EXECUTE
     'SELECT
         e."hashId",
-        e."from",
-        e."to",
+        e.from,
+        e.to,
         eg."tokenId",
         e."blockTimestamp",
         e.type,
@@ -475,10 +511,10 @@ BEGIN
         public.events_sepolia e
     INNER JOIN public.ethscriptions_sepolia eg ON e."hashId" = eg."hashId"
     WHERE
-        eg."slug" = ''' || p_collection_slug || '''
-        AND e."to" != ''' || "auctionAddress" || '''
-        AND e."to" != ''' || "marketAddress" || '''
-        AND e."from" != ''' || "auctionAddress" || '''
+        eg.slug = ''' || p_collection_slug || '''
+        AND e.to != ''' || "auctionAddress" || '''
+        AND e.to != ''' || "marketAddress" || '''
+        AND e.from != ''' || "auctionAddress" || '''
         AND e.type != ''PhunkNoLongerForSale''' ||
         (CASE WHEN p_type IS NOT NULL THEN
             ' AND e.type = ''' || p_type || ''''
@@ -487,8 +523,7 @@ BEGIN
         END) ||
     ' ORDER BY e."blockTimestamp" DESC
     LIMIT ' || p_limit;
-END;
-$$;
+END;$$;
 
 ALTER FUNCTION "public"."fetch_events_sepolia"("p_limit" integer, "p_type" "text", "p_collection_slug" "text") OWNER TO "postgres";
 
@@ -539,6 +574,63 @@ END;
 $$;
 
 ALTER FUNCTION "public"."fetch_leaderboard_sepolia"() OWNER TO "postgres";
+
+CREATE OR REPLACE FUNCTION "public"."fetch_user_events_sepolia"("p_limit" integer, "p_address" "text", "p_type" "text" DEFAULT NULL::"text", "p_collection_slug" "text" DEFAULT 'ethereum-phunks'::"text") RETURNS TABLE("hashId" "text", "from" "text", "to" "text", "tokenId" bigint, "blockTimestamp" timestamp with time zone, "type" "text", "value" "text", "slug" "text", "sha" "text")
+    LANGUAGE "plpgsql"
+    AS $$
+DECLARE
+    "marketAddress" CONSTANT TEXT := '0x3dfbc8c62d3ce0059bdaf21787ec24d5d116fe1e';  -- market address
+BEGIN
+    RETURN QUERY EXECUTE
+    'WITH corrected_events AS (
+        SELECT
+            e."hashId",
+            CASE
+                WHEN e."from" = ''' || "marketAddress" || ''' AND e.type IN (''PhunkBought'', ''escrow'') THEN (
+                    SELECT e2."from"
+                    FROM public.events_sepolia e2
+                    WHERE e2."to" = ''' || "marketAddress" || '''
+                    AND e2."hashId" = e."hashId"
+                    LIMIT 1
+                )
+                ELSE e."from"
+            END AS "fromAddress",
+            e."to" AS "toAddress",
+            eg."tokenId",
+            e."blockTimestamp",
+            e.type,
+            e.value,
+            eg.slug,
+            eg.sha
+        FROM
+            public.events_sepolia e
+        INNER JOIN public.ethscriptions_sepolia eg ON e."hashId" = eg."hashId"
+        WHERE
+            eg."slug" = ''' || p_collection_slug || '''
+            AND (e."to" = ''' || p_address || ''' OR e."from" = ''' || p_address || ''' OR (
+                e."from" = ''' || "marketAddress" || ''' AND e.type IN (''PhunkBought'', ''escrow'') AND (
+                    SELECT e2."from"
+                    FROM public.events_sepolia e2
+                    WHERE e2."to" = ''' || "marketAddress" || '''
+                    AND e2."hashId" = e."hashId"
+                    LIMIT 1
+                ) = ''' || p_address || '''
+            ))
+            AND e."to" != ''' || "marketAddress" || '''
+            AND e.type != ''PhunkNoLongerForSale''' ||
+            (CASE WHEN p_type IS NOT NULL THEN
+                ' AND e.type = ''' || p_type || ''''
+            ELSE
+                ''
+            END) ||
+            ' AND NOT (e.type = ''transfer'' AND (e."to" = ''' || p_address || ''' OR e."from" = ''' || p_address || '''))'
+    ' ORDER BY e."blockTimestamp" DESC
+    LIMIT ' || p_limit
+    || ') SELECT * FROM corrected_events;';
+END;
+$$;
+
+ALTER FUNCTION "public"."fetch_user_events_sepolia"("p_limit" integer, "p_address" "text", "p_type" "text", "p_collection_slug" "text") OWNER TO "postgres";
 
 CREATE OR REPLACE FUNCTION "public"."get_total_volume"("start_date" timestamp with time zone DEFAULT (CURRENT_TIMESTAMP - '30 days'::interval), "end_date" timestamp with time zone DEFAULT CURRENT_TIMESTAMP, "slug_filter" "text" DEFAULT NULL::"text") RETURNS TABLE("volume" numeric, "sales" bigint)
     LANGUAGE "plpgsql"
@@ -599,6 +691,14 @@ SET default_tablespace = '';
 
 SET default_table_access_method = "heap";
 
+CREATE TABLE IF NOT EXISTS "public"."_global_config" (
+    "maintenance" boolean DEFAULT false NOT NULL,
+    "network" bigint DEFAULT '1'::bigint NOT NULL,
+    "chat" boolean DEFAULT true NOT NULL
+);
+
+ALTER TABLE "public"."_global_config" OWNER TO "postgres";
+
 CREATE TABLE IF NOT EXISTS "public"."attributes" (
     "sha" "text" NOT NULL,
     "values" "jsonb",
@@ -618,26 +718,6 @@ CREATE TABLE IF NOT EXISTS "public"."auctionBids" (
 );
 
 ALTER TABLE "public"."auctionBids" OWNER TO "postgres";
-
-CREATE TABLE IF NOT EXISTS "public"."auctionBids_goerli" (
-    "id" bigint NOT NULL,
-    "createdAt" timestamp with time zone DEFAULT "now"() NOT NULL,
-    "auctionId" bigint NOT NULL,
-    "fromAddress" "text" DEFAULT ''::"text" NOT NULL,
-    "amount" "text" DEFAULT '0'::"text" NOT NULL,
-    "txHash" "text" NOT NULL
-);
-
-ALTER TABLE "public"."auctionBids_goerli" OWNER TO "postgres";
-
-ALTER TABLE "public"."auctionBids_goerli" ALTER COLUMN "id" ADD GENERATED BY DEFAULT AS IDENTITY (
-    SEQUENCE NAME "public"."auctionBids_goerli_id_seq"
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1
-);
 
 ALTER TABLE "public"."auctionBids" ALTER COLUMN "id" ADD GENERATED BY DEFAULT AS IDENTITY (
     SEQUENCE NAME "public"."auctionBids_id_seq"
@@ -693,29 +773,6 @@ ALTER TABLE "public"."auctions" ALTER COLUMN "auctionId" ADD GENERATED BY DEFAUL
     CACHE 1
 );
 
-CREATE TABLE IF NOT EXISTS "public"."auctions_goerli" (
-    "auctionId" bigint NOT NULL,
-    "createdAt" timestamp with time zone DEFAULT "now"() NOT NULL,
-    "hashId" "text" NOT NULL,
-    "amount" "text" DEFAULT '0'::"text" NOT NULL,
-    "startTime" timestamp with time zone,
-    "endTime" timestamp with time zone,
-    "bidder" "text",
-    "settled" boolean DEFAULT false NOT NULL,
-    "prevOwner" "text"
-);
-
-ALTER TABLE "public"."auctions_goerli" OWNER TO "postgres";
-
-ALTER TABLE "public"."auctions_goerli" ALTER COLUMN "auctionId" ADD GENERATED BY DEFAULT AS IDENTITY (
-    SEQUENCE NAME "public"."auctions_goerli_auctionId_seq"
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1
-);
-
 CREATE TABLE IF NOT EXISTS "public"."auctions_sepolia" (
     "auctionId" bigint NOT NULL,
     "createdAt" timestamp with time zone DEFAULT "now"() NOT NULL,
@@ -750,16 +807,6 @@ CREATE TABLE IF NOT EXISTS "public"."bids" (
 );
 
 ALTER TABLE "public"."bids" OWNER TO "postgres";
-
-CREATE TABLE IF NOT EXISTS "public"."bids_goerli" (
-    "createdAt" timestamp with time zone DEFAULT "now"() NOT NULL,
-    "hashId" "text" NOT NULL,
-    "fromAddress" "text" NOT NULL,
-    "value" "text" DEFAULT '0'::"text" NOT NULL,
-    "txHash" "text" NOT NULL
-);
-
-ALTER TABLE "public"."bids_goerli" OWNER TO "postgres";
 
 CREATE TABLE IF NOT EXISTS "public"."bids_sepolia" (
     "createdAt" timestamp with time zone DEFAULT "now"() NOT NULL,
@@ -805,30 +852,6 @@ CREATE TABLE IF NOT EXISTS "public"."collections" (
 
 ALTER TABLE "public"."collections" OWNER TO "postgres";
 
-CREATE TABLE IF NOT EXISTS "public"."collections_goerli" (
-    "slug" "text" NOT NULL,
-    "createdAt" timestamp with time zone DEFAULT "now"() NOT NULL,
-    "posterHashId" "text",
-    "name" "text" NOT NULL,
-    "description" "text",
-    "image" "text",
-    "id" bigint NOT NULL,
-    "singleName" "text",
-    "active" boolean DEFAULT false NOT NULL,
-    "supply" bigint DEFAULT '0'::bigint NOT NULL
-);
-
-ALTER TABLE "public"."collections_goerli" OWNER TO "postgres";
-
-ALTER TABLE "public"."collections_goerli" ALTER COLUMN "id" ADD GENERATED BY DEFAULT AS IDENTITY (
-    SEQUENCE NAME "public"."collections_goerli_id_seq"
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1
-);
-
 ALTER TABLE "public"."collections" ALTER COLUMN "id" ADD GENERATED BY DEFAULT AS IDENTITY (
     SEQUENCE NAME "public"."collections_id_seq"
     START WITH 1
@@ -871,27 +894,13 @@ CREATE TABLE IF NOT EXISTS "public"."ethscriptions" (
     "hashId" "text" NOT NULL,
     "sha" "text" NOT NULL,
     "tokenId" bigint DEFAULT '-1'::bigint NOT NULL,
-    "data" "text",
     "prevOwner" "text",
     "slug" "text",
-    "oldHashId" "text"
+    "oldHashId" "text",
+    "locked" boolean DEFAULT false NOT NULL
 );
 
 ALTER TABLE "public"."ethscriptions" OWNER TO "postgres";
-
-CREATE TABLE IF NOT EXISTS "public"."ethscriptions_goerli" (
-    "createdAt" timestamp with time zone DEFAULT "now"(),
-    "creator" "text",
-    "owner" "text" NOT NULL,
-    "hashId" "text" NOT NULL,
-    "sha" "text" NOT NULL,
-    "prevOwner" "text",
-    "slug" "text" NOT NULL,
-    "data" "text",
-    "tokenId" bigint DEFAULT '-1'::bigint NOT NULL
-);
-
-ALTER TABLE "public"."ethscriptions_goerli" OWNER TO "postgres";
 
 CREATE TABLE IF NOT EXISTS "public"."ethscriptions_sepolia" (
     "createdAt" timestamp with time zone DEFAULT "now"(),
@@ -926,22 +935,6 @@ CREATE TABLE IF NOT EXISTS "public"."events" (
 
 ALTER TABLE "public"."events" OWNER TO "postgres";
 
-CREATE TABLE IF NOT EXISTS "public"."events_goerli" (
-    "hashId" "text" NOT NULL,
-    "from" "text" NOT NULL,
-    "to" "text" NOT NULL,
-    "blockHash" "text" NOT NULL,
-    "txHash" "text" NOT NULL,
-    "blockNumber" bigint,
-    "blockTimestamp" timestamp with time zone DEFAULT "now"(),
-    "type" "text",
-    "value" "text",
-    "txId" "text" NOT NULL,
-    "txIndex" bigint DEFAULT '-1'::bigint NOT NULL
-);
-
-ALTER TABLE "public"."events_goerli" OWNER TO "postgres";
-
 CREATE TABLE IF NOT EXISTS "public"."events_sepolia" (
     "hashId" "text" NOT NULL,
     "from" "text" NOT NULL,
@@ -953,7 +946,8 @@ CREATE TABLE IF NOT EXISTS "public"."events_sepolia" (
     "type" "text",
     "value" "text",
     "txId" "text" NOT NULL,
-    "txIndex" bigint DEFAULT '-1'::bigint NOT NULL
+    "txIndex" bigint DEFAULT '-1'::bigint NOT NULL,
+    "l2" boolean DEFAULT false NOT NULL
 );
 
 ALTER TABLE "public"."events_sepolia" OWNER TO "postgres";
@@ -972,18 +966,6 @@ CREATE TABLE IF NOT EXISTS "public"."listings" (
 
 ALTER TABLE "public"."listings" OWNER TO "postgres";
 
-CREATE TABLE IF NOT EXISTS "public"."listings_goerli" (
-    "createdAt" timestamp with time zone DEFAULT "now"() NOT NULL,
-    "hashId" "text" NOT NULL,
-    "listed" boolean DEFAULT false NOT NULL,
-    "toAddress" "text",
-    "minValue" "text" NOT NULL,
-    "listedBy" "text" NOT NULL,
-    "txHash" "text" NOT NULL
-);
-
-ALTER TABLE "public"."listings_goerli" OWNER TO "postgres";
-
 CREATE TABLE IF NOT EXISTS "public"."listings_sepolia" (
     "createdAt" timestamp with time zone DEFAULT "now"() NOT NULL,
     "hashId" "text" NOT NULL,
@@ -998,6 +980,42 @@ ALTER TABLE "public"."listings_sepolia" OWNER TO "postgres";
 
 COMMENT ON TABLE "public"."listings_sepolia" IS 'This is a duplicate of listings';
 
+CREATE TABLE IF NOT EXISTS "public"."nfts" (
+    "tokenId" bigint NOT NULL,
+    "hashId" "text" NOT NULL,
+    "owner" "text",
+    "createdAt" timestamp with time zone DEFAULT "now"() NOT NULL
+);
+
+ALTER TABLE "public"."nfts" OWNER TO "postgres";
+
+CREATE TABLE IF NOT EXISTS "public"."nfts_sepolia" (
+    "tokenId" bigint NOT NULL,
+    "hashId" "text" NOT NULL,
+    "owner" "text",
+    "createdAt" timestamp with time zone DEFAULT "now"() NOT NULL
+);
+
+ALTER TABLE "public"."nfts_sepolia" OWNER TO "postgres";
+
+ALTER TABLE "public"."nfts_sepolia" ALTER COLUMN "tokenId" ADD GENERATED BY DEFAULT AS IDENTITY (
+    SEQUENCE NAME "public"."nfts_sepolia_tokenId_seq"
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+ALTER TABLE "public"."nfts" ALTER COLUMN "tokenId" ADD GENERATED BY DEFAULT AS IDENTITY (
+    SEQUENCE NAME "public"."nfts_tokenId_seq"
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
 CREATE TABLE IF NOT EXISTS "public"."users" (
     "createdAt" timestamp with time zone DEFAULT "now"(),
     "address" "text" NOT NULL,
@@ -1005,14 +1023,6 @@ CREATE TABLE IF NOT EXISTS "public"."users" (
 );
 
 ALTER TABLE "public"."users" OWNER TO "postgres";
-
-CREATE TABLE IF NOT EXISTS "public"."users_goerli" (
-    "createdAt" timestamp with time zone DEFAULT "now"(),
-    "address" "text" NOT NULL,
-    "points" bigint DEFAULT '0'::bigint NOT NULL
-);
-
-ALTER TABLE "public"."users_goerli" OWNER TO "postgres";
 
 CREATE TABLE IF NOT EXISTS "public"."users_sepolia" (
     "createdAt" timestamp with time zone DEFAULT "now"(),
@@ -1023,6 +1033,12 @@ CREATE TABLE IF NOT EXISTS "public"."users_sepolia" (
 ALTER TABLE "public"."users_sepolia" OWNER TO "postgres";
 
 COMMENT ON TABLE "public"."users_sepolia" IS 'This is a duplicate of users';
+
+ALTER TABLE ONLY "public"."_global_config"
+    ADD CONSTRAINT "admin_network_key" UNIQUE ("network");
+
+ALTER TABLE ONLY "public"."_global_config"
+    ADD CONSTRAINT "admin_pkey" PRIMARY KEY ("network");
 
 ALTER TABLE ONLY "public"."attributes"
     ADD CONSTRAINT "attributes_pkey" PRIMARY KEY ("sha");
@@ -1036,20 +1052,11 @@ ALTER TABLE ONLY "public"."auctionBids"
 ALTER TABLE ONLY "public"."auctionBids_sepolia"
     ADD CONSTRAINT "auctionBids_sepolia_pkey" PRIMARY KEY ("id");
 
-ALTER TABLE ONLY "public"."auctionBids_goerli"
-    ADD CONSTRAINT "auctionbids_goerli_pkey" PRIMARY KEY ("id");
-
-ALTER TABLE ONLY "public"."auctions_goerli"
-    ADD CONSTRAINT "auctions_goerli_pkey" PRIMARY KEY ("auctionId");
-
 ALTER TABLE ONLY "public"."auctions"
     ADD CONSTRAINT "auctions_pkey" PRIMARY KEY ("auctionId");
 
 ALTER TABLE ONLY "public"."auctions_sepolia"
     ADD CONSTRAINT "auctions_sepolia_pkey" PRIMARY KEY ("auctionId");
-
-ALTER TABLE ONLY "public"."bids_goerli"
-    ADD CONSTRAINT "bids_goerli_pkey" PRIMARY KEY ("hashId");
 
 ALTER TABLE ONLY "public"."bids"
     ADD CONSTRAINT "bids_pkey" PRIMARY KEY ("hashId");
@@ -1059,12 +1066,6 @@ ALTER TABLE ONLY "public"."bids_sepolia"
 
 ALTER TABLE ONLY "public"."blocks"
     ADD CONSTRAINT "blocks_pkey" PRIMARY KEY ("network");
-
-ALTER TABLE ONLY "public"."collections_goerli"
-    ADD CONSTRAINT "collections_goerli_id_key" UNIQUE ("id");
-
-ALTER TABLE ONLY "public"."collections_goerli"
-    ADD CONSTRAINT "collections_goerli_pkey" PRIMARY KEY ("slug");
 
 ALTER TABLE ONLY "public"."collections"
     ADD CONSTRAINT "collections_id_key" UNIQUE ("id");
@@ -1077,12 +1078,6 @@ ALTER TABLE ONLY "public"."collections_sepolia"
 
 ALTER TABLE ONLY "public"."collections_sepolia"
     ADD CONSTRAINT "collections_sepolia_pkey" PRIMARY KEY ("slug");
-
-ALTER TABLE ONLY "public"."ethscriptions_goerli"
-    ADD CONSTRAINT "ethscriptions_goerli_pkey" PRIMARY KEY ("hashId");
-
-ALTER TABLE ONLY "public"."ethscriptions_goerli"
-    ADD CONSTRAINT "ethscriptions_goerli_sha_key" UNIQUE ("sha");
 
 ALTER TABLE ONLY "public"."ethscriptions"
     ADD CONSTRAINT "ethscriptions_hashId_key" UNIQUE ("hashId");
@@ -1108,9 +1103,6 @@ ALTER TABLE ONLY "public"."ethscriptions_sepolia"
 ALTER TABLE ONLY "public"."ethscriptions"
     ADD CONSTRAINT "ethscriptions_sha_key" UNIQUE ("sha");
 
-ALTER TABLE ONLY "public"."events_goerli"
-    ADD CONSTRAINT "events_goerli_pkey" PRIMARY KEY ("txId");
-
 ALTER TABLE ONLY "public"."events"
     ADD CONSTRAINT "events_pkey" PRIMARY KEY ("txId");
 
@@ -1129,11 +1121,17 @@ ALTER TABLE ONLY "public"."listings"
 ALTER TABLE ONLY "public"."listings_sepolia"
     ADD CONSTRAINT "listings_sepolia_pkey" PRIMARY KEY ("hashId");
 
-ALTER TABLE ONLY "public"."listings_goerli"
-    ADD CONSTRAINT "market_listings_pkey" PRIMARY KEY ("hashId");
+ALTER TABLE ONLY "public"."nfts"
+    ADD CONSTRAINT "nfts_pkey" PRIMARY KEY ("tokenId", "hashId");
 
-ALTER TABLE ONLY "public"."users_goerli"
-    ADD CONSTRAINT "users_goerli_pkey" PRIMARY KEY ("address");
+ALTER TABLE ONLY "public"."nfts_sepolia"
+    ADD CONSTRAINT "nfts_sepolia_pkey" PRIMARY KEY ("tokenId", "hashId");
+
+ALTER TABLE ONLY "public"."nfts_sepolia"
+    ADD CONSTRAINT "nfts_sepolia_tokenId_key" UNIQUE ("tokenId");
+
+ALTER TABLE ONLY "public"."nfts"
+    ADD CONSTRAINT "nfts_tokenId_key" UNIQUE ("tokenId");
 
 ALTER TABLE ONLY "public"."users"
     ADD CONSTRAINT "users_pkey" PRIMARY KEY ("address");
@@ -1141,15 +1139,11 @@ ALTER TABLE ONLY "public"."users"
 ALTER TABLE ONLY "public"."users_sepolia"
     ADD CONSTRAINT "users_sepolia_pkey" PRIMARY KEY ("address");
 
-CREATE INDEX "ethscriptions_goerli_hashid_idx" ON "public"."ethscriptions_goerli" USING "btree" ("hashId");
-
 CREATE INDEX "ethscriptions_hashId_idx" ON "public"."ethscriptions" USING "btree" ("hashId");
 
 CREATE INDEX "ethscriptions_sepolia_hashId_idx" ON "public"."ethscriptions_sepolia" USING "btree" ("hashId");
 
 CREATE INDEX "idx_attributes" ON "public"."attributes" USING "gin" ("values");
-
-CREATE INDEX "phunks_goerli_hashId_idx" ON "public"."ethscriptions_goerli" USING "btree" ("hashId");
 
 ALTER TABLE ONLY "public"."attributes"
     ADD CONSTRAINT "attributes_sha_fkey" FOREIGN KEY ("sha") REFERENCES "public"."ethscriptions"("sha");
@@ -1157,32 +1151,26 @@ ALTER TABLE ONLY "public"."attributes"
 ALTER TABLE ONLY "public"."auctionBids"
     ADD CONSTRAINT "auctionBids_auctionId_fkey" FOREIGN KEY ("auctionId") REFERENCES "public"."auctions"("auctionId");
 
-ALTER TABLE ONLY "public"."auctions_goerli"
-    ADD CONSTRAINT "auctions_goerli_hashid_fkey" FOREIGN KEY ("hashId") REFERENCES "public"."ethscriptions_goerli"("hashId");
-
 ALTER TABLE ONLY "public"."auctions"
     ADD CONSTRAINT "auctions_hashId_fkey" FOREIGN KEY ("hashId") REFERENCES "public"."ethscriptions"("hashId");
-
-ALTER TABLE ONLY "public"."bids_goerli"
-    ADD CONSTRAINT "bids_goerli_hashId_fkey" FOREIGN KEY ("hashId") REFERENCES "public"."ethscriptions_goerli"("hashId") ON DELETE CASCADE;
 
 ALTER TABLE ONLY "public"."bids"
     ADD CONSTRAINT "bids_hashId_fkey" FOREIGN KEY ("hashId") REFERENCES "public"."ethscriptions"("hashId");
 
-ALTER TABLE ONLY "public"."ethscriptions_goerli"
-    ADD CONSTRAINT "ethscriptions_goerli_slug_fkey" FOREIGN KEY ("slug") REFERENCES "public"."collections_goerli"("slug") ON UPDATE CASCADE ON DELETE SET NULL;
-
 ALTER TABLE ONLY "public"."ethscriptions"
     ADD CONSTRAINT "ethscriptions_slug_fkey" FOREIGN KEY ("slug") REFERENCES "public"."collections"("slug");
-
-ALTER TABLE ONLY "public"."events_goerli"
-    ADD CONSTRAINT "events_goerli_hashId_fkey" FOREIGN KEY ("hashId") REFERENCES "public"."ethscriptions_goerli"("hashId") ON DELETE CASCADE;
 
 ALTER TABLE ONLY "public"."events"
     ADD CONSTRAINT "events_hashId_fkey" FOREIGN KEY ("hashId") REFERENCES "public"."ethscriptions"("hashId") ON UPDATE RESTRICT ON DELETE CASCADE;
 
 ALTER TABLE ONLY "public"."listings"
     ADD CONSTRAINT "listings_hashId_fkey" FOREIGN KEY ("hashId") REFERENCES "public"."ethscriptions"("hashId");
+
+ALTER TABLE ONLY "public"."nfts"
+    ADD CONSTRAINT "nfts_hashId_fkey" FOREIGN KEY ("hashId") REFERENCES "public"."ethscriptions"("hashId");
+
+ALTER TABLE ONLY "public"."nfts_sepolia"
+    ADD CONSTRAINT "nfts_sepolia_hashId_fkey" FOREIGN KEY ("hashId") REFERENCES "public"."ethscriptions_sepolia"("hashId");
 
 ALTER TABLE ONLY "public"."auctionBids_sepolia"
     ADD CONSTRAINT "public_auctionBids_sepolia_auctionId_fkey" FOREIGN KEY ("auctionId") REFERENCES "public"."auctions"("auctionId");
@@ -1202,17 +1190,13 @@ ALTER TABLE ONLY "public"."events_sepolia"
 ALTER TABLE ONLY "public"."listings_sepolia"
     ADD CONSTRAINT "public_listings_sepolia_hashId_fkey" FOREIGN KEY ("hashId") REFERENCES "public"."ethscriptions_sepolia"("hashId");
 
+CREATE POLICY "Enable read access for all users" ON "public"."_global_config" FOR SELECT USING (true);
+
 CREATE POLICY "Enable read access for all users" ON "public"."attributes" FOR SELECT USING (true);
 
 CREATE POLICY "Enable read access for all users" ON "public"."auctionBids" FOR SELECT USING (true);
 
-CREATE POLICY "Enable read access for all users" ON "public"."auctionBids_goerli" FOR SELECT USING (true);
-
-CREATE POLICY "Enable read access for all users" ON "public"."auctions_goerli" FOR SELECT USING (true);
-
 CREATE POLICY "Enable read access for all users" ON "public"."bids" FOR SELECT USING (true);
-
-CREATE POLICY "Enable read access for all users" ON "public"."bids_goerli" FOR SELECT USING (true);
 
 CREATE POLICY "Enable read access for all users" ON "public"."bids_sepolia" FOR SELECT USING (true);
 
@@ -1220,51 +1204,41 @@ CREATE POLICY "Enable read access for all users" ON "public"."blocks" FOR SELECT
 
 CREATE POLICY "Enable read access for all users" ON "public"."collections" FOR SELECT USING (true);
 
-CREATE POLICY "Enable read access for all users" ON "public"."collections_goerli" FOR SELECT USING (true);
-
 CREATE POLICY "Enable read access for all users" ON "public"."collections_sepolia" FOR SELECT USING (true);
 
 CREATE POLICY "Enable read access for all users" ON "public"."ethscriptions" FOR SELECT USING (true);
-
-CREATE POLICY "Enable read access for all users" ON "public"."ethscriptions_goerli" FOR SELECT USING (true);
 
 CREATE POLICY "Enable read access for all users" ON "public"."ethscriptions_sepolia" FOR SELECT USING (true);
 
 CREATE POLICY "Enable read access for all users" ON "public"."events" FOR SELECT USING (true);
 
-CREATE POLICY "Enable read access for all users" ON "public"."events_goerli" FOR SELECT USING (true);
-
 CREATE POLICY "Enable read access for all users" ON "public"."events_sepolia" FOR SELECT USING (true);
 
 CREATE POLICY "Enable read access for all users" ON "public"."listings" FOR SELECT USING (true);
 
-CREATE POLICY "Enable read access for all users" ON "public"."listings_goerli" FOR SELECT USING (true);
-
 CREATE POLICY "Enable read access for all users" ON "public"."listings_sepolia" FOR SELECT USING (true);
+
+CREATE POLICY "Enable read access for all users" ON "public"."nfts" FOR SELECT USING (true);
+
+CREATE POLICY "Enable read access for all users" ON "public"."nfts_sepolia" FOR SELECT USING (true);
 
 CREATE POLICY "Enable read access for all users" ON "public"."users" FOR SELECT USING (true);
 
-CREATE POLICY "Enable read access for all users" ON "public"."users_goerli" FOR SELECT USING (true);
-
 CREATE POLICY "Enable read access for all users" ON "public"."users_sepolia" FOR SELECT USING (true);
+
+ALTER TABLE "public"."_global_config" ENABLE ROW LEVEL SECURITY;
 
 ALTER TABLE "public"."attributes" ENABLE ROW LEVEL SECURITY;
 
 ALTER TABLE "public"."auctionBids" ENABLE ROW LEVEL SECURITY;
 
-ALTER TABLE "public"."auctionBids_goerli" ENABLE ROW LEVEL SECURITY;
-
 ALTER TABLE "public"."auctionBids_sepolia" ENABLE ROW LEVEL SECURITY;
 
 ALTER TABLE "public"."auctions" ENABLE ROW LEVEL SECURITY;
 
-ALTER TABLE "public"."auctions_goerli" ENABLE ROW LEVEL SECURITY;
-
 ALTER TABLE "public"."auctions_sepolia" ENABLE ROW LEVEL SECURITY;
 
 ALTER TABLE "public"."bids" ENABLE ROW LEVEL SECURITY;
-
-ALTER TABLE "public"."bids_goerli" ENABLE ROW LEVEL SECURITY;
 
 ALTER TABLE "public"."bids_sepolia" ENABLE ROW LEVEL SECURITY;
 
@@ -1272,74 +1246,36 @@ ALTER TABLE "public"."blocks" ENABLE ROW LEVEL SECURITY;
 
 ALTER TABLE "public"."collections" ENABLE ROW LEVEL SECURITY;
 
-ALTER TABLE "public"."collections_goerli" ENABLE ROW LEVEL SECURITY;
-
 ALTER TABLE "public"."collections_sepolia" ENABLE ROW LEVEL SECURITY;
 
 ALTER TABLE "public"."ethscriptions" ENABLE ROW LEVEL SECURITY;
-
-ALTER TABLE "public"."ethscriptions_goerli" ENABLE ROW LEVEL SECURITY;
 
 ALTER TABLE "public"."ethscriptions_sepolia" ENABLE ROW LEVEL SECURITY;
 
 ALTER TABLE "public"."events" ENABLE ROW LEVEL SECURITY;
 
-ALTER TABLE "public"."events_goerli" ENABLE ROW LEVEL SECURITY;
-
 ALTER TABLE "public"."events_sepolia" ENABLE ROW LEVEL SECURITY;
 
 ALTER TABLE "public"."listings" ENABLE ROW LEVEL SECURITY;
 
-ALTER TABLE "public"."listings_goerli" ENABLE ROW LEVEL SECURITY;
-
 ALTER TABLE "public"."listings_sepolia" ENABLE ROW LEVEL SECURITY;
+
+ALTER TABLE "public"."nfts" ENABLE ROW LEVEL SECURITY;
+
+ALTER TABLE "public"."nfts_sepolia" ENABLE ROW LEVEL SECURITY;
 
 ALTER TABLE "public"."users" ENABLE ROW LEVEL SECURITY;
 
-ALTER TABLE "public"."users_goerli" ENABLE ROW LEVEL SECURITY;
-
 ALTER TABLE "public"."users_sepolia" ENABLE ROW LEVEL SECURITY;
-
-ALTER PUBLICATION "supabase_realtime" OWNER TO "postgres";
-
-ALTER PUBLICATION "supabase_realtime" ADD TABLE ONLY "public"."auctionBids";
-
-ALTER PUBLICATION "supabase_realtime" ADD TABLE ONLY "public"."auctionBids_sepolia";
-
-ALTER PUBLICATION "supabase_realtime" ADD TABLE ONLY "public"."auctions";
-
-ALTER PUBLICATION "supabase_realtime" ADD TABLE ONLY "public"."auctions_sepolia";
-
-ALTER PUBLICATION "supabase_realtime" ADD TABLE ONLY "public"."bids";
-
-ALTER PUBLICATION "supabase_realtime" ADD TABLE ONLY "public"."bids_goerli";
-
-ALTER PUBLICATION "supabase_realtime" ADD TABLE ONLY "public"."bids_sepolia";
-
-ALTER PUBLICATION "supabase_realtime" ADD TABLE ONLY "public"."blocks";
-
-ALTER PUBLICATION "supabase_realtime" ADD TABLE ONLY "public"."ethscriptions_goerli";
-
-ALTER PUBLICATION "supabase_realtime" ADD TABLE ONLY "public"."events";
-
-ALTER PUBLICATION "supabase_realtime" ADD TABLE ONLY "public"."events_goerli";
-
-ALTER PUBLICATION "supabase_realtime" ADD TABLE ONLY "public"."events_sepolia";
-
-ALTER PUBLICATION "supabase_realtime" ADD TABLE ONLY "public"."listings";
-
-ALTER PUBLICATION "supabase_realtime" ADD TABLE ONLY "public"."listings_goerli";
-
-ALTER PUBLICATION "supabase_realtime" ADD TABLE ONLY "public"."listings_sepolia";
-
-ALTER PUBLICATION "supabase_realtime" ADD TABLE ONLY "public"."users";
-
-ALTER PUBLICATION "supabase_realtime" ADD TABLE ONLY "public"."users_sepolia";
 
 GRANT USAGE ON SCHEMA "public" TO "postgres";
 GRANT USAGE ON SCHEMA "public" TO "anon";
 GRANT USAGE ON SCHEMA "public" TO "authenticated";
 GRANT USAGE ON SCHEMA "public" TO "service_role";
+
+GRANT ALL ON FUNCTION "public"."addresses_are_holders"("addresses" "text"[]) TO "anon";
+GRANT ALL ON FUNCTION "public"."addresses_are_holders"("addresses" "text"[]) TO "authenticated";
+GRANT ALL ON FUNCTION "public"."addresses_are_holders"("addresses" "text"[]) TO "service_role";
 
 GRANT ALL ON FUNCTION "public"."addresses_are_holders_sepolia"("addresses" "text"[]) TO "anon";
 GRANT ALL ON FUNCTION "public"."addresses_are_holders_sepolia"("addresses" "text"[]) TO "authenticated";
@@ -1393,6 +1329,10 @@ GRANT ALL ON FUNCTION "public"."fetch_leaderboard_sepolia"() TO "anon";
 GRANT ALL ON FUNCTION "public"."fetch_leaderboard_sepolia"() TO "authenticated";
 GRANT ALL ON FUNCTION "public"."fetch_leaderboard_sepolia"() TO "service_role";
 
+GRANT ALL ON FUNCTION "public"."fetch_user_events_sepolia"("p_limit" integer, "p_address" "text", "p_type" "text", "p_collection_slug" "text") TO "anon";
+GRANT ALL ON FUNCTION "public"."fetch_user_events_sepolia"("p_limit" integer, "p_address" "text", "p_type" "text", "p_collection_slug" "text") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."fetch_user_events_sepolia"("p_limit" integer, "p_address" "text", "p_type" "text", "p_collection_slug" "text") TO "service_role";
+
 GRANT ALL ON FUNCTION "public"."get_total_volume"("start_date" timestamp with time zone, "end_date" timestamp with time zone, "slug_filter" "text") TO "anon";
 GRANT ALL ON FUNCTION "public"."get_total_volume"("start_date" timestamp with time zone, "end_date" timestamp with time zone, "slug_filter" "text") TO "authenticated";
 GRANT ALL ON FUNCTION "public"."get_total_volume"("start_date" timestamp with time zone, "end_date" timestamp with time zone, "slug_filter" "text") TO "service_role";
@@ -1405,6 +1345,10 @@ GRANT ALL ON FUNCTION "public"."holder_count"() TO "anon";
 GRANT ALL ON FUNCTION "public"."holder_count"() TO "authenticated";
 GRANT ALL ON FUNCTION "public"."holder_count"() TO "service_role";
 
+GRANT ALL ON TABLE "public"."_global_config" TO "anon";
+GRANT ALL ON TABLE "public"."_global_config" TO "authenticated";
+GRANT ALL ON TABLE "public"."_global_config" TO "service_role";
+
 GRANT ALL ON TABLE "public"."attributes" TO "anon";
 GRANT ALL ON TABLE "public"."attributes" TO "authenticated";
 GRANT ALL ON TABLE "public"."attributes" TO "service_role";
@@ -1412,14 +1356,6 @@ GRANT ALL ON TABLE "public"."attributes" TO "service_role";
 GRANT ALL ON TABLE "public"."auctionBids" TO "anon";
 GRANT ALL ON TABLE "public"."auctionBids" TO "authenticated";
 GRANT ALL ON TABLE "public"."auctionBids" TO "service_role";
-
-GRANT ALL ON TABLE "public"."auctionBids_goerli" TO "anon";
-GRANT ALL ON TABLE "public"."auctionBids_goerli" TO "authenticated";
-GRANT ALL ON TABLE "public"."auctionBids_goerli" TO "service_role";
-
-GRANT ALL ON SEQUENCE "public"."auctionBids_goerli_id_seq" TO "anon";
-GRANT ALL ON SEQUENCE "public"."auctionBids_goerli_id_seq" TO "authenticated";
-GRANT ALL ON SEQUENCE "public"."auctionBids_goerli_id_seq" TO "service_role";
 
 GRANT ALL ON SEQUENCE "public"."auctionBids_id_seq" TO "anon";
 GRANT ALL ON SEQUENCE "public"."auctionBids_id_seq" TO "authenticated";
@@ -1441,14 +1377,6 @@ GRANT ALL ON SEQUENCE "public"."auctions_auctionId_seq" TO "anon";
 GRANT ALL ON SEQUENCE "public"."auctions_auctionId_seq" TO "authenticated";
 GRANT ALL ON SEQUENCE "public"."auctions_auctionId_seq" TO "service_role";
 
-GRANT ALL ON TABLE "public"."auctions_goerli" TO "anon";
-GRANT ALL ON TABLE "public"."auctions_goerli" TO "authenticated";
-GRANT ALL ON TABLE "public"."auctions_goerli" TO "service_role";
-
-GRANT ALL ON SEQUENCE "public"."auctions_goerli_auctionId_seq" TO "anon";
-GRANT ALL ON SEQUENCE "public"."auctions_goerli_auctionId_seq" TO "authenticated";
-GRANT ALL ON SEQUENCE "public"."auctions_goerli_auctionId_seq" TO "service_role";
-
 GRANT ALL ON TABLE "public"."auctions_sepolia" TO "anon";
 GRANT ALL ON TABLE "public"."auctions_sepolia" TO "authenticated";
 GRANT ALL ON TABLE "public"."auctions_sepolia" TO "service_role";
@@ -1460,10 +1388,6 @@ GRANT ALL ON SEQUENCE "public"."auctions_sepolia_auctionId_seq" TO "service_role
 GRANT ALL ON TABLE "public"."bids" TO "anon";
 GRANT ALL ON TABLE "public"."bids" TO "authenticated";
 GRANT ALL ON TABLE "public"."bids" TO "service_role";
-
-GRANT ALL ON TABLE "public"."bids_goerli" TO "anon";
-GRANT ALL ON TABLE "public"."bids_goerli" TO "authenticated";
-GRANT ALL ON TABLE "public"."bids_goerli" TO "service_role";
 
 GRANT ALL ON TABLE "public"."bids_sepolia" TO "anon";
 GRANT ALL ON TABLE "public"."bids_sepolia" TO "authenticated";
@@ -1481,14 +1405,6 @@ GRANT ALL ON TABLE "public"."collections" TO "anon";
 GRANT ALL ON TABLE "public"."collections" TO "authenticated";
 GRANT ALL ON TABLE "public"."collections" TO "service_role";
 
-GRANT ALL ON TABLE "public"."collections_goerli" TO "anon";
-GRANT ALL ON TABLE "public"."collections_goerli" TO "authenticated";
-GRANT ALL ON TABLE "public"."collections_goerli" TO "service_role";
-
-GRANT ALL ON SEQUENCE "public"."collections_goerli_id_seq" TO "anon";
-GRANT ALL ON SEQUENCE "public"."collections_goerli_id_seq" TO "authenticated";
-GRANT ALL ON SEQUENCE "public"."collections_goerli_id_seq" TO "service_role";
-
 GRANT ALL ON SEQUENCE "public"."collections_id_seq" TO "anon";
 GRANT ALL ON SEQUENCE "public"."collections_id_seq" TO "authenticated";
 GRANT ALL ON SEQUENCE "public"."collections_id_seq" TO "service_role";
@@ -1505,10 +1421,6 @@ GRANT ALL ON TABLE "public"."ethscriptions" TO "anon";
 GRANT ALL ON TABLE "public"."ethscriptions" TO "authenticated";
 GRANT ALL ON TABLE "public"."ethscriptions" TO "service_role";
 
-GRANT ALL ON TABLE "public"."ethscriptions_goerli" TO "anon";
-GRANT ALL ON TABLE "public"."ethscriptions_goerli" TO "authenticated";
-GRANT ALL ON TABLE "public"."ethscriptions_goerli" TO "service_role";
-
 GRANT ALL ON TABLE "public"."ethscriptions_sepolia" TO "anon";
 GRANT ALL ON TABLE "public"."ethscriptions_sepolia" TO "authenticated";
 GRANT ALL ON TABLE "public"."ethscriptions_sepolia" TO "service_role";
@@ -1516,10 +1428,6 @@ GRANT ALL ON TABLE "public"."ethscriptions_sepolia" TO "service_role";
 GRANT ALL ON TABLE "public"."events" TO "anon";
 GRANT ALL ON TABLE "public"."events" TO "authenticated";
 GRANT ALL ON TABLE "public"."events" TO "service_role";
-
-GRANT ALL ON TABLE "public"."events_goerli" TO "anon";
-GRANT ALL ON TABLE "public"."events_goerli" TO "authenticated";
-GRANT ALL ON TABLE "public"."events_goerli" TO "service_role";
 
 GRANT ALL ON TABLE "public"."events_sepolia" TO "anon";
 GRANT ALL ON TABLE "public"."events_sepolia" TO "authenticated";
@@ -1529,21 +1437,29 @@ GRANT ALL ON TABLE "public"."listings" TO "anon";
 GRANT ALL ON TABLE "public"."listings" TO "authenticated";
 GRANT ALL ON TABLE "public"."listings" TO "service_role";
 
-GRANT ALL ON TABLE "public"."listings_goerli" TO "anon";
-GRANT ALL ON TABLE "public"."listings_goerli" TO "authenticated";
-GRANT ALL ON TABLE "public"."listings_goerli" TO "service_role";
-
 GRANT ALL ON TABLE "public"."listings_sepolia" TO "anon";
 GRANT ALL ON TABLE "public"."listings_sepolia" TO "authenticated";
 GRANT ALL ON TABLE "public"."listings_sepolia" TO "service_role";
 
+GRANT ALL ON TABLE "public"."nfts" TO "anon";
+GRANT ALL ON TABLE "public"."nfts" TO "authenticated";
+GRANT ALL ON TABLE "public"."nfts" TO "service_role";
+
+GRANT ALL ON TABLE "public"."nfts_sepolia" TO "anon";
+GRANT ALL ON TABLE "public"."nfts_sepolia" TO "authenticated";
+GRANT ALL ON TABLE "public"."nfts_sepolia" TO "service_role";
+
+GRANT ALL ON SEQUENCE "public"."nfts_sepolia_tokenId_seq" TO "anon";
+GRANT ALL ON SEQUENCE "public"."nfts_sepolia_tokenId_seq" TO "authenticated";
+GRANT ALL ON SEQUENCE "public"."nfts_sepolia_tokenId_seq" TO "service_role";
+
+GRANT ALL ON SEQUENCE "public"."nfts_tokenId_seq" TO "anon";
+GRANT ALL ON SEQUENCE "public"."nfts_tokenId_seq" TO "authenticated";
+GRANT ALL ON SEQUENCE "public"."nfts_tokenId_seq" TO "service_role";
+
 GRANT ALL ON TABLE "public"."users" TO "anon";
 GRANT ALL ON TABLE "public"."users" TO "authenticated";
 GRANT ALL ON TABLE "public"."users" TO "service_role";
-
-GRANT ALL ON TABLE "public"."users_goerli" TO "anon";
-GRANT ALL ON TABLE "public"."users_goerli" TO "authenticated";
-GRANT ALL ON TABLE "public"."users_goerli" TO "service_role";
 
 GRANT ALL ON TABLE "public"."users_sepolia" TO "anon";
 GRANT ALL ON TABLE "public"."users_sepolia" TO "authenticated";
