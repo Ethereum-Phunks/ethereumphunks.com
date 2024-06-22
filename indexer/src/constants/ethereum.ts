@@ -1,4 +1,4 @@
-import { createPublicClient, createWalletClient, http } from 'viem';
+import { createPublicClient, createWalletClient, fallback, http } from 'viem';
 import { mainnet, sepolia } from 'viem/chains';
 import { privateKeyToAccount } from 'viem/accounts';
 
@@ -34,6 +34,11 @@ export const l1RpcURL: string =
     ? process.env.RPC_URL_MAINNET
     : process.env.RPC_URL_SEPOLIA;
 
+export const l1RpcURL_BACKUP: string =
+  chain === 'mainnet'
+    ? process.env.RPC_URL_MAINNET_BACKUP
+    : process.env.RPC_URL_SEPOLIA_BACKUP;
+
 export const marketAddressL1: string =
   chain === 'mainnet'
     ? process.env.MARKET_ADDRESS_MAINNET_L1
@@ -61,12 +66,27 @@ export const bridgeAddressL2: string =
 
 export const l1Client = createPublicClient({
   chain: chain === 'mainnet' ? mainnet : sepolia,
-  transport: http(l1RpcURL),
+  transport: fallback([
+    http(l1RpcURL),
+    http(l1RpcURL_BACKUP),
+  ], {
+    rank: false,
+  }),
+  batch: {
+    multicall: true,
+  },
 });
 
 export const l2Client = createPublicClient({
   chain: magma,
-  transport: http(magma.rpcUrls.default.http[0]),
+  transport: fallback([
+    http(magma.rpcUrls.default.http[0]),
+  ], {
+    rank: false,
+  }),
+  batch: {
+    multicall: true,
+  },
 });
 
 export const l2WalletClient = createWalletClient({

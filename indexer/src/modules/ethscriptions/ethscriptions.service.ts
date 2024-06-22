@@ -414,7 +414,7 @@ export class EthscriptionsService {
     // Update the eth phunk owner
     await this.sbSvc.updateEthscriptionOwner(ethscript.hashId, ethscript.owner, to);
     Logger.log(
-      `Updated ethscript owner to ${txn.to} (contract event)`,
+      `Updated ethscript owner to ${to} (contract event)`,
       ethscript.hashId
     );
 
