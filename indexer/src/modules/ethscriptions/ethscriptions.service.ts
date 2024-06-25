@@ -341,11 +341,14 @@ export class EthscriptionsService {
     index?: number
   ): Promise<Event | null> {
     const ethscript: Ethscription = await this.sbSvc.checkEthscriptionExistsByHashId(hashId);
+    // console.log({ethscript})
     if (!ethscript) return null;
 
     const { from, to } = txn;
     const isMatchedHashId = ethscript.hashId.toLowerCase() === hashId.toLowerCase();
     const transferrerIsOwner = ethscript.owner.toLowerCase() === txn.from.toLowerCase();
+
+    // console.log({ isMatchedHashId, transferrerIsOwner, ethscript })
 
     if (!isMatchedHashId || !transferrerIsOwner) return null;
 
@@ -404,6 +407,8 @@ export class EthscriptionsService {
 
     const isMatchedHashId = ethscript.hashId.toLowerCase() === hashId.toLowerCase();
     const transferrerIsOwner = ethscript.owner.toLowerCase() === from.toLowerCase();
+
+    // console.log({ isMatchedHashId, transferrerIsOwner, ethscript });
 
     const samePrevOwner = (ethscript.prevOwner && prevOwner)
       ? ethscript.prevOwner.toLowerCase() === prevOwner.toLowerCase()
@@ -520,7 +525,7 @@ export class EthscriptionsService {
   }
 
   /**
-   * Processes an ESIP5 (batch calldata) transaction and returns the corresponding events.
+   * Processes an ESIP5 (batch transfer) transaction and returns the corresponding events.
    * @param txn - The transaction to process.
    * @param createdAt - The creation date of the transaction.
    * @returns A promise that resolves to an array of events.
@@ -529,19 +534,24 @@ export class EthscriptionsService {
     txn: Transaction,
     createdAt: Date
   ): Promise<Event[]> {
+
     const { input } = txn;
     const data = input.substring(2);
     if (data.length % SEGMENT_SIZE !== 0) return [];
 
     const allHashes = data.match(/.{1,64}/g).map((hash) => '0x' + hash);
-    const validHashes = await this.web3SvcL1.getValidTransactions(allHashes);
-    if (!validHashes.length) return [];
+    // console.log(allHashes.length);
+    const validItems = await this.sbSvc.checkEthscriptionsExistsByHashIds(allHashes);
+
+    if (!validItems?.length) return [];
+    const validHashes = validItems.map((item) => item.hashId);
 
     const events = [];
     Logger.debug(
       `Processing batch transfer (L1)`,
       txn.hash
     );
+
     for (let i = 0; i < validHashes.length; i++) {
       try {
         const hashId = validHashes[i].toLowerCase();

@@ -194,17 +194,44 @@ export class SupabaseService {
   }
 
   async checkEthscriptionsExistsByHashIds(hashes: string[]): Promise<Ethscription[]> {
-    const response: EthscriptionResponse = await supabase
-      .from('ethscriptions' + this.suffix)
-      .select('*')
-      .in('hashId', hashes.map((hash) => hash.toLowerCase()));
+    if (!hashes.length) return null;
 
-    const { data, error } = response;
+    // We check these in batches of 100
+    const batchSize = 100;
+    let results: Ethscription[] = [];
 
-    if (error) throw error;
-    if (data?.length) return data;
-    return null;
+    for (let i = 0; i < hashes.length; i += batchSize) {
+      const batch = hashes.slice(i, i + batchSize);
+
+      const response: EthscriptionResponse = await supabase
+        .from('ethscriptions' + this.suffix)
+        .select('*')
+        .in('hashId', batch.map((hash) => hash.toLowerCase()));
+
+      const { data, error } = response;
+      // console.log({ data, error });
+
+      if (error) throw error;
+      if (data?.length) results = results.concat(data);
+    }
+
+    return results.length ? results : null;
   }
+
+  // async checkEthscriptionsExistsByHashIds(hashes: string[]): Promise<Ethscription[]> {
+  //   if (!hashes.length) return null;
+
+  //   const response: EthscriptionResponse = await supabase
+  //     .from('ethscriptions' + this.suffix)
+  //     .select('*')
+  //     .in('hashId', hashes.map((hash) => hash.toLowerCase()));
+
+  //   const { data, error } = response;
+
+  //   if (error) throw error;
+  //   if (data?.length) return data;
+  //   return null;
+  // }
 
   ////////////////////////////////////////////////////////////////////////////////
   // Adds ////////////////////////////////////////////////////////////////////////

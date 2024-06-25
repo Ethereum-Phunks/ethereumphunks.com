@@ -1,7 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 
-import { FormattedTransaction, GetBlockReturnType, GetTransactionReturnType, Transaction, TransactionReceipt, WriteContractParameters } from 'viem';
-
+import { GetBlockReturnType, Transaction, TransactionReceipt, WriteContractParameters } from 'viem';
 import { bridgeAbiL1, bridgeAddressL1, l1Client, l2Client, pointsAbiL1, pointsAddressL1 } from '@/constants/ethereum';
 
 import dotenv from 'dotenv';
@@ -18,53 +17,19 @@ export class Web3Service {
     if (layer === 'l2') this.client = l2Client;
   }
 
-  /**
-   * Retrieves the transactions of a specific block.
-   * @param n - The block number.
-   * @param chain - The chain to retrieve the block from.
-   * @returns A promise that resolves to an object containing the transactions and the creation date of the block.
-   */
-  async getBlockTransactions(n: number): Promise<{
-    txns: { transaction: FormattedTransaction; receipt: TransactionReceipt; }[],
-    createdAt: Date,
-  }> {
-    const block = await this.client.getBlock({
-      includeTransactions: true,
-      blockNumber: BigInt(n),
+  async getBlock(
+    n = 0,
+    includeTransactions = false
+  ): Promise<GetBlockReturnType<undefined, typeof includeTransactions>> {
+    return this.client.getBlock({
+      includeTransactions,
+      blockNumber: n ? BigInt(n) : undefined,
     });
-
-    const ts = Number(block.timestamp);
-    const createdAt = new Date(ts * 1000);
-
-    const txArray = block.transactions.filter((txn) => txn.input !== '0x');
-    const txns = await Promise.all(
-      txArray.map(async (tx) => {
-        return {
-          transaction: tx,
-          receipt: await this.client.getTransactionReceipt({ hash: tx.hash }),
-        };
-      })
-    );
-
-    return { txns, createdAt };
   }
 
   async getTransaction(hash: `0x${string}`): Promise<Transaction> {
     const transaction = await this.client.getTransaction({ hash });
     return transaction;
-  }
-
-  async getValidTransactions(hashes: string[]): Promise<string[]> {
-    const transactions = await Promise.all(
-      hashes.map(async (hash) => {
-        return this.client.getTransaction({ hash: hash as `0x${string}` }).then((res) => {
-          return res.hash;
-        }).catch((e) => {
-          return null;
-        });
-      })
-    );
-    return transactions.filter((tx) => tx);
   }
 
   async getTransactionReceipt(hash: `0x${string}`): Promise<TransactionReceipt> {
@@ -75,11 +40,6 @@ export class Web3Service {
   async waitForTransactionReceipt(hash: `0x${string}`): Promise<TransactionReceipt> {
     const receipt = await this.client.waitForTransactionReceipt({ hash });
     return receipt;
-  }
-
-  async getBlock(n?: number): Promise<GetBlockReturnType> {
-    if (n) return await this.client.getBlock({ blockNumber: BigInt(n), includeTransactions: false });
-    return await this.client.getBlock({ includeTransactions: false });
   }
 
   /**
@@ -165,6 +125,15 @@ export class Web3Service {
     return punkAttributes as any;
   }
 
+  ///////////////////////////////////////////////////////////////////////////////
+  // Utils //////////////////////////////////////////////////////////////////////
+  ///////////////////////////////////////////////////////////////////////////////
+
+  /**
+   * Retrieves the ENS name associated with the given address.
+   * @param address - The Ethereum address.
+   * @returns A Promise that resolves to the ENS name if found, or null if not found.
+   */
   async getEnsFromAddress(address: string): Promise<string | null> {
     try {
       return await l1Client.getEnsName({ address: address as `0x${string}` });

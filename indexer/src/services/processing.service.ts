@@ -37,7 +37,11 @@ export class ProcessingService {
    * @returns A Promise that resolves when the block processing is complete.
    */
   async processBlock(blockNum: number, updateBlockDb = true): Promise<void> {
-    const { txns, createdAt } = await this.web3SvcL1.getBlockTransactions(blockNum);
+
+    const { timestamp, transactions } = await this.web3SvcL1.getBlock(blockNum, true);
+
+    const createdAt = new Date(Number(timestamp) * 1000);
+    const bundles = await this.bundleTransactions(transactions as Transaction[]);
 
     // Log the block
     const timeAgo = this.timeSvc.howLongAgo(createdAt as any);
@@ -47,7 +51,7 @@ export class ProcessingService {
     );
 
     // Process the transactions & get the events
-    const events = await this.processTransactions(txns, createdAt);
+    const events = await this.processTransactions(bundles, createdAt);
     // console.log(events?.length);
     // Add the events to the database
     if (events.length) await this.sbSvc.addEvents(events);
@@ -68,8 +72,12 @@ export class ProcessingService {
       await this.utilSvc.delay(5000);
 
       // Get the transactions from the block
-      const { txns, createdAt } = await this.web3SvcL1.getBlockTransactions(blockNum);
-      await this.processTransactions(txns, createdAt);
+      const { timestamp, transactions } = await this.web3SvcL1.getBlock(blockNum, true);
+      const createdAt = new Date(Number(timestamp) * 1000);
+
+      const bundles = await this.bundleTransactions(transactions as Transaction[]);
+
+      await this.processTransactions(bundles, createdAt);
     } catch (error) {
       console.log(error);
       // Pause for 5 seconds
@@ -145,5 +153,20 @@ export class ProcessingService {
     // if (nftEvents?.length) events.push(...nftEvents);
 
     return events;
+  }
+
+  async bundleTransactions(
+    transactions: Transaction[],
+  ): Promise<{ transaction: FormattedTransaction; receipt: TransactionReceipt; }[]> {
+    const txArray = transactions.filter((txn: Transaction) => txn.input !== '0x');
+    const txns = await Promise.all(
+      txArray.map(async (tx: Transaction) => {
+        return {
+          transaction: tx,
+          receipt: await this.web3SvcL1.getTransactionReceipt(tx.hash),
+        };
+      })
+    );
+    return txns;
   }
 }
