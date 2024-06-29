@@ -65,7 +65,7 @@ export class AppService {
    * @throws An error if the start block is greater than the latest block.
    */
   async startBackfill(startBlock: number): Promise<void> {
-    const latestBlock = await this.web3SvcL1.getBlock();
+    const latestBlock = await this.web3SvcL1.getBlock({});
 
     Logger.debug('Starting Backfill', chain.toUpperCase());
 
@@ -91,6 +91,7 @@ export class AppService {
       // Watch for new blocks and add them to the queue
       const unwatch = l1Client.watchBlocks({
         // blockTag: 'safe',
+        emitOnBegin: true,
         emitMissed: true,
         includeTransactions: false,
         onBlock: async (block) => {

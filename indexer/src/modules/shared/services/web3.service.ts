@@ -1,10 +1,20 @@
 import { Injectable, Logger } from '@nestjs/common';
 
-import { GetBlockReturnType, Transaction, TransactionReceipt, WriteContractParameters } from 'viem';
+import { BlockTag, Chain, Transaction, TransactionReceipt, WriteContractParameters, toHex } from 'viem';
 import { bridgeAbiL1, bridgeAddressL1, l1Client, l2Client, pointsAbiL1, pointsAddressL1 } from '@/constants/ethereum';
 
 import dotenv from 'dotenv';
 dotenv.config();
+
+interface GetBlockOptions {
+  blockNumber?: number;
+  blockHash?: string;
+  includeTransactions?: boolean;
+}
+
+type GetBlockReturnType<T> = T & {
+  transactions?: {transaction: Transaction, receipt: TransactionReceipt}[];
+};
 
 @Injectable()
 export class Web3Service {
@@ -12,19 +22,70 @@ export class Web3Service {
   client: typeof l1Client | typeof l2Client = l1Client;
 
   constructor(
-    private readonly layer: 'l1' | 'l2'
+    private readonly layer: 'l1' | 'l2',
   ) {
     if (layer === 'l2') this.client = l2Client;
   }
 
-  async getBlock(
-    n = 0,
-    includeTransactions = false
-  ): Promise<GetBlockReturnType<undefined, typeof includeTransactions>> {
-    return this.client.getBlock({
-      includeTransactions,
-      blockNumber: n ? BigInt(n) : undefined,
+  async getBlock({
+    blockNumber,
+    blockHash,
+    includeTransactions
+  }: GetBlockOptions | undefined): Promise<GetBlockReturnType<any>> {
+    const config = {};
+
+    if (blockNumber) config['blockNumber'] = BigInt(blockNumber);
+    else if (blockHash) config['blockHash'] = blockHash as `0x${string}`;
+
+    if (includeTransactions) config['includeTransactions'] = includeTransactions;
+
+    const [block, receipts] = await Promise.all([
+      this.client.getBlock(config),
+      includeTransactions ? this.getBlockReceipts(config) : undefined,
+    ]);
+
+    const result: GetBlockReturnType<any> = { ...block };
+
+    if (includeTransactions && receipts) {
+      result.transactions = (block.transactions as any).map((tx: Transaction) => {
+        const receipt = receipts.find((r) => r.transactionHash === tx.hash);
+        return { transaction: tx, receipt };
+      });
+    }
+
+    return result;
+  }
+
+  async getBlockReceipts(opts: GetBlockOptions): Promise<TransactionReceipt[]> {
+    const params = [];
+
+    if (opts.blockNumber) params.push(toHex(opts.blockNumber));
+    else if (opts.blockHash) params.push(opts.blockHash);
+    else params.push('latest');
+
+    const receipts: any = await this.client.request({
+      method: 'eth_getBlockReceipts',
+      params: [...params],
+      id: process.env.CHAIN_ID,
+      jsonrpc: '2.0',
     });
+
+    return receipts.map((rec) => {
+      return {
+        blockHash: rec.blockHash,
+        blockNumber: BigInt(rec.blockNumber),
+        contractAddress: rec.contractAddress,
+        cumulativeGasUsed: BigInt(rec.cumulativeGasUsed),
+        from: rec.from,
+        gasUsed: BigInt(rec.gasUsed),
+        logs: rec.logs,
+        logsBloom: rec.logsBloom,
+        status: rec.status === '0x1' ? 'success' : 'failure',
+        to: rec.to,
+        transactionHash: rec.transactionHash,
+        transactionIndex: Number(rec.transactionIndex),
+      };
+    }) as TransactionReceipt[];
   }
 
   async getTransaction(hash: `0x${string}`): Promise<Transaction> {

@@ -317,8 +317,8 @@ export class EthscriptionsService {
 
       await this.sbSvc.updateUserPoints(fromAddress, Number(points));
       Logger.log(
-        `Updated user points for ${fromAddress}`,
-        points.toString()
+        `Updated user points for ${points.toString()}`,
+        fromAddress
       );
     } catch (error) {
       console.log(error);

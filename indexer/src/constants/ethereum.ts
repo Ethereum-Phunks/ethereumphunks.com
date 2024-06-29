@@ -68,7 +68,7 @@ export const l1Client = createPublicClient({
   chain: chain === 'mainnet' ? mainnet : sepolia,
   transport: fallback([
     http(l1RpcURL),
-    http(l1RpcURL_BACKUP),
+    // http(l1RpcURL_BACKUP),
   ], {
     rank: false,
   }),
