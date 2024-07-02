@@ -70,7 +70,9 @@ export class DiscordService {
     const single = items.length === 1;
     const count = items.length;
     const title = `${single ? '' : count} Phunk${single ? (' #' + items[0].tokenId + ' was') : 's were'} flipped`;
-    const link = single ? `${baseUrl}/#/details/${items[0].tokenId}` : `https://${baseUrl}`;
+    const link = single ? `${baseUrl}/details/${items[0].tokenId}` : baseUrl;
+
+    // console.log({ baseUrl, single, count, title, link, description })
 
     const exampleEmbed = new EmbedBuilder()
       .setColor(0xC3FF00)

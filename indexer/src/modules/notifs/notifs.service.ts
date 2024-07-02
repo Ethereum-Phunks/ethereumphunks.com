@@ -21,7 +21,5 @@ export class NotifsService {
   async handleNotificationFromHashId(hashId: string): Promise<void> {
     const event = await this.sbSvc.getEventByHashId(hashId);
     await this.discordSvc.postMessage([event]);
-
   }
-
 }

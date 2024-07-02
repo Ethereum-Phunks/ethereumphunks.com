@@ -5,6 +5,7 @@ import { createCanvas, Image } from 'canvas';
 
 import { Ethscription } from '@/models/db';
 import { catchError, firstValueFrom, of } from 'rxjs';
+import { writeFile } from 'fs/promises';
 
 @Injectable()
 export class ImageService {
@@ -57,6 +58,7 @@ export class ImageService {
     }
 
     const buffer = canvas.toBuffer('image/png');
+    // await writeFile('test.png', buffer);
     return buffer;
   }
 }
