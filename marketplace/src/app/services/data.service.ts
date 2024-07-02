@@ -12,7 +12,7 @@ import { Attribute, Bid, Event, Listing, Phunk } from '@/models/db';
 
 import { createClient } from '@supabase/supabase-js'
 
-import { Observable, of, BehaviorSubject, from, forkJoin, firstValueFrom, EMPTY } from 'rxjs';
+import { Observable, of, BehaviorSubject, from, forkJoin, firstValueFrom, EMPTY, fromEvent } from 'rxjs';
 import { catchError, expand, map, reduce, switchMap, tap } from 'rxjs/operators';
 
 import { NgForage } from 'ngforage';
@@ -23,6 +23,7 @@ import * as dataStateActions from '@/state/actions/data-state.actions';
 import * as appStateActions from '@/state/actions/app-state.actions';
 
 import { MarketState } from '@/models/market.state';
+import { DOCUMENT } from '@angular/common';
 
 const supabaseUrl = environment.supabaseUrl;
 const supabaseKey = environment.supabaseKey;
@@ -58,7 +59,7 @@ export class DataService {
     private ngForage: NgForage,
   ) {
 
-    this.createListeners();
+    this.listenEvents();
     this.listenForBlocks();
     this.listenGlobalConfig();
 
@@ -77,17 +78,24 @@ export class DataService {
     // });
   }
 
-  createListeners() {
+  listenEvents() {
     supabase
       .channel('events')
       .on(
         'postgres_changes',
-        { event: '*', schema: 'public', table: 'events' + this.prefix },
+        {
+          event: '*',
+          schema: 'public',
+          table: 'events' + this.prefix
+        },
         (payload) => {
+          console.log({payload});
           if (!payload) return;
           this.store.dispatch(dataStateActions.dbEventTriggered({ payload }));
         },
-      ).subscribe();
+      ).subscribe((status) => {
+        console.log('Channel status:', status);
+      });
   }
 
   listenGlobalConfig() {
@@ -97,7 +105,6 @@ export class DataService {
       .eq('network', environment.chainId)
       .limit(1)
       .then(({ data, error }) => {
-        // console.log('listenGlobalConfig', { data, error })
         if (error) return;
         this.store.dispatch(appStateActions.setGlobalConfig({ config: data[0] }));
       });
@@ -106,7 +113,11 @@ export class DataService {
       .channel('_global_config')
       .on(
         'postgres_changes',
-        { event: '*', schema: 'public', table: '_global_config' },
+        {
+          event: '*',
+          schema: 'public',
+          table: '_global_config'
+        },
         (payload) => {
           const config: any = payload.new;
           if (config.network !== environment.chainId) return;
@@ -116,20 +127,33 @@ export class DataService {
   }
 
   listenForBlocks() {
-    supabase
+    const blockQuery = supabase
       .from('blocks')
       .select('blockNumber')
-      .eq('network', environment.chainId)
-      .then((res: any) => {
+      .eq('network', environment.chainId);
+
+    blockQuery.then((res: any) => {
+      const blockNumber = res.data[0]?.blockNumber || 0;
+      this.store.dispatch(appStateActions.setIndexerBlock({ indexerBlock: blockNumber }));
+    });
+
+    // Temporary solution to stale app state. Supabase sucks at this.
+    setInterval(() => {
+      blockQuery.then((res: any) => {
         const blockNumber = res.data[0]?.blockNumber || 0;
         this.store.dispatch(appStateActions.setIndexerBlock({ indexerBlock: blockNumber }));
-      })
+      });
+    }, 20000);
 
     supabase
       .channel('blocks')
       .on(
         'postgres_changes',
-        { event: '*', schema: 'public', table: 'blocks' },
+        {
+          event: '*',
+          schema: 'public',
+          table: 'blocks'
+        },
         (payload: any) => {
           if (payload.new.network !== environment.chainId) return;
           this.store.dispatch(appStateActions.setIndexerBlock({ indexerBlock: payload.new.blockNumber }));
@@ -447,19 +471,21 @@ export class DataService {
         const newPhunk = { ...phunk, ...collection, collectionName, nft } as Phunk;
         newPhunk.isEscrowed = phunk?.owner === environment.marketAddress;
         newPhunk.isBridged = phunk?.owner === environment.bridgeAddress;
+        newPhunk.isSupported = !!collection;
         newPhunk.attributes = [];
 
         return newPhunk;
       }),
-      // tap((res) => console.log('fetchSinglePhunk', res)),
       switchMap((res: Phunk) => forkJoin([
         this.addAttributes(res.slug, [res]),
-        from(this.getListingFromHashId(res.hashId))
+        from(this.getListingFromHashId(res.hashId)),
+        this.checkConsensus([res]),
       ])),
-      map(([[res], listing]) => {
+      map(([[res], listing, [consensus]]) => {
         return {
           ...res,
           listing: listing?.listedBy.toLowerCase() === res.prevOwner?.toLowerCase() ? listing : null,
+          consensus: consensus?.consensus,
           attributes: [ ...(res.attributes || []) ].sort((a: Attribute, b: Attribute) => {
             if (a.k === "Sex") return -1;
             if (b.k === "Sex") return 1;
@@ -597,8 +623,8 @@ export class DataService {
       if (key) {
         params = params.set('page_key', key);
       }
-      return this.http.get<any>(`https://ethscriptions-api-${prefix}.flooredape.io/ethscriptions`, { params }).pipe(
-        tap((res: any) => { if (res) console.log('checkConsensus', res); }),
+      return this.http.get<any>(`https://ethscriptions-api${prefix ? ('-' + prefix) : ''}.flooredape.io/ethscriptions`, { params }).pipe(
+        // tap((res: any) => { if (res) console.log('checkConsensus', res); }),
       );
     };
 

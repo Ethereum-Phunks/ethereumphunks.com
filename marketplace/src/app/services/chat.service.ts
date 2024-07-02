@@ -102,7 +102,13 @@ export class ChatService {
     message: string | null
   ): Promise<void> {
     if (!message) return;
-    await conversation.send(message);
+    const preparedMsg = await conversation.prepareMessage(message);
+
+    try {
+      preparedMsg.send();
+    } catch (e) {
+      console.error(e);
+    }
   }
 
   async sendMessage(

@@ -44,6 +44,8 @@ import * as dataStateSelectors from '@/state/selectors/data-state.selectors';
 import { selectNotifications } from '@/state/selectors/notification.selectors';
 import { upsertNotification } from '@/state/actions/notification.actions';
 
+import { setChat } from '@/state/actions/chat.actions';
+
 interface TxStatus {
   title: string;
   message: string | null;
@@ -88,6 +90,7 @@ interface TxStatuses {
 export class ItemViewComponent implements AfterViewInit, OnDestroy {
 
   @ViewChild('sellPriceInput') sellPriceInput!: ElementRef<HTMLInputElement>;
+  @ViewChild('revShareInput') revShareInput!: ElementRef<HTMLInputElement>;
   @ViewChild('transferAddressInput') transferAddressInput!: ElementRef<HTMLInputElement>;
 
   explorerUrl = environment.explorerUrl
@@ -102,6 +105,7 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
 
   transferAddress = new FormControl<string | null>('');
   listPrice = new FormControl<number | undefined>(undefined);
+  revShare = new FormControl<number | undefined>(undefined);
   listToAddress = new FormControl<string | null>('');
 
   objectValues = Object.values;
@@ -157,6 +161,14 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
     this.route.params.pipe(
       tap((params: any) => this.store.dispatch(dataStateActions.fetchSinglePhunk({ phunkId: params.tokenId }))),
       takeUntil(this.destroy$),
+    ).subscribe();
+
+    // RevShare input validation
+    this.revShare.valueChanges.pipe(
+      tap((value) => {
+        if (value && value > 100) this.revShare.setValue(100);
+        if (value && value < 0) this.revShare.setValue(0);
+      })
     ).subscribe();
   }
 
@@ -227,7 +239,10 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
     if (!this.listPrice.value) return;
 
     const value = this.listPrice.value;
+    const revShare = (this.revShare.value || 0) * 1000;
     let address = this.listToAddress.value || undefined;
+
+    console.log({hashId, value, revShare, address});
 
     let notification: Notification = {
       id: this.utilSvc.createIdFromString('offerPhunkForSale' + hashId),
@@ -257,11 +272,11 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
 
       let hash;
       if (phunk.isEscrowed) {
-        hash = await this.web3Svc.offerPhunkForSale(hashId, value, address);
+        hash = await this.web3Svc.offerPhunkForSale(hashId, value, address, revShare);
       } else if (phunk.nft) {
-        hash = await this.web3Svc.offerPhunkForSaleL2(hashId, value, address);
+        hash = await this.web3Svc.offerPhunkForSaleL2(hashId, value, address, revShare);
       } else {
-        hash = await this.web3Svc.escrowAndOfferPhunkForSale(hashId, value, address);
+        hash = await this.web3Svc.escrowAndOfferPhunkForSale(hashId, value, address, revShare);
       }
 
       // this.initNotificationMessage();
@@ -685,5 +700,12 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
 
   expand(): void {
     this.expanded = !this.expanded;
+  }
+
+  async setChat() {
+    this.store.dispatch(setChat({
+      active: true,
+      toAddress: '0xf1Aa941d56041d47a9a18e99609A047707Fe96c7'
+    }));
   }
 }

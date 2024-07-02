@@ -72,6 +72,28 @@ app-phunk-billboard {
   }
 }
 
+.notice {
+  padding: 1rem;
+  background-color: rgba(var(--bid-color), 1);
+  color: rgba(var(--white), 1);
+  max-width: 46rem;
+  box-shadow: .3rem .3rem 0 0 rgba(var(--highlight), 1);
+
+  margin-bottom: 2rem;
+
+  .consensus {
+    padding: 0;
+
+    font-size: 1.4rem;
+    font-weight: 600;
+
+    a {
+      color: rgba(var(--highlight), 1);
+      font-weight: 700;
+    }
+  }
+}
+
 .details-wrapper {
   padding-top: 4rem;
 
@@ -197,6 +219,17 @@ app-phunk-billboard {
       width: 100%;
       max-width: 46rem;
 
+      &.external {
+        background: none;
+        color: rgba(var(--background), 1);
+        background-color: rgba(var(--highlight), 1);
+
+        background-image: url('data:image/svg+xml;utf8,<svg height="15" viewBox="0 0 15 15" width="15" xmlns="http://www.w3.org/2000/svg"><path d="m0 15v-15h6v3h-3v6h3v3h6v-3h3v6zm9-9v3h-3v-3zm6-6v6h-3v-3h-3v-3z" fill="black" fill-rule="evenodd"/></svg>');
+        background-size: 1.2rem;
+        background-position: right 1rem center;
+        background-repeat: no-repeat;
+      }
+
       &.active {
         background: none;
         color: rgba(var(--highlight), 1);
@@ -229,6 +262,7 @@ app-phunk-billboard {
 
   .cooldown-wrapper {
     position: absolute;
+    z-index: 2;
     top: 0;
     left: 0;
     width: 100%;
@@ -317,6 +351,21 @@ app-phunk-billboard {
   background-color: rgba(var(--highlight), 1);
   color: rgba(var(--background), 1);
 
+  label {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    .info-ind {
+      font-family: $secondary-font-stack;
+      font-weight: 400;
+      color: rgba(var(--highlight), 1);
+
+      padding: 0 .5rem;
+      background-color: rgba(var(--bid-color), 1);
+    }
+  }
+
   p {
     font-size: 1.4rem;
     line-height: 1.4;
@@ -338,6 +387,69 @@ app-phunk-billboard {
 
     &::placeholder {
       color: rgba(var(--background), .3);
+    }
+  }
+
+  .row {
+    display: grid;
+    width: 100%;
+    padding-bottom: 1rem;
+
+    &-2 {
+      grid-template-columns: calc(100% - 18rem) 16rem;
+      column-gap: 2rem;
+    }
+
+    > div {
+      display: flex;
+      flex-direction: column;
+
+      &.list-price {
+        position: relative;
+      }
+
+      &.rev-share {
+        max-width: 16rem;
+      }
+    }
+  }
+
+  .percent-input {
+    position: relative;
+
+    display: flex;
+    align-items: center;
+
+    span {
+      position: absolute;
+      top: 50%;
+      right: 1rem;
+
+      font-family: $primary-font-stack;
+      font-size: 1.4rem;
+      font-weight: 700;
+
+      transform: translateY(-50%);
+    }
+  }
+
+  .sale-total,
+  .rev-total {
+    // position: absolute;
+    // top: calc(100% - .5rem);
+    // right: 0;
+
+    font-size: 1.3rem;
+    font-weight: 600;
+    // text-align: right;
+
+    padding: .5rem 1rem;
+    background-color: rgba(var(--transferred-color), 1);
+
+    // opacity: .5;
+
+    &.active {
+      opacity: 1;
     }
   }
 }

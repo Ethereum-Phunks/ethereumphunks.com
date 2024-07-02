@@ -1,5 +1,5 @@
 import { CommonModule, Location } from '@angular/common';
-import { Component, ElementRef, Inject, Input, SimpleChanges, ViewChild } from '@angular/core';
+import { Component, ElementRef, Inject, Input, SimpleChanges, ViewChild, input, signal } from '@angular/core';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 
@@ -26,7 +26,8 @@ import { HISTORY } from '@ng-web-apis/common';
 })
 export class BreadcrumbsComponent {
 
-  @Input() phunk!: Phunk | null;
+  // @Input() phunk!: Phunk | null;
+  phunk = input<Phunk | null>();
 
   @ViewChild('pfp') pfp!: ElementRef;
   @ViewChild('tokenImage') tokenImage!: ElementRef;
@@ -54,10 +55,6 @@ export class BreadcrumbsComponent {
     this.shapeCheck.valueChanges.pipe(
       tap(() => this.paintCanvas())
     ).subscribe();
-  }
-
-  ngOnChanges(changes: SimpleChanges): void {
-    if (changes.data && this.pfpOptionsActive) this.pfpOptionsActive = false;
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -143,17 +140,17 @@ export class BreadcrumbsComponent {
   }
 
   async getPunkImage(): Promise<string | undefined> {
-    if (!this.phunk) return;
-    const imgUrl = this.dataSvc.staticUrl + '/images/' + this.phunk.sha + '.png';
+    if (!this.phunk()) return;
+    const imgUrl = this.dataSvc.staticUrl + '/images/' + this.phunk()!.sha + '.png';
     const response = await firstValueFrom(this.http.get(imgUrl, { responseType: 'blob' }));
     const blob = new Blob([response], { type: 'image/png' });
     return URL.createObjectURL(blob);
   }
 
   downloadCanvas(): void {
-    if (!this.phunk) return;
+    if (!this.phunk()) return;
 
-    const name = this.phunk.singleName?.replace(' ', '-') + '#' + this.phunk.tokenId;
+    const name = this.phunk()!.singleName?.replace(' ', '-') + '#' + this.phunk()!.tokenId;
     const link = document.createElement('a');
     if (window.innerWidth > 800) link.download = name + '.png';
 

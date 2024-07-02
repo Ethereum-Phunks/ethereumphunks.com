@@ -19,7 +19,7 @@ import { map } from 'rxjs';
 import * as dataStateSelectors from '@/state/selectors/data-state.selectors';
 
 import { removeNotification, setNotifHoverState } from '@/state/actions/notification.actions';
-import { setChatActive, setToUser } from '@/state/actions/chat.actions';
+import { setChat } from '@/state/actions/chat.actions';
 
 @Component({
   selector: 'app-notification',
@@ -62,13 +62,11 @@ export class NotificationComponent {
   constructor(
     private store: Store<GlobalState>
   ) {
-
     effect(() => {
       if (this.txn()?.type === 'error') {
         // console.log('NotificationComponent', {...this.txn()?.detail});
       }
     });
-
   }
 
   dismiss(txn: Notification) {
@@ -85,9 +83,8 @@ export class NotificationComponent {
     this.store.dispatch(setNotifHoverState({ notifHoverState: { [notificationId]: false } }));
   }
 
-  setChatActive(address: string) {
-    this.store.dispatch(setChatActive({ active: true }));
-    this.store.dispatch(setToUser({ address }));
+  setChat(toAddress: string) {
+    this.store.dispatch(setChat({ active: true, toAddress }));
     this.store.dispatch(removeNotification({ txId: this.txn()?.id || '' }));
   }
 

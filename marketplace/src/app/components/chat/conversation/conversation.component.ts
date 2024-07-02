@@ -10,10 +10,10 @@ import { BehaviorSubject, Observable, catchError, filter, from, map, of, scan, s
 
 import { Message } from '@/models/chat';
 import { WalletAddressDirective } from '@/directives/wallet-address.directive';
-import { selectToUser } from '@/state/selectors/chat.selectors';
 import { Store } from '@ngrx/store';
 import { GlobalState } from '@/models/global-state';
-import { setToUser } from '@/state/actions/chat.actions';
+import { setChat } from '@/state/actions/chat.actions';
+import { selectChatState } from '@/state/selectors/chat.selectors';
 
 @Component({
   selector: 'app-conversation',
@@ -45,8 +45,9 @@ export class ConversationComponent {
 
   conversations$: Observable<any[]> = of([]);
 
-  toUser$ = this.store.select(selectToUser);
-  messages$: Observable<Message[]> = this.store.select(selectToUser).pipe(
+  toUser$ = this.store.select(selectChatState).pipe(map((state) => state.toAddress));
+
+  messages$: Observable<Message[]> = this.toUser$.pipe(
     filter((user) => !!user),
     switchMap((user) =>
       from(this.chatSvc.createConversationWithUser(user!)).pipe(
@@ -102,6 +103,6 @@ export class ConversationComponent {
   }
 
   goBack() {
-    this.store.dispatch(setToUser({ address: null }));
+    this.store.dispatch(setChat({ active: true, toAddress: null }));
   }
 }

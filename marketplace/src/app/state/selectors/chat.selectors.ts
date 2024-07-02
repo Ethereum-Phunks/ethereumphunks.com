@@ -6,7 +6,7 @@ export const selectChatState = (state: GlobalState) => state.chatState;
 
 export const selectChatActive = createSelector(
   selectChatState,
-  (state: ChatState) => state.active
+  (state: ChatState) => ({ active: state.active, toAddress: state.toAddress })
 );
 
 export const selectChatConnected = createSelector(
@@ -22,9 +22,4 @@ export const selectConversations = createSelector(
 export const selectActiveConversation = createSelector(
   selectChatState,
   (state: ChatState) => state.activeConversation
-);
-
-export const selectToUser = createSelector(
-  selectChatState,
-  (state: ChatState) => state.toUser
 );

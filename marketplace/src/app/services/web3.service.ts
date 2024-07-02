@@ -27,7 +27,7 @@ import { magma } from '@/constants/magmaChain';
 import { Web3Modal } from '@web3modal/wagmi/dist/types/src/client';
 import { createWeb3Modal } from '@web3modal/wagmi';
 
-import { PublicClient, TransactionReceipt, WatchBlockNumberReturnType, WatchContractEventReturnType, createPublicClient, decodeFunctionData, formatEther, isAddress, parseEther, zeroAddress } from 'viem';
+import { PublicClient, TransactionReceipt, WatchBlockNumberReturnType, WatchContractEventReturnType, createPublicClient, decodeFunctionData, formatEther, formatUnits, isAddress, keccak256, numberToHex, parseEther, stringToBytes, zeroAddress } from 'viem';
 
 const marketAddress = environment.marketAddress;
 const marketAddressL2 = environment.marketAddressL2;
@@ -287,7 +287,7 @@ export class Web3Service {
       });
       return call;
     } catch (error) {
-      console.log({functionName, args, error});
+      // console.log({functionName, args, error});
       return null;
     }
   }
@@ -300,7 +300,12 @@ export class Web3Service {
     return transaction;
   }
 
-  async offerPhunkForSale(hashId: string, value: number, toAddress?: string | null): Promise<string | undefined> {
+  async offerPhunkForSale(
+    hashId: string,
+    value: number,
+    toAddress?: string | null,
+    revShare = 0
+  ): Promise<string | undefined> {
     const weiValue = value * 1e18;
     if (toAddress) {
       if (!isAddress(toAddress)) throw new Error('Invalid address');
@@ -312,27 +317,34 @@ export class Web3Service {
 
     return this.writeMarketContract(
       'offerPhunkForSale',
-      [hashId, weiValue]
+      [hashId, weiValue, BigInt(revShare)]
     );
   }
 
   async escrowAndOfferPhunkForSale(
     hashId: string,
     value: number,
-    toAddress: string = zeroAddress
+    toAddress: string = zeroAddress,
+    revShare = 0
   ): Promise<string | undefined> {
-    const weiValue = value * 1e18;
+    const weiValue = this.ethToWei(value);
 
-    const sig = '4445504f5349545f414e445f4c4953545f5349474e4154555245000000000000';
+    const sig = keccak256(stringToBytes('DEPOSIT_AND_LIST_SIGNATURE'));
     const bytes32Value = weiValue.toString(16).padStart(64, '0');
     toAddress = toAddress.toLowerCase().replace('0x', '').padStart(64, '0');
+    const revShareHex = numberToHex(revShare).replace('0x', '').padStart(64, '0');
 
-    return await this.batchTransferPhunks([hashId, sig, bytes32Value, toAddress], marketAddress);
+    // console.log('revShareHex', revShareHex, Number(revShareHex));
+    // console.log({ hashId, sig, bytes32Value, toAddress, revShare, revShareHex });
+
+    return await this.batchTransferPhunks([hashId, sig, bytes32Value, toAddress, revShareHex], marketAddress);
+
+    return;
   }
 
   async batchOfferPhunkForSale(hashIds: string[], listPrices: number[]): Promise<string | undefined> {
     const weiValues = listPrices.map((price) => this.ethToWei(price));
-    return this.writeMarketContract('batchOfferPhunkForSale', [hashIds, weiValues]);
+    return this.writeMarketContract('batchOfferPhunkForSale', [hashIds, weiValues, BigInt(0)]);
   }
 
   async batchBuyPhunks(
@@ -368,8 +380,6 @@ export class Web3Service {
     }
 
     if (!hashIds.length || !minSalePricesInWei.length) throw new Error('No phunks selected');
-
-    // console.log({ hashIds, minSalePricesInWei, total });
 
     return this.writeMarketContract(
       'batchBuyPhunk',
@@ -530,7 +540,12 @@ export class Web3Service {
     }
   }
 
-  async offerPhunkForSaleL2(hashId: string, value: number, address?: string): Promise<string | undefined> {
+  async offerPhunkForSaleL2(
+    hashId: string,
+    value: number,
+    address?: string,
+    revShare = 0
+  ): Promise<string | undefined> {
     const tokenId = await this.readTokenContractL2('hashToToken', [hashId]);
     const weiValue = this.ethToWei(value);
 
@@ -617,7 +632,7 @@ export class Web3Service {
   }
 
   async readMarketContractL2(functionName: any, args: (string | undefined)[]): Promise<any> {
-    console.log('l2client', this.l2Client)
+    // console.log('l2client', this.l2Client);
     if (!this.l2Client?.chain) return null;
     const call: any = await this.l2Client.readContract({
       address: marketAddressL2 as `0x${string}`,
@@ -629,7 +644,7 @@ export class Web3Service {
   }
 
   async readTokenContractL2(functionName: any, args: (string | undefined)[]): Promise<any> {
-    console.log('l2client', this.l2Client)
+    // console.log('l2client', this.l2Client);
     if (!this.l2Client?.chain) return null;
     const call: any = await this.l2Client.readContract({
       address: bridgeAddressL2 as `0x${string}`,

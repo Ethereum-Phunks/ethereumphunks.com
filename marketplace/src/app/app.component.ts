@@ -30,7 +30,7 @@ import * as appStateActions from '@/state/actions/app-state.actions';
 import * as dataStateActions from '@/state/actions/data-state.actions';
 import * as marketStateActions from '@/state/actions/market-state.actions';
 
-import { debounceTime, filter, observeOn, scan, tap } from 'rxjs/operators';
+import { debounceTime, filter, map, observeOn, scan, tap } from 'rxjs/operators';
 import { asyncScheduler, fromEvent } from 'rxjs';
 import { environment } from 'src/environments/environment';
 
@@ -61,7 +61,7 @@ export class AppComponent {
 
   env = environment;
 
-  chatActive$ = this.store.select(selectChatActive);
+  chatActive$ = this.store.select(selectChatActive).pipe(map(({ active }) => active));
 
   constructor(
     @Inject(DOCUMENT) private document: Document,

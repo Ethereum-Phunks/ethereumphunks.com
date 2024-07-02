@@ -23,7 +23,7 @@
                 </a>
 
                 @if ((address | lowercase) !== (walletAddress$ | async)) {
-                  <button class="chat-button" (click)="this.setChatActive(address)">
+                  <button class="chat-button" (click)="setChat(address)">
                     <ng-template [ngTemplateOutlet]="chatIcon" />
                   </button>
                 }

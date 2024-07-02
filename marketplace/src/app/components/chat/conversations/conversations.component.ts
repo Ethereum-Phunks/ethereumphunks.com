@@ -11,7 +11,7 @@ import { LazyLoadImageModule } from 'ng-lazyload-image';
 import { ImagePipe } from '@/pipes/image.pipe';
 import { Store } from '@ngrx/store';
 import { GlobalState } from '@/models/global-state';
-import { setToUser } from '@/state/actions/chat.actions';
+import { setChat } from '@/state/actions/chat.actions';
 
 @Component({
   imports: [
@@ -67,6 +67,6 @@ export class ConversationsComponent implements OnInit {
   ngOnInit() {}
 
   selectConversation(convo: any) {
-    this.store.dispatch(setToUser({ address: convo.peerAddress }));
+    this.store.dispatch(setChat({ active: true, toAddress: convo.peerAddress }));
   }
 }

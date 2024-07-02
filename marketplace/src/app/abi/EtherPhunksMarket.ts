@@ -138,56 +138,6 @@ export const EtherPhunksMarketABI = [
         name: 'fromAddress',
         type: 'address',
       },
-    ],
-    name: 'PhunkBidEntered',
-    type: 'event',
-  },
-  {
-    anonymous: false,
-    inputs: [
-      {
-        indexed: true,
-        internalType: 'bytes32',
-        name: 'phunkId',
-        type: 'bytes32',
-      },
-      {
-        indexed: false,
-        internalType: 'uint256',
-        name: 'value',
-        type: 'uint256',
-      },
-      {
-        indexed: true,
-        internalType: 'address',
-        name: 'fromAddress',
-        type: 'address',
-      },
-    ],
-    name: 'PhunkBidWithdrawn',
-    type: 'event',
-  },
-  {
-    anonymous: false,
-    inputs: [
-      {
-        indexed: true,
-        internalType: 'bytes32',
-        name: 'phunkId',
-        type: 'bytes32',
-      },
-      {
-        indexed: false,
-        internalType: 'uint256',
-        name: 'value',
-        type: 'uint256',
-      },
-      {
-        indexed: true,
-        internalType: 'address',
-        name: 'fromAddress',
-        type: 'address',
-      },
       {
         indexed: true,
         internalType: 'address',
@@ -359,6 +309,11 @@ export const EtherPhunksMarketABI = [
         name: 'minSalePricesInWei',
         type: 'uint256[]',
       },
+      {
+        internalType: 'uint256',
+        name: 'revSharePercentage',
+        type: 'uint256',
+      },
     ],
     name: 'batchOfferPhunkForSale',
     outputs: [],
@@ -436,6 +391,24 @@ export const EtherPhunksMarketABI = [
   {
     inputs: [
       {
+        internalType: 'uint256',
+        name: '_contractVersion',
+        type: 'uint256',
+      },
+      {
+        internalType: 'address payable',
+        name: '_revShareAddress',
+        type: 'address',
+      },
+    ],
+    name: 'initializeV2_1',
+    outputs: [],
+    stateMutability: 'nonpayable',
+    type: 'function',
+  },
+  {
+    inputs: [
+      {
         internalType: 'bytes32',
         name: 'phunkId',
         type: 'bytes32',
@@ -443,6 +416,11 @@ export const EtherPhunksMarketABI = [
       {
         internalType: 'uint256',
         name: 'minSalePriceInWei',
+        type: 'uint256',
+      },
+      {
+        internalType: 'uint256',
+        name: 'revSharePercentage',
         type: 'uint256',
       },
     ],
@@ -627,6 +605,11 @@ export const EtherPhunksMarketABI = [
         name: 'onlySellTo',
         type: 'address',
       },
+      {
+        internalType: 'uint256',
+        name: 'revSharePercentage',
+        type: 'uint256',
+      },
     ],
     stateMutability: 'view',
     type: 'function',
@@ -652,6 +635,19 @@ export const EtherPhunksMarketABI = [
     type: 'function',
   },
   {
+    inputs: [],
+    name: 'revShareAddress',
+    outputs: [
+      {
+        internalType: 'address payable',
+        name: '',
+        type: 'address',
+      },
+    ],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
     inputs: [
       {
         internalType: 'address',
@@ -660,6 +656,19 @@ export const EtherPhunksMarketABI = [
       },
     ],
     name: 'setPointsAddress',
+    outputs: [],
+    stateMutability: 'nonpayable',
+    type: 'function',
+  },
+  {
+    inputs: [
+      {
+        internalType: 'address payable',
+        name: '_newRevShare',
+        type: 'address',
+      },
+    ],
+    name: 'setRevShareAddress',
     outputs: [],
     stateMutability: 'nonpayable',
     type: 'function',
@@ -764,5 +773,5 @@ export const EtherPhunksMarketABI = [
     outputs: [],
     stateMutability: 'nonpayable',
     type: 'function',
-  },
+  }
 ] as const;

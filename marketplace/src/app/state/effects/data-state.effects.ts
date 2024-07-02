@@ -92,8 +92,9 @@ export class DataStateEffects {
     }),
     switchMap(([action]) => this.dataSvc.fetchSinglePhunk(action.phunkId).pipe(
       switchMap((phunk) => {
-        if (!phunk.collectionName) {
-          return this.dataSvc.fetchUnsupportedItem(action.phunkId)
+        // console.log({phunk})
+        if (!phunk.isSupported) {
+          return this.dataSvc.fetchUnsupportedItem(action.phunkId);
         }
         return of(phunk);
       })

@@ -43,6 +43,7 @@ export interface Phunk {
   collectionName?: string | null
   supply?: number | null
 
+  isSupported?: boolean
   consensus?: boolean
 
   nft?: {

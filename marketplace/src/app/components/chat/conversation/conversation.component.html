@@ -28,6 +28,13 @@
             <div class="content">{{ message.content }}</div>
           </div>
         </div>
+      } @empty {
+        <div class="loader">
+          loading conversation
+          <div class="spinner">
+            <img src="/assets/loader-dark.gif" width="15" height="15" alt="" />
+          </div>
+        </div>
       }
 
       @if (this.error) {

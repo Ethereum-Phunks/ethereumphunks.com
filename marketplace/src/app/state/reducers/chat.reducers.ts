@@ -8,13 +8,13 @@ export const initialState: ChatState = {
   connected: false,
   conversations: [],
   activeConversation: null,
-  toUser: null,
+  toAddress: null,
 };
 
 export const chatReducer: ActionReducer<ChatState, Action> = createReducer(
   initialState,
-  on(actions.setChatActive, (state, { active }) => {
-    return { ...state, active };
+  on(actions.setChat, (state, { active, toAddress }) => {
+    return { ...state, active, toAddress };
   }),
   on(actions.setChatConnected, (state, { connected }) => {
     return { ...state, connected };
@@ -24,8 +24,5 @@ export const chatReducer: ActionReducer<ChatState, Action> = createReducer(
   }),
   on(actions.setActiveConversation, (state, { activeConversation }) => {
     return { ...state, activeConversation };
-  }),
-  on(actions.setToUser, (state, { address }) => {
-    return { ...state, toUser: address };
   }),
 );

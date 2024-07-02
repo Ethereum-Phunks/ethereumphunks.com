@@ -4,7 +4,7 @@ import { Store } from '@ngrx/store';
 
 import { GlobalState } from '@/models/global-state';
 
-import { setChatActive } from '@/state/actions/chat.actions';
+import { setChat } from '@/state/actions/chat.actions';
 
 @Component({
   standalone: true,
@@ -31,6 +31,6 @@ export class ModalComponent implements OnInit {
   ngOnInit(): void {}
 
   close(): void {
-    this.store.dispatch(setChatActive({ active: false }));
+    this.store.dispatch(setChat({ active: false }));
   }
 }

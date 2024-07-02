@@ -1,9 +1,10 @@
+import { ChatState } from '@/models/global-state';
 import { createAction, props } from '@ngrx/store';
 import { Conversation } from '@xmtp/xmtp-js';
 
-export const setChatActive = createAction(
+export const setChat = createAction(
   '[Chat] Set Chat Active',
-  props<{ active: boolean }>()
+  props<{ active: boolean, toAddress?: ChatState['toAddress'] }>()
 );
 
 export const setChatConnected = createAction(
@@ -19,9 +20,4 @@ export const setConversations = createAction(
 export const setActiveConversation = createAction(
   '[Chat] Set Active Conversation',
   props<{ activeConversation: Conversation }>()
-);
-
-export const setToUser = createAction(
-  '[Chat] Set To User',
-  props<{ address: string | null }>()
 );

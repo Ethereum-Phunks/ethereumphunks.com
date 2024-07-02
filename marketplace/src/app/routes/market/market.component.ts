@@ -32,7 +32,7 @@ import { WeiToEthPipe } from '@/pipes/wei-to-eth.pipe';
 import { CalcPipe } from '@/pipes/calculate.pipe';
 import { FormatCashPipe } from '@/pipes/format-cash.pipe';
 
-import { setChatActive, setToUser } from '@/state/actions/chat.actions';
+import { setChat } from '@/state/actions/chat.actions';
 import * as appStateSelectors from '@/state/selectors/app-state.selectors';
 import * as appStateActions from '@/state/actions/app-state.actions';
 import * as dataStateSelectors from '@/state/selectors/data-state.selectors';
@@ -641,9 +641,8 @@ export class MarketComponent {
     this.selectedPhunksFormArray = this.fb.array([]);
   }
 
-  setChatActive(address: string) {
-    this.store.dispatch(setChatActive({ active: true }));
-    this.store.dispatch(setToUser({ address }));
+  setChat(toAddress: string) {
+    this.store.dispatch(setChat({ active: true, toAddress }));
   }
 
   // Submissions

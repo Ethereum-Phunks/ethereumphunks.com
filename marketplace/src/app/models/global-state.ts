@@ -52,10 +52,10 @@ export interface AppState {
 
 export interface ChatState {
   active: boolean;
+  toAddress: string | null | undefined;
   connected: boolean;
   conversations: Conversation[];
   activeConversation: Conversation | null;
-  toUser: string | null;
 }
 
 export interface NotificationState {

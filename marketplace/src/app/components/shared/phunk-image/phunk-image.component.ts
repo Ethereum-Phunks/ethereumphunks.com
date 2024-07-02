@@ -46,9 +46,10 @@ export class PhunkImageComponent {
   ) {
 
     effect(() => {
-      console.log(this.hashId(), this.phunk());
+      // console.log(this.hashId(), this.phunk());
 
       if (this.hashId() && this.hashId() !== this.hashIdPrevValue) {
+        // console.log('hashId changed', this.hashId());
         this.getPhunkByHashId(this.hashId()!);
       }
 
@@ -105,6 +106,7 @@ export class PhunkImageComponent {
 
   async getPhunkByHashId(hashId: string): Promise<any> {
     const tx = await this.web3Svc.getTransactionL1(hashId);
+    // console.log(tx);
     this.phunkImgSrc = hexToString(tx.input);
     // console.log(tx.input, hexToString(tx.input))
   }

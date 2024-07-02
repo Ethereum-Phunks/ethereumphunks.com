@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { setChatActive, setChatConnected, setToUser } from '../actions/chat.actions';
+import { setChat, setChatConnected } from '../actions/chat.actions';
 
 import { Store } from '@ngrx/store';
 
@@ -17,7 +17,7 @@ import { ChatService } from '@/services/chat.service';
 export class ChatEffects {
 
   chatActive$ = createEffect(() => this.actions$.pipe(
-    ofType(setChatActive),
+    ofType(setChat),
     // filter((action) => action.active),
     withLatestFrom(this.store.select(selectWalletAddress)),
     filter(([_, address]) => !!address),
@@ -28,11 +28,6 @@ export class ChatEffects {
       );
     }),
   ));
-
-  onToUser$ = createEffect(() => this.actions$.pipe(
-    ofType(setToUser),
-    // tap((action) => console.log({ action })),
-  ), { dispatch: false });
 
   constructor(
     private store: Store<GlobalState>,
