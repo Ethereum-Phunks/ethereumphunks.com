@@ -52,6 +52,9 @@ export class AppModule {
       .forRoutes({
         path: '/admin/*',
         method: RequestMethod.ALL
+      }, {
+        path: '/ethscriptions/*',
+        method: RequestMethod.POST
       });
   }
 }

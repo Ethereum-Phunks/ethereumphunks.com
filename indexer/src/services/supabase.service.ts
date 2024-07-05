@@ -7,7 +7,6 @@ import { writeFile } from 'fs/promises';
 
 import {
   Event,
-  ShaResponse,
   UserResponse,
   EventType,
   EventResponse,
@@ -15,9 +14,10 @@ import {
   ListingResponse,
   Bid,
   BidResponse,
-  PhunkSha,
   EthscriptionResponse,
   Ethscription,
+  AttributeItem,
+  AttributesResponse,
 } from '@/models/db';
 
 import dotenv from 'dotenv';
@@ -154,8 +154,8 @@ export class SupabaseService {
   // Checks //////////////////////////////////////////////////////////////////////
   ////////////////////////////////////////////////////////////////////////////////
 
-  async checkIsEthPhunk(sha: string): Promise<PhunkSha | null> {
-    const response: ShaResponse = await supabase
+  async checkIsEthPhunk(sha: string): Promise<AttributeItem | null> {
+    const response: AttributesResponse = await supabase
       .from('attributes')
       .select('*')
       .eq('sha', sha);
@@ -234,17 +234,33 @@ export class SupabaseService {
   // }
 
   ////////////////////////////////////////////////////////////////////////////////
+  // Storage /////////////////////////////////////////////////////////////////////
+  ////////////////////////////////////////////////////////////////////////////////
+
+  async uploadImage(
+    sha: string,
+    imageBuffer: Buffer,
+    contentType: string
+  ): Promise<{ path: string }> {
+    const { data, error } = await supabase.storage
+      .from('images')
+      .upload(`${sha}.${contentType.split('/')[1]}`, imageBuffer, {
+        contentType,
+      });
+
+    if (error) console.error('Error uploading image:', error);
+    return data;
+  }
+
+  ////////////////////////////////////////////////////////////////////////////////
   // Adds ////////////////////////////////////////////////////////////////////////
   ////////////////////////////////////////////////////////////////////////////////
 
-  async addEthPhunk(
+  async addEthscription(
     txn: Transaction,
     createdAt: Date,
-    phunkShaData: PhunkSha,
+    attributesData: AttributeItem,
   ): Promise<void> {
-
-    const stringData = hexToString(txn.input.toString() as `0x${string}`);
-    const cleanedString = stringData.replace(/\x00/g, '');
 
     // Get or create the users
     if (txn.from.toLowerCase() === txn.to.toLowerCase()) {
@@ -256,23 +272,30 @@ export class SupabaseService {
       ]);
     }
 
-    const response: EthscriptionResponse = await supabase
+    const { error }: EthscriptionResponse = await supabase
       .from('ethscriptions' + this.suffix)
       .insert([
         {
           createdAt,
           creator: txn.from.toLowerCase(),
+          prevOwner: txn.from.toLowerCase(),
           owner: txn.to.toLowerCase(),
           hashId: txn.hash.toLowerCase(),
-          // data: cleanedString,
-          sha: phunkShaData.sha,
-          slug: phunkShaData.slug || 'ethereum-phunks',
-          tokenId: phunkShaData.tokenId,
+          sha: attributesData.sha,
+          slug: attributesData.slug,
+          tokenId: attributesData.tokenId,
         },
       ]);
 
-    const { error } = response;
     if (error) throw error.message;
+    Logger.log('Ethscription created', txn.hash.toLowerCase());
+
+    const { error: attributesError }: AttributesResponse = await supabase
+      .from('attributes')
+      .insert([attributesData]);
+
+    if (attributesError) console.log(attributesError.message);
+    Logger.log('Attributes created', txn.hash.toLowerCase());
   }
 
   async addEvent(

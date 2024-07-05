@@ -10,8 +10,8 @@ export interface EventResponse {
   error: PostgrestError | null;
 }
 
-export interface ShaResponse {
-  data: PhunkSha[];
+export interface AttributesResponse {
+  data: AttributeItem[];
   error: PostgrestError | null;
 }
 
@@ -75,18 +75,11 @@ export interface Event {
   l2?: boolean;
 }
 
-export interface PhunkSha {
-  sha: string | null;
-  tokenId: number;
-  slug: string | null;
-}
-
-export interface CuratedItem {
-  name: string;
-  attributes: {k: string, v: string}[];
+export interface AttributeItem {
+  sha: string;
+  values: {k: string, v: string}[];
   slug: string;
   tokenId: number | null;
-  sha: string;
 }
 
 export interface User {

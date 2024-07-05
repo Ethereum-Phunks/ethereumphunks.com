@@ -1,7 +1,7 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
 
 import { SupabaseService } from '@/services/supabase.service';
-import { UtilityService } from '@/modules/shared/services/utility.service';
+import { DataService } from '@/services/data.service';
 
 import { BridgeProcessingQueue } from '@/modules/queue/queues/bridge-processing.queue';
 import { NotifsService } from '@/modules/notifs/notifs.service';
@@ -12,7 +12,7 @@ import * as esips from '@/constants/esips';
 
 import { bridgeAbiL1, bridgeAddressL1, chain, marketAbiL1, marketAddressL1, pointsAbiL1, pointsAddressL1 } from '@/constants/ethereum';
 
-import { Ethscription, Event, PhunkSha } from '@/models/db';
+import { AttributeItem, Ethscription, Event } from '@/models/db';
 
 import { DecodeEventLogReturnType, Log, Transaction, TransactionReceipt, decodeEventLog, hexToString, zeroAddress } from 'viem';
 
@@ -30,7 +30,53 @@ export class EthscriptionsService {
     private readonly sbSvc: SupabaseService,
     private readonly notifsSvc: NotifsService,
     private readonly bridgeQueue: BridgeProcessingQueue,
+    private readonly dataSvc: DataService
   ) {}
+
+  async addEthscription(body: { hash: string, attributes: AttributeItem }): Promise<any> {
+
+    let { hash, attributes } = body;
+
+    const transaction = await this.web3SvcL1.getTransaction(hash as `0x${string}`)
+    const block = await this.web3SvcL1.getBlock({ blockNumber: Number(transaction.blockNumber) });
+    const timestamp = new Date(Number(block.timestamp) * 1000);
+
+    const { input } = transaction;
+
+    // Make sure its an ethscription
+    const stringData = hexToString(input.toString() as `0x${string}`);
+    const cleanedString = stringData.replace(/\x00/g, '');
+    if (!cleanedString.startsWith('data:')) return [];
+
+    // Create sha and check if it exists
+    const sha = createHash('sha256').update(cleanedString).digest('hex');
+    const [ existsLocal, existsGlobal ] = await Promise.all([
+      this.sbSvc.checkEthscriptionExistsBySha(sha),
+      this.dataSvc.getEthscriptionByHashId(hash)
+    ]);
+
+    // Only process ones that don't already exist locally
+    if (existsLocal) return;
+
+    // Only process ones that already exist globally (ethscriptions)
+    if (!existsGlobal) return;
+
+    // Set the sha
+    attributes.sha = sha;
+
+    // Mime type
+    const base64Header = cleanedString.split(',')[0];
+    const mimeType = base64Header.match(/data:([^;]*);?/)[1];
+
+    // Create image buffer from data uri
+    const imageBuffer = Buffer.from(cleanedString.split(',')[1], 'base64');
+
+    // Upload image to storage bucket
+    await this.sbSvc.uploadImage(sha, imageBuffer, mimeType);
+
+    const event = await this.processEtherPhunkCreationEvent(transaction, timestamp, attributes);
+    if (event) await this.sbSvc.addEvents([event]);
+  }
 
   /**
    * Processes the ethscriptions for a given transaction.
@@ -200,12 +246,12 @@ export class EthscriptionsService {
   async processEtherPhunkCreationEvent(
     txn: Transaction,
     createdAt: Date,
-    phunkShaData: PhunkSha,
+    attributesData: AttributeItem,
   ): Promise<Event> {
     const { from, to, hash: hashId } = txn;
 
     // Add the ethereum phunk
-    await this.sbSvc.addEthPhunk(txn, createdAt, phunkShaData);
+    await this.sbSvc.addEthscription(txn, createdAt, attributesData);
     Logger.log('Added eth phunk', `${hashId.toLowerCase()}`);
 
     return {

@@ -29,4 +29,19 @@ export class DataService {
       )
     );
   }
+
+  async getEthscriptionByHashId(hashId: string): Promise<any> {
+    const prefix = process.env.CHAIN_ID === '1' ? '' : '-sepolia';
+    const url = `https://ethscriptions-api${prefix}.flooredape.io/ethscriptions/${hashId}`;
+
+    return firstValueFrom(
+      this.http.get(url).pipe(
+        map(response => response.data?.result),
+        catchError(error => {
+          // console.log('getEthscriptionBySha', error);
+          return of(null);
+        }),
+      )
+    );
+  }
 }
