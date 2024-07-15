@@ -14,7 +14,6 @@ import { TxHistoryComponent } from '@/components/tx-history/tx-history.component
 import { PhunkImageComponent } from '@/components/shared/phunk-image/phunk-image.component';
 import { BreadcrumbsComponent } from '@/components/breadcrumbs/breadcrumbs.component';
 import { AuctionComponent } from '@/components/auction/auction.component';
-import { StepsComponent } from '@/components/steps/steps.component';
 
 import { WalletAddressDirective } from '@/directives/wallet-address.directive';
 
@@ -76,7 +75,6 @@ interface TxStatuses {
     PhunkImageComponent,
     BreadcrumbsComponent,
     AuctionComponent,
-    StepsComponent,
 
     TokenIdParsePipe,
     TraitCountPipe,
@@ -134,7 +132,9 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
   );
 
   walletAddress$ = this.store.select(appStateSelectors.selectWalletAddress);
-  singlePhunk$ = this.store.select(dataStateSelectors.selectSinglePhunk);
+  singlePhunk$ = this.store.select(dataStateSelectors.selectSinglePhunk).pipe(
+    tap((phunk) => console.log({phunk})),
+  );
   theme$ = this.store.select(appStateSelectors.selectTheme);
   usd$ = this.store.select(dataStateSelectors.selectUsd);
 
@@ -442,7 +442,15 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
       await this.checkConsenus(phunk);
       if (!phunk.prevOwner) throw new Error('Invalid prevOwner');
 
-      const hash = await this.web3Svc.batchBuyPhunks([phunk]);
+      let hash: string | undefined = undefined;
+      if (phunk.nft) {
+        hash = await this.web3Svc.buyPhunkL2(hashId);
+      } else {
+        hash = await this.web3Svc.batchBuyPhunks([phunk]);
+      }
+
+      if (!hash) throw new Error('Could not process transaction');
+
       notification = {
         ...notification,
         type: 'pending',

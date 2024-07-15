@@ -36,7 +36,7 @@
 
           <div class="label">
             @if (event.type) {
-              <div>{{ labels[event.type] }}</div>
+              <div [innerHTML]="labels[event.type]"></div>
             }
 
             @if (

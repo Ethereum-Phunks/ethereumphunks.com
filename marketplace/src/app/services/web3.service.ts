@@ -9,12 +9,13 @@ import { Phunk } from '@/models/db';
 
 import { Observable, catchError, firstValueFrom, map, of, tap } from 'rxjs';
 
-import PointsAbi from '@/abi/Points.json';
-
+// L1
 import { EtherPhunksMarketABI } from '@/abi/EtherPhunksMarket';
-import EtherPhunksBridgeL2 from '@/abi/EtherPhunksBridgeL2.json';
+import { PointsABI } from '@/abi/Points';
 
-import EtherPhunksNftMarket from '@/abi/EtherPhunksNftMarket.json';
+// L2
+import { EtherPhunksNftMarketABI } from '@/abi/EtherPhunksNftMarket';
+import { EtherPhunksBridgeL2ABI } from '@/abi/EtherPhunksBridgeL2';
 
 import { reconnect, http, createConfig, Config, watchAccount, getPublicClient, getAccount, disconnect, getChainId, getWalletClient, GetWalletClientReturnType, GetAccountReturnType } from '@wagmi/core';
 import { coinbaseWallet, walletConnect, injected } from '@wagmi/connectors';
@@ -27,7 +28,7 @@ import { magma } from '@/constants/magmaChain';
 import { Web3Modal } from '@web3modal/wagmi/dist/types/src/client';
 import { createWeb3Modal } from '@web3modal/wagmi';
 
-import { PublicClient, TransactionReceipt, WatchBlockNumberReturnType, WatchContractEventReturnType, createPublicClient, decodeFunctionData, formatEther, formatUnits, isAddress, keccak256, numberToHex, parseEther, stringToBytes, zeroAddress } from 'viem';
+import { PublicClient, TransactionReceipt, WatchBlockNumberReturnType, WatchContractEventReturnType, createPublicClient, decodeFunctionData, formatEther, isAddress, keccak256, numberToHex, parseEther, stringToBytes, zeroAddress } from 'viem';
 
 const marketAddress = environment.marketAddress;
 const marketAddressL2 = environment.marketAddressL2;
@@ -77,7 +78,7 @@ export class Web3Service {
     private store: Store<GlobalState>,
     private ngZone: NgZone
   ) {
-    const chains: [Chain, ...Chain[]] = environment.chainId === 1 ? [mainnet] : [sepolia];
+    const chains: [Chain, ...Chain[]] = environment.chainId === 1 ? [mainnet] : [sepolia, magma];
 
     this.l1Client = createPublicClient({
       chain: chains[0],
@@ -124,6 +125,7 @@ export class Web3Service {
 
     this.connectedState.pipe(
       tap((account: GetAccountReturnType) => {
+        console.log('account', account);
         this.store.dispatch(appStateActions.setConnected({ connected: account.isConnected }));
         this.store.dispatch(appStateActions.setWalletAddress({ walletAddress: account.address }));
       }),
@@ -153,7 +155,7 @@ export class Web3Service {
     if (this.pointsWatcher) return;
     this.pointsWatcher = this.l1Client.watchContractEvent({
       address: pointsAddress as `0x${string}`,
-      abi: PointsAbi,
+      abi: PointsABI,
       onLogs: (logs) => {
         logs.forEach((log: any) => {
           if (log.eventName === 'PointsAdded') this.store.dispatch(appStateActions.pointsChanged({ log }));
@@ -181,7 +183,7 @@ export class Web3Service {
     }
   }
 
-  async switchNetwork(l: string): Promise<void> {
+  async switchNetwork(l: string = 'l1'): Promise<void> {
     const walletClient = await getWalletClient(this.config);
     const chainId = getChainId(this.config);
 
@@ -246,7 +248,7 @@ export class Web3Service {
     value?: string
   ): Promise<string | undefined> {
     if (!functionName) return;
-    await this.switchNetwork('l1');
+    await this.switchNetwork();
 
     const chainId = getChainId(this.config);
     const walletClient = await getWalletClient(this.config, { chainId });
@@ -396,7 +398,7 @@ export class Web3Service {
     if (!hashId) throw new Error('No phunk selected');
     if (!toAddress) throw new Error('No address provided');
 
-    await this.switchNetwork('l1');
+    await this.switchNetwork();
 
     const wallet = await getWalletClient(this.config);
     return wallet?.sendTransaction({
@@ -417,7 +419,7 @@ export class Web3Service {
 
   async lockPhunk(hexArr: string[]): Promise<string | undefined> {
     if (!hexArr.length) throw new Error('No phunk selected');
-    await this.switchNetwork('l1');
+    await this.switchNetwork();
 
     const data = hexArr.map((res) => res.replace('0x', '')).join('');
 
@@ -440,9 +442,9 @@ export class Web3Service {
   async getUserPoints(address: string): Promise<number> {
     const points = await this.l1Client.readContract({
       address: pointsAddress as `0x${string}`,
-      abi: PointsAbi,
+      abi: PointsABI,
       functionName: 'points',
-      args: [address],
+      args: [address as `0x${string}`],
     });
     return Number(points);
   }
@@ -450,7 +452,7 @@ export class Web3Service {
   async getMultiplier(): Promise<any> {
     const multiplier = await this.l1Client.readContract({
       address: pointsAddress as `0x${string}`,
-      abi: PointsAbi,
+      abi: PointsABI,
       functionName: 'multiplier',
       args: [],
     });
@@ -566,6 +568,18 @@ export class Web3Service {
     }
   }
 
+  async buyPhunkL2(hashId: string): Promise<string | undefined> {
+    const tokenId = await this.readTokenContractL2('hashToToken', [hashId]);
+    const offer = await this.readMarketContractL2('phunksOfferedForSale', [tokenId]);
+
+    console.log({tokenId, offer});
+    if (!offer[0]) throw new Error('Phunk not for sale');
+
+    const value = offer[3];
+    await this.switchNetwork('l2');
+    return this.writeMarketContractL2('buyPhunk', [tokenId], value);
+  }
+
   async phunkNoLongerForSaleL2(hashId: string): Promise<string | undefined> {
     const tokenId = await this.readTokenContractL2('hashToToken', [hashId]);
     return this.writeMarketContractL2('phunkNoLongerForSale', [tokenId]);
@@ -590,7 +604,7 @@ export class Web3Service {
 
     const tx: any = {
       address: marketAddressL2 as `0x${string}`,
-      abi: EtherPhunksNftMarket,
+      abi: EtherPhunksNftMarketABI,
       functionName,
       args,
       account: walletClient?.account?.address as `0x${string}`,
@@ -620,7 +634,7 @@ export class Web3Service {
 
     const tx: any = {
       address: bridgeAddressL2 as `0x${string}`,
-      abi: EtherPhunksBridgeL2,
+      abi: EtherPhunksBridgeL2ABI,
       functionName,
       args,
       account: walletClient?.account?.address as `0x${string}`,
@@ -636,10 +650,11 @@ export class Web3Service {
     if (!this.l2Client?.chain) return null;
     const call: any = await this.l2Client.readContract({
       address: marketAddressL2 as `0x${string}`,
-      abi: EtherPhunksNftMarket,
+      abi: EtherPhunksNftMarketABI,
       functionName,
       args: args as any,
     });
+    // console.log('readMarketContractL2', {functionName, args, call});
     return call;
   }
 
@@ -648,10 +663,11 @@ export class Web3Service {
     if (!this.l2Client?.chain) return null;
     const call: any = await this.l2Client.readContract({
       address: bridgeAddressL2 as `0x${string}`,
-      abi: EtherPhunksBridgeL2,
+      abi: EtherPhunksBridgeL2ABI,
       functionName,
       args: args as any,
     });
+    // console.log('readTokenContractL2', {functionName, args, call});
     return call;
   }
 

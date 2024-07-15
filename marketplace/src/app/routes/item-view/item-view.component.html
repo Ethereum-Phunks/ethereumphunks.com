@@ -95,7 +95,7 @@
                         @if (phunk.consensus) {
 
                           <!-- Bridge button -->
-                          <!-- @if ((owner | lowercase) === (address | lowercase)) {
+                          @if ((owner | lowercase) === (address | lowercase)) {
                             <button class="bridge" [class.active]="bridgeActive" (click)="bridgePhunkAction()">
                               <span>Bridge</span>
                               <ng-container *ngTemplateOutlet="pending; context:{ $implicit: 'bridgePhunk' }" />
@@ -104,13 +104,18 @@
                             @if (bridgeActive) {
                               <ng-container *ngTemplateOutlet="bridgeForm; context:{ $implicit: phunk }" />
                             }
-                          } -->
+                          }
 
                           <!-- Buy button -->
                           @if (
                             phunk.listing &&
-                            phunk.isEscrowed &&
-                            (phunk.prevOwner | lowercase) !== (address | lowercase)
+                            ((
+                              phunk.isEscrowed &&
+                              (phunk.prevOwner | lowercase) !== (address | lowercase)
+                            ) || (
+                              phunk.nft &&
+                              phunk.nft.owner !== address
+                            ))
                           ) {
                             <button class="buy" (click)="buyPhunk(phunk)">
                               <span>Buy</span>
@@ -123,7 +128,7 @@
                             ((owner | lowercase) === (escrowAddress | lowercase) &&
                             (phunk.prevOwner | lowercase) === (address | lowercase)) ||
                             (owner | lowercase) === (address | lowercase) ||
-                            (phunk.nft?.owner === address)
+                            (phunk.nft && phunk.nft.owner === address)
                           ) {
                             <button class="sell" (click)="sellPhunk()" [class.active]="sellActive">
                               <span>Sell</span>
@@ -159,11 +164,14 @@
                           <!-- Delist button -->
                           @if (
                             phunk.listing &&
-                            (
+                            ((
                               ((owner | lowercase) === (escrowAddress | lowercase) &&
                               (phunk.prevOwner | lowercase) === (address | lowercase)) ||
                               (phunk.nft?.owner === address)
-                            )
+                            ) || (
+                              phunk.nft &&
+                              phunk.nft.owner === address
+                            ))
                           ) {
                             <button class="sell" (click)="phunkNoLongerForSale(phunk)">
                               <span>Delist</span>
@@ -173,7 +181,7 @@
                         } @else {
                           @if (!(isCooling$ | async)) {
                             <div class="notice">
-                              <div class="consensus">This {{ phunk.singleName }} does not have consensus with one or more indexers. <a (click)="setChat()">Contact us</a> to resolve this issue.</div>
+                              <div class="consensus">This {{ phunk.singleName }} does not have consensus with one or more indexers. <a (click)="setChat()">Contact support</a> to resolve this issue.</div>
                             </div>
                           }
                         }
@@ -294,7 +302,7 @@
 <!-- Transfer Form -->
 <ng-template #transferForm let-phunk>
   <form class="form-wrapper">
-    <ng-template [ngTemplateOutlet]="cooldown" />
+    <ng-container *ngTemplateOutlet="cooldown; context:{ $implicit: phunk }" />
 
     <div class="form-group">
       <label i18n for="transfer-address">Transfer to address</label>
@@ -313,7 +321,7 @@
 <ng-template #sellForm let-phunk>
   <form class="form-wrapper">
     @if (!phunk.isEscrowed) {
-      <ng-template [ngTemplateOutlet]="cooldown" />
+      <ng-container *ngTemplateOutlet="cooldown; context:{ $implicit: phunk }" />
     }
 
     <div class="form-group">
@@ -365,7 +373,7 @@
 <!-- Escrow Form -->
 <ng-template #escrowForm let-phunk>
   <div class="form-wrapper">
-    <ng-template [ngTemplateOutlet]="cooldown" />
+    <ng-container *ngTemplateOutlet="cooldown; context:{ $implicit: phunk }" />
 
     <p i18n>Your {{ phunk.singleName }} must be held in escrow in order to be listed. <span class="small">While held in escrow, your Phunk will not show in your wallet on other apps/marketplaces.</span></p>
 
@@ -381,13 +389,11 @@
 <!-- Bridge Form -->
 <ng-template #bridgeForm let-phunk>
   <div class="form-wrapper">
-    <ng-template [ngTemplateOutlet]="cooldown" />
+    <ng-container *ngTemplateOutlet="cooldown; context:{ $implicit: phunk }" />
 
-    <p i18n>Bridge your {{ phunk.singleName }} to the magma L2 for faster and cheaper transacting on our marketplace. You can unlock and bridge your {{ phunk.singleName }} back at any time</p>
+    <p i18n>Bridge your {{ phunk.singleName }} to Magma L2 for faster and cheaper transacting. You can unlock and bridge your {{ phunk.singleName }} back at any time.</p>
 
     <!-- <p><span class="small">You must own magma's native token in order to transact on the L2.</span> <a href="#">Click here to swap</a></p> -->
-
-    <app-steps />
 
     <div class="form-actions">
       <button i18n type="reset" class="cancel" (click)="closeBridge()">Cancel</button>
@@ -416,8 +422,8 @@
 </ng-template>
 
 <!-- Cooldown overlay -->
-<ng-template #cooldown>
-  @if (isCooling$ | async) {
+<ng-template #cooldown let-phunk>
+  @if ((isCooling$ | async) && !phunk.nft) {
     <div class="cooldown-wrapper">
       <p>{{ web3Svc.maxCooldown }} Block cooldown</p>
       <img src="/assets/loader-phunk.gif" width="40" height="40" alt="">

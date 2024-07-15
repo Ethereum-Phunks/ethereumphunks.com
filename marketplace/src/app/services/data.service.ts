@@ -168,6 +168,7 @@ export class DataService {
   getAttributes(slug: string): Observable<any> {
     return from(this.ngForage.getItem(`${slug}__attributes`)).pipe(
       switchMap((res: any) => {
+        // console.log('getAttributes', res);
         if (res) return of(res);
         return this.http.get(`${environment.staticUrl}/data/${slug}_attributes.json`).pipe(
           tap((res: any) => this.ngForage.setItem(`${slug}__attributes`, res)),
@@ -582,14 +583,13 @@ export class DataService {
     if (!hashId) return null;
 
     try {
-      const calls = [
+
+      const [ callL1, callL2 ] = await Promise.all([
         this.web3Svc.readMarketContract('phunksOfferedForSale', [hashId]),
         this.web3Svc.phunksOfferedForSaleL2(hashId),
-      ];
+      ]);
 
-      const [ callL1, callL2 ] = await Promise.all(calls);
-
-      const offer = callL1 || callL2;
+      const offer = callL1[0] ? callL1 : callL2;
       if (!offer?.[0]) return null;
 
       const listing = {
