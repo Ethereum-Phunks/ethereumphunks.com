@@ -1,12 +1,12 @@
 // https://forum.openzeppelin.com/t/openzeppelin-upgrades-step-by-step-tutorial-for-hardhat/3580
 
-import { ethers } from 'hardhat';
 import hre, { upgrades } from 'hardhat';
 
-const contractName = 'EtherPhunksMarketV2';
+const contractName = 'EtherPhunksMarketV2_1';
+const _proxyAddress = '0x3dfbc8c62d3ce0059bdaf21787ec24d5d116fe1e';
 
 const _version = 2;
-const _proxyAddress = '0x3dfbc8c62d3ce0059bdaf21787ec24d5d116fe1e';
+const _revShareAddress = '0x051281d626b327638B916E1a52aF1495855016c1';
 
 export async function upgradeMarket() {
   const [signer] = await hre.ethers.getSigners();
@@ -17,14 +17,14 @@ export async function upgradeMarket() {
 
   const ContractFactory = await hre.ethers.getContractFactory(contractName);
 
-  // const args: any[] = [];
-
   // Upgrade the contract
   const contract = await upgrades.upgradeProxy(
     _proxyAddress,
     ContractFactory,
-    // { call: { fn: 'initializeV2', args: [_version] } }
+    // { call: { fn: 'initializeV3', args: [_version, _revShareAddress] } }
   );
+
+  // console.log({contract});
 
   await contract.waitForDeployment();
   const upgraded = await contract.getAddress();
@@ -41,6 +41,6 @@ export async function upgradeMarket() {
 upgradeMarket().then(() => {
   process.exit(0);
 }).catch((error) => {
-  console.error(error);
+  console.error({error});
   process.exit(1);
 });

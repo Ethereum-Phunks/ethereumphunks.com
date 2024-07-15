@@ -8,7 +8,7 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 const config: HardhatUserConfig = {
-  defaultNetwork: 'sepolia',
+  defaultNetwork: 'hardhat',
   solidity: {
     version: '0.8.20',
     settings: {
@@ -26,6 +26,7 @@ const config: HardhatUserConfig = {
   },
   networks: {
     // hardhat: {
+    //   chainId: 1337,
     //   // forking: {
     //   //   enabled: true,
     //   //   url: 'http://geth.dappnode:8545',
@@ -41,21 +42,32 @@ const config: HardhatUserConfig = {
     //   from: process.env.MAINNET_ADDRESS as string,
     //   accounts: [`0x${process.env.MAINNET_PK}`],
     // },
-    sepolia: {
-      url: 'http://geth.sepolia-geth.dappnode:8545',
-      chainId: 11155111,
-      from: process.env.SEPOLIA_ADDRESS as string,
-      accounts: [`0x${process.env.SEPOLIA_PK}`],
-    },
-    // magma: {
-    //   url: 'https://turbo.magma-rpc.com',
-    //   chainId: 6969696969,
+    // sepolia: {
+    //   url: 'http://geth.sepolia-geth.dappnode:8545',
+    //   chainId: 11155111,
     //   from: process.env.SEPOLIA_ADDRESS as string,
     //   accounts: [`0x${process.env.SEPOLIA_PK}`],
     // },
+    magma: {
+      url: 'https://turbo.magma-rpc.com',
+      chainId: 6969696969,
+      from: process.env.SEPOLIA_ADDRESS as string,
+      accounts: [`0x${process.env.SEPOLIA_PK}`],
+    },
   },
   etherscan: {
     apiKey: process.env.ETHERSCAN_API_KEY,
+    customChains: [
+      {
+        network: 'magma',
+        chainId: 6969696969,
+        urls: {
+
+          apiURL: 'https://magmascan.org/api/',
+          browserURL: "https://magmascan.org",
+        }
+      }
+    ]
   },
 };
 
