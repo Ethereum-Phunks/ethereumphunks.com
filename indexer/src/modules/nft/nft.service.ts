@@ -55,28 +55,29 @@ export class NftService {
     const txn = await this.web3SvcL2.getTransaction(transactionHash);
     const hashId = await this.readTokenContract('tokenToHash', [phunkIndex]);
 
-    // await this.sbSvc.createListing(
-    //   txn,
-    //   new Date(),
-    //   hashId,
-    //   toAddress,
-    //   minValue,
-    // );
+    await this.sbSvc.createListing(
+      txn,
+      new Date(),
+      hashId,
+      toAddress,
+      minValue,
+      true
+    );
 
-    // this.sbSvc.addEvents([{
-    //   txId: txn.hash + log.logIndex,
-    //   type: eventName,
-    //   hashId: hashId.toLowerCase(),
-    //   from: txn.from?.toLowerCase(),
-    //   to: zeroAddress,
-    //   blockHash: txn.blockHash,
-    //   txIndex: txn.transactionIndex,
-    //   txHash: txn.hash,
-    //   blockNumber: Number(txn.blockNumber),
-    //   blockTimestamp: new Date(),
-    //   value: BigInt(minValue).toString(),
-    //   l2: true
-    // }])
+    this.sbSvc.addEvents([{
+      txId: txn.hash + log.logIndex,
+      type: eventName,
+      hashId: hashId.toLowerCase(),
+      from: txn.from?.toLowerCase(),
+      to: zeroAddress,
+      blockHash: txn.blockHash,
+      txIndex: txn.transactionIndex,
+      txHash: txn.hash,
+      blockNumber: Number(txn.blockNumber),
+      blockTimestamp: new Date(),
+      value: BigInt(minValue).toString(),
+      l2: true
+    }])
 
     Logger.debug(`Offered phunk ${phunkIndex} to ${toAddress}`, hashId);
   }

@@ -152,7 +152,7 @@ export class VerificationService {
       )
     );
 
-    const account = privateKeyToAccount('0x' + process.env.DATA_DEPLOYER_PK as `0x${string}`);
+    const account = privateKeyToAccount('0x' + process.env.L1_RELAY_SIGNER_PK as `0x${string}`);
     const signature = await account.signMessage({ message: { raw: message as `0x${string}` } });
 
     const r = signature.substring(0, 66);

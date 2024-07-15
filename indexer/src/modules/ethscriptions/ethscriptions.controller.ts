@@ -16,8 +16,8 @@ export class EthscriptionsController {
     @Body() body: { hash: string, attributes: AttributeItem }
   ): Promise<void> {
 
-    const { hash, attributes } = body;
-    const res = await this.ethsSvc.addEthscription(body);
+    // const { hash, attributes } = body;
+    // const res = await this.ethsSvc.addEthscription(body);
 
     // const res = await this.ethsSvc.addEthscriptionByTransactionHash(body.hash);
     // console.log('addEthscriptionByTransactionHash', res);

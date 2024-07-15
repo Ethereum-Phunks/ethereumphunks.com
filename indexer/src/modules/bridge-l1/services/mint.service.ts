@@ -64,6 +64,22 @@ export class MintService {
     }
   }
 
+  async burnToken(request: WriteContractParameters) {
+    try {
+      const hash = await l2WalletClient.writeContract(request);
+      const receipt = await this.web3SvcL2.waitForTransactionReceipt(hash);
+
+      const logs = parseEventLogs({
+        abi: bridgeAbiL2,
+        logs: receipt.logs,
+      });
+
+      logs.forEach((log: any) => console.log(log.args));
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
   /**
    * Creates a mint request that can be used to transact with the L2
    *

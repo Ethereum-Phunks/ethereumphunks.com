@@ -107,6 +107,7 @@ export class SupabaseService {
     hashId: string,
     toAddress: string,
     minValue: bigint,
+    l2: boolean = false
   ): Promise<void> {
     const response: ListingResponse = await supabase
       .from('listings' + this.suffix)
@@ -118,6 +119,7 @@ export class SupabaseService {
         minValue: minValue.toString(),
         listedBy: txn.from.toLowerCase(),
         toAddress: toAddress.toLowerCase(),
+        l2,
       });
 
     const { error } = response;

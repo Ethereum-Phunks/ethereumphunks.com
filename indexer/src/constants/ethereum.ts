@@ -92,7 +92,7 @@ export const l2Client = createPublicClient({
 export const l2WalletClient = createWalletClient({
   chain: magma,
   transport: http(magma.rpcUrls.default.http[0]),
-  account: privateKeyToAccount(`0x${process.env.DATA_DEPLOYER_PK}`),
+  account: privateKeyToAccount(`0x${process.env.L2_RELAY_SIGNER_PK}`),
 });
 
 export const minterAddressL2 = l2WalletClient.account.address;

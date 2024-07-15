@@ -2,7 +2,7 @@ import { defineChain } from 'viem'
 
 export const magma = defineChain({
   id: 6969696969,
-  name: 'Magma:Onyx',
+  name: 'Magma:Sepolia',
   nativeCurrency: { name: 'Lava', symbol: 'LAVA', decimals: 18 },
   rpcUrls: {
     default: {
