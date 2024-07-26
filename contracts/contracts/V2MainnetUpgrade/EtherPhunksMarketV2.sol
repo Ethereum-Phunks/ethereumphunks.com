@@ -21,11 +21,9 @@
 /* - Removed MulticallUpgradeable             */
 /* - Removed bidding functionality            */
 /* - Removed single buyPhunk (dev method)     */
-/* - Added setPointsAddress()                 */
+/* - Added setPointsAddress() + event         */
 /* - Documentation updates                    */
 /* - Gas efficiency updates                   */
-/* - Added rev share                          */
-/* - Added revshare to phunkBought event      */
 /* ****************************************** */
 
 pragma solidity 0.8.20;
@@ -59,7 +57,6 @@ contract EtherPhunksMarketV2 is
         address seller;
         uint minValue;
         address onlySellTo;
-        uint revSharePercentage;
     }
 
     /**
@@ -94,9 +91,9 @@ contract EtherPhunksMarketV2 is
      * @param toAddress The address to which the item is offered for sale.
      */
     event PhunkOffered(
-      bytes32 indexed phunkId,
-      uint minValue,
-      address indexed toAddress
+        bytes32 indexed phunkId,
+        uint minValue,
+        address indexed toAddress
     );
 
     /**
@@ -107,11 +104,10 @@ contract EtherPhunksMarketV2 is
      * @param toAddress The address of the buyer.
      */
     event PhunkBought(
-      bytes32 indexed phunkId,
-      uint value,
-      address indexed fromAddress,
-      address indexed toAddress,
-      uint revShareAmount
+        bytes32 indexed phunkId,
+        uint value,
+        address indexed fromAddress,
+        address indexed toAddress
     );
 
     /**
@@ -146,38 +142,27 @@ contract EtherPhunksMarketV2 is
      */
     function offerPhunkForSale(
         bytes32 phunkId,
-        uint minSalePriceInWei,
-        uint revSharePercentage
+        uint minSalePriceInWei
     ) external nonReentrant {
-        require(
-            revSharePercentage <= 100000,
-            "Revshare cannot exceed 100%"
-        );
-        _offerPhunkForSale(phunkId, minSalePriceInWei, revSharePercentage);
+        _offerPhunkForSale(phunkId, minSalePriceInWei);
     }
 
     /**
      * @dev Allows batch offering of multiple items for sale.
      * @param phunkIds An array of item hashIds to be offered for sale.
      * @param minSalePricesInWei An array of minimum sale prices (in Wei) for each item.
-     * @param revSharePercentage The revshare percentage for the items.
      * @notice The lengths of `phunkIds` and `minSalePricesInWei` arrays must match.
      */
     function batchOfferPhunkForSale(
         bytes32[] calldata phunkIds,
-        uint[] calldata minSalePricesInWei,
-        uint revSharePercentage
+        uint[] calldata minSalePricesInWei
     ) external nonReentrant {
         require(
             phunkIds.length == minSalePricesInWei.length,
             "Lengths mismatch"
         );
-        require(
-            revSharePercentage <= 100000,
-            "Revshare cannot exceed 100%"
-        );
         for (uint i = 0; i < phunkIds.length; i++) {
-             _offerPhunkForSale(phunkIds[i], minSalePricesInWei[i], revSharePercentage);
+             _offerPhunkForSale(phunkIds[i], minSalePricesInWei[i]);
         }
     }
 
@@ -201,8 +186,7 @@ contract EtherPhunksMarketV2 is
             phunkId,
             msg.sender,
             minSalePriceInWei,
-            toAddress,
-            0
+            toAddress
         );
 
         emit PhunkOffered(phunkId, minSalePriceInWei, toAddress);
@@ -212,12 +196,10 @@ contract EtherPhunksMarketV2 is
      * @dev Internal function to offer an item for sale.
      * @param phunkId The hashId of the item being offered for sale.
      * @param minSalePriceInWei The minimum sale price for the item in Wei.
-     * @param revSharePercentage The revshare percentage for the item.
      */
     function _offerPhunkForSale(
         bytes32 phunkId,
-        uint minSalePriceInWei,
-        uint revSharePercentage
+        uint minSalePriceInWei
     ) internal {
         if (userEthscriptionDefinitelyNotStored(msg.sender, phunkId)) {
             revert EthscriptionNotDeposited();
@@ -228,8 +210,7 @@ contract EtherPhunksMarketV2 is
             phunkId,
             msg.sender,
             minSalePriceInWei,
-            address(0x0),
-            revSharePercentage
+            address(0x0)
         );
 
         emit PhunkOffered(phunkId, minSalePriceInWei, address(0x0));
@@ -263,17 +244,14 @@ contract EtherPhunksMarketV2 is
             offer.isForSale &&
             (offer.onlySellTo == address(0x0) || offer.onlySellTo == msg.sender) &&
             minSalePriceInWei == offer.minValue &&
-            offer.seller != msg.sender,
+            offer.seller != msg.sender &&
+            msg.value >= minSalePriceInWei,
             "Invalid sale conditions"
         );
 
-        uint revShareAmount = minSalePriceInWei * offer.revSharePercentage / 100000;
-        uint sellerAmount = minSalePriceInWei - revShareAmount;
+        uint sellerAmount = minSalePriceInWei;
 
         _invalidateListing(phunkId);
-
-        (bool revShareSent,) = revShareAddress.call{value: revShareAmount}("");
-        require(revShareSent, "Revshare transfer failed");
 
         address seller = offer.seller;
 
@@ -285,8 +263,7 @@ contract EtherPhunksMarketV2 is
             phunkId,
             minSalePriceInWei,
             seller,
-            msg.sender,
-            revShareAmount
+            msg.sender
         );
     }
 
@@ -329,10 +306,10 @@ contract EtherPhunksMarketV2 is
 
         uint amount = pendingWithdrawals[msg.sender];
 
-        pendingWithdrawals[msg.sender] = 0;
-
-        (bool sent,) = payable(msg.sender).call{value: amount}("");
+        (bool sent, ) = payable(msg.sender).call{value: amount}("");
         require(sent, "Failed to send Ether");
+
+        pendingWithdrawals[msg.sender] = 0;
     }
 
     /**
@@ -484,13 +461,11 @@ contract EtherPhunksMarketV2 is
             bytes32 phunkId;
             bytes32 listingPrice;
             bytes32 toAddress;
-            bytes32 revShare;
 
             assembly {
                 phunkId := calldataload(0)
                 listingPrice := calldataload(64)
                 toAddress := calldataload(96)
-                revShare := calldataload(128)
             }
 
             if (toAddress != 0x0) {
@@ -502,7 +477,7 @@ contract EtherPhunksMarketV2 is
             }
 
             _onPotentialSingleEthscriptionDeposit(msg.sender, phunkId);
-            _offerPhunkForSale(phunkId, uint256(listingPrice), uint(revShare));
+            _offerPhunkForSale(phunkId, uint256(listingPrice));
             return;
         }
 
@@ -514,20 +489,23 @@ contract EtherPhunksMarketV2 is
     /* ******************** */
 
     /**
-     * @dev The address for revshare.
+     * @dev Emitted when the points address is changed.
+     * @param oldPointsAddress The address of the old points contract.
+     * @param newPointsAddress The address of the new points contract.
      */
-    address payable public revShareAddress;
+    event PointsAddressChanged(
+      address indexed oldPointsAddress,
+      address indexed newPointsAddress
+    );
 
     /**
      * @dev Initializes the contract with the specified contract version.
      * @param _contractVersion The version of the contract to be set.
      */
     function initializeV2(
-        uint256 _contractVersion,
-        address payable _revShareAddress
-    ) public initializer {
+        uint256 _contractVersion
+    ) public reinitializer(2) {
         contractVersion = _contractVersion;
-        revShareAddress = _revShareAddress;
     }
 
     /**
@@ -536,17 +514,18 @@ contract EtherPhunksMarketV2 is
      * @param _pointsAddress The address of the points contract.
      */
     function setPointsAddress(address _pointsAddress) public onlyOwner {
+        require(_pointsAddress != address(0), "New points address cannot be zero");
+
+        address oldPointsAddress = pointsAddress;
         pointsAddress = _pointsAddress;
+
+        emit PointsAddressChanged(oldPointsAddress, _pointsAddress);
     }
 
     /**
-     * @dev Sets the address for revshare.
-     * @param _newRevShare The new address for revshare.
-     * @notice Only the contract owner can call this function.
-     * @dev Throws an error if the new address is invalid (address(0)).
+     * @dev receive Ether.
      */
-    function setRevShareAddress(address payable _newRevShare) public onlyOwner {
-        require(_newRevShare != address(0), "Invalid address");
-        revShareAddress = _newRevShare;
+    receive() external payable {
+      require(!paused(), "Contract is paused");
     }
 }

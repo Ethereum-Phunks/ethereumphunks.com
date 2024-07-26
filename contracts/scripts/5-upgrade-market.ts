@@ -2,11 +2,10 @@
 
 import hre, { upgrades } from 'hardhat';
 
-const contractName = 'EtherPhunksMarketV2_1';
-const _proxyAddress = '0x3dfbc8c62d3ce0059bdaf21787ec24d5d116fe1e';
+const contractName = 'EtherPhunksMarketV2';
+const _proxyAddress = '0xD3418772623Be1a3cc6B6D45CB46420CEdD9154a';
 
 const _version = 2;
-const _revShareAddress = '0x051281d626b327638B916E1a52aF1495855016c1';
 
 export async function upgradeMarket() {
   const [signer] = await hre.ethers.getSigners();
@@ -15,18 +14,17 @@ export async function upgradeMarket() {
   console.log(`Upgrading to ${contractName} with account:`, signer.address);
   console.log('=====================================================================');
 
+  // Get the contract factory
   const ContractFactory = await hre.ethers.getContractFactory(contractName);
 
   // Upgrade the contract
   const contract = await upgrades.upgradeProxy(
     _proxyAddress,
     ContractFactory,
-    // { call: { fn: 'initializeV3', args: [_version, _revShareAddress] } }
+    { call: { fn: 'initializeV2', args: [_version] } }
   );
-
-  // console.log({contract});
-
   await contract.waitForDeployment();
+
   const upgraded = await contract.getAddress();
 
   console.log('\n\n=====================================================================');

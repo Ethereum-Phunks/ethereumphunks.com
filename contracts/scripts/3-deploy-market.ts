@@ -5,7 +5,7 @@ import hre, { upgrades } from 'hardhat';
 const contractName = 'EtherPhunksMarket';
 
 const _version = 1;
-const _pointsAddress = '0x2A953aA14e986b0595A0c5201dD267391BF7d39d';
+const _pointsAddress = '0x4119a7b9Ef6413EA7f9235AC64Ca1945609A3bF7';
 
 export async function deployMarket() {
   const [signer] = await hre.ethers.getSigners();
