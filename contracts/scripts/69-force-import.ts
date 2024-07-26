@@ -3,8 +3,8 @@
 import { ethers } from 'hardhat';
 import hre, { upgrades } from 'hardhat';
 
-const contractName = 'EtherPhunksMarket';
-const _proxyAddress = '0xD3418772623Be1a3cc6B6D45CB46420CEdD9154a';
+const contractName = 'EtherPhunksMarketV2_1';
+const _proxyAddress = '0x3dfbc8c62d3ce0059bdaf21787ec24d5d116fe1e';
 
 export async function upgradeMarket() {
   const [signer] = await hre.ethers.getSigners();

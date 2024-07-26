@@ -4,7 +4,7 @@ import hre, { upgrades } from 'hardhat';
 
 const contractName = 'EtherPhunksNftMarket';
 
-const _initialBridgeAddress = '0x2A953aA14e986b0595A0c5201dD267391BF7d39d';
+const _initialBridgeAddress = '';
 
 export async function deployMarket() {
   const [signer] = await hre.ethers.getSigners();

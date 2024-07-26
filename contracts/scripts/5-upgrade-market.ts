@@ -2,8 +2,8 @@
 
 import hre, { upgrades } from 'hardhat';
 
-const contractName = 'EtherPhunksMarketV2';
-const _proxyAddress = '0xD3418772623Be1a3cc6B6D45CB46420CEdD9154a';
+const contractName = 'EtherPhunksMarketV2SepoliaDowngrade';
+const _proxyAddress = '0x3dfbc8c62d3ce0059bdaf21787ec24d5d116fe1e';
 
 const _version = 2;
 
@@ -21,7 +21,7 @@ export async function upgradeMarket() {
   const contract = await upgrades.upgradeProxy(
     _proxyAddress,
     ContractFactory,
-    { call: { fn: 'initializeV2', args: [_version] } }
+    // { call: { fn: 'initializeV2SepoliaDowngrade', args: [_version] } }
   );
   await contract.waitForDeployment();
 
