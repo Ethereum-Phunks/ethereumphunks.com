@@ -97,8 +97,8 @@ export class Web3Service {
         6969696969: http(environment.magmaRpcHttpProvider)
       },
       connectors: [
-        walletConnect({ projectId, metadata, showQrModal: false }),
         injected({ shimDisconnect: true }),
+        walletConnect({ projectId, metadata, showQrModal: false }),
         coinbaseWallet({
           appName: metadata.name,
           appLogoUrl: metadata.icons[0]
@@ -119,15 +119,16 @@ export class Web3Service {
   }
 
   async createListeners(): Promise<void> {
+
     this.connectedState = new Observable((observer) => watchAccount(this.config, {
       onChange: (account) => this.ngZone.run(() => observer.next(account))
     }));
 
     this.connectedState.pipe(
       tap((account: GetAccountReturnType) => {
-        console.log('account', account);
         this.store.dispatch(appStateActions.setConnected({ connected: account.isConnected }));
         this.store.dispatch(appStateActions.setWalletAddress({ walletAddress: account.address }));
+        // if (account.chainId !== environment.chainId) this.switchNetwork();
       }),
       catchError((err) => {
         this.disconnectWeb3();
@@ -183,16 +184,17 @@ export class Web3Service {
     }
   }
 
-  async switchNetwork(l: string = 'l1'): Promise<void> {
+  async switchNetwork(l: 'l1' | 'l2' = 'l1'): Promise<void> {
     const walletClient = await getWalletClient(this.config);
     const chainId = getChainId(this.config);
 
     if (l === 'l1') {
+      console.log('switching chain', chainId, environment.chainId);
       if (chainId === environment.chainId) return;
-      await walletClient?.switchChain({ id: environment.chainId });
+      return await walletClient?.switchChain({ id: environment.chainId });
     } else if (l === 'l2') {
       if (chainId === magma.id) return;
-      await walletClient?.switchChain({ id: magma.id });
+      return await walletClient?.switchChain({ id: magma.id });
     }
   }
 

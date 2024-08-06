@@ -87,7 +87,6 @@ export class DataStateEffects {
     // Reset the single phunk
     withLatestFrom(this.store.select(dataStateSelectors.selectSinglePhunk)),
     tap(([action, phunk]) => {
-      console.log('fetchSingle$', action, phunk)
       const cleanPhunk = phunk ? { ...phunk, loading: true } : null;
       this.store.dispatch(dataStateActions.setSinglePhunk({ phunk: cleanPhunk }))
     }),

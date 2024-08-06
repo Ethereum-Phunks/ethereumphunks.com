@@ -12,8 +12,8 @@ import { Attribute, Bid, Event, Listing, Phunk } from '@/models/db';
 
 import { createClient } from '@supabase/supabase-js'
 
-import { Observable, of, BehaviorSubject, from, forkJoin, firstValueFrom, EMPTY, fromEvent } from 'rxjs';
-import { catchError, expand, map, reduce, switchMap, tap } from 'rxjs/operators';
+import { Observable, of, BehaviorSubject, from, forkJoin, firstValueFrom, EMPTY, fromEvent, timer } from 'rxjs';
+import { catchError, expand, map, reduce, switchMap, takeWhile, tap } from 'rxjs/operators';
 
 import { NgForage } from 'ngforage';
 
@@ -436,64 +436,76 @@ export class DataService {
 
   fetchSinglePhunk(tokenId: string): Observable<Phunk> {
 
-    let query = supabase
-      .from('ethscriptions' + this.prefix)
-      .select(`
-        hashId,
-        sha,
-        tokenId,
-        createdAt,
-        owner,
-        prevOwner,
-        collections${this.prefix}(singleName,slug,name,supply),
-        nfts${this.prefix}(hashId,tokenId,owner)
-      `)
-      .limit(1);
+    const fetch = () => {
+      let query = supabase
+        .from('ethscriptions' + this.prefix)
+        .select(`
+          hashId,
+          sha,
+          tokenId,
+          createdAt,
+          owner,
+          prevOwner,
+          collections${this.prefix}(singleName,slug,name,supply),
+          nfts${this.prefix}(hashId,tokenId,owner)
+        `)
+        .limit(1);
 
-    return from(
-      tokenId.startsWith('0x') ? of(tokenId) : this.getHashIdFromTokenId(tokenId)
-    ).pipe(
-      switchMap((hashId: string | null) => {
-        if (hashId) query = query.eq('hashId', hashId)
-        return from(query);
-      }),
-      map((res: any) => (res.data?.length ? res.data[0] : { tokenId })),
-      map((phunk: any) => {
+      return from(
+        tokenId.startsWith('0x') ? of(tokenId) : this.getHashIdFromTokenId(tokenId)
+      ).pipe(
+        switchMap((hashId: string | null) => {
+          if (hashId) query = query.eq('hashId', hashId)
+          return from(query);
+        }),
+        map((res: any) => (res.data?.length ? res.data[0] : { tokenId })),
+        map((phunk: any) => {
 
-        const collection = phunk[`collections${this.prefix}`];
-        const collectionName = collection?.name;
+          const collection = phunk[`collections${this.prefix}`];
+          const collectionName = collection?.name;
 
-        const nft = phunk[`nfts${this.prefix}`]?.[0];
-        if (nft) delete nft?.hashId;
+          const nft = phunk[`nfts${this.prefix}`]?.[0];
+          if (nft) delete nft?.hashId;
 
-        delete phunk[`nfts${this.prefix}`];
-        delete phunk[`collections${this.prefix}`];
+          delete phunk[`nfts${this.prefix}`];
+          delete phunk[`collections${this.prefix}`];
 
-        const newPhunk = { ...phunk, ...collection, collectionName, nft } as Phunk;
-        newPhunk.isEscrowed = phunk?.owner === environment.marketAddress;
-        newPhunk.isBridged = phunk?.owner === environment.bridgeAddress;
-        newPhunk.isSupported = !!collection;
-        newPhunk.attributes = [];
+          const newPhunk = { ...phunk, ...collection, collectionName, nft } as Phunk;
+          newPhunk.isEscrowed = phunk?.owner === environment.marketAddress;
+          newPhunk.isBridged = phunk?.owner === environment.bridgeAddress;
+          newPhunk.isSupported = !!collection;
+          newPhunk.attributes = [];
 
-        return newPhunk;
-      }),
-      switchMap((res: Phunk) => forkJoin([
-        this.addAttributes(res.slug, [res]),
-        from(this.getListingFromHashId(res.hashId)),
-        this.checkConsensus([res]),
-      ])),
-      map(([[res], listing, [consensus]]) => {
-        return {
-          ...res,
-          listing: listing?.listedBy.toLowerCase() === res.prevOwner?.toLowerCase() ? listing : null,
-          consensus: consensus?.consensus,
-          attributes: [ ...(res.attributes || []) ].sort((a: Attribute, b: Attribute) => {
-            if (a.k === "Sex") return -1;
-            if (b.k === "Sex") return 1;
-            return 0;
-          }),
-        };
-      }),
+          return newPhunk;
+        }),
+        switchMap((res: Phunk) => forkJoin([
+          this.addAttributes(res.slug, [res]),
+          from(this.getListingFromHashId(res.hashId)),
+          this.checkConsensus([res]),
+        ])),
+        map(([[res], listing, [consensus]]) => {
+          console.log('fetchSinglePhunk::fetch', {res, listing, consensus});
+
+          const phunk = {
+            ...res,
+            listing: listing?.listedBy.toLowerCase() === res.prevOwner?.toLowerCase() ? listing : null,
+            consensus: consensus?.consensus,
+            attributes: [ ...(res.attributes || []) ].sort((a: Attribute, b: Attribute) => {
+              if (a.k === "Sex") return -1;
+              if (b.k === "Sex") return 1;
+              return 0;
+            }),
+          };
+
+          return phunk;
+        }),
+      );
+    };
+
+    return timer(0, 5000).pipe(
+      switchMap(() => fetch()),
+      tap(phunk => console.log('Fetch complete at', new Date().toISOString(), 'Consensus:', phunk?.consensus)),
+      takeWhile((phunk) => !phunk?.consensus, true)
     );
   }
 
