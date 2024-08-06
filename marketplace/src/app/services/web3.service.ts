@@ -200,9 +200,11 @@ export class Web3Service {
     return await getWalletClient(this.config);
   }
 
-  async checkHasWithdrawal(address: string): Promise<number> {
-    const pendingWithdrawals = await this.readMarketContract('pendingWithdrawalsV2', [address]);
-    return Number(pendingWithdrawals);
+  async checkHasWithdrawal(address: string): Promise<bigint> {
+    const pendingWithdrawals = await this.readMarketContract('pendingWithdrawals', [address]);
+    const pendingWithdrawalsV2 = await this.readMarketContract('pendingWithdrawalsV2', [address]);
+    // console.log(pendingWithdrawals || BigInt(0)) + (pendingWithdrawalsV2 || BigInt(0));
+    return (pendingWithdrawals || BigInt(0)) + (pendingWithdrawalsV2 || BigInt(0));
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -276,6 +278,9 @@ export class Web3Service {
     if (value) tx.value = value;
 
     const { request, result } = await publicClient.simulateContract(tx);
+
+    console.log({result})
+
     return await walletClient?.writeContract(request);
   }
 
@@ -289,7 +294,7 @@ export class Web3Service {
       });
       return call;
     } catch (error) {
-      // console.log({functionName, args, error});
+      console.log({functionName, args, error});
       return null;
     }
   }
@@ -306,7 +311,7 @@ export class Web3Service {
     hashId: string,
     value: number,
     toAddress?: string | null,
-    revShare = 0
+    // revShare = 0
   ): Promise<string | undefined> {
     const weiValue = value * 1e18;
     if (toAddress) {
@@ -319,7 +324,7 @@ export class Web3Service {
 
     return this.writeMarketContract(
       'offerPhunkForSale',
-      [hashId, weiValue, BigInt(revShare)]
+      [hashId, weiValue]
     );
   }
 
@@ -327,26 +332,26 @@ export class Web3Service {
     hashId: string,
     value: number,
     toAddress: string = zeroAddress,
-    revShare = 0
+    // revShare = 0
   ): Promise<string | undefined> {
     const weiValue = this.ethToWei(value);
 
     const sig = keccak256(stringToBytes('DEPOSIT_AND_LIST_SIGNATURE'));
     const bytes32Value = weiValue.toString(16).padStart(64, '0');
     toAddress = toAddress.toLowerCase().replace('0x', '').padStart(64, '0');
-    const revShareHex = numberToHex(revShare).replace('0x', '').padStart(64, '0');
+    // const revShareHex = numberToHex(revShare).replace('0x', '').padStart(64, '0');
 
     // console.log('revShareHex', revShareHex, Number(revShareHex));
     // console.log({ hashId, sig, bytes32Value, toAddress, revShare, revShareHex });
 
-    return await this.batchTransferPhunks([hashId, sig, bytes32Value, toAddress, revShareHex], marketAddress);
+    return await this.batchTransferPhunks([hashId, sig, bytes32Value, toAddress], marketAddress);
 
-    return;
+    // return;
   }
 
   async batchOfferPhunkForSale(hashIds: string[], listPrices: number[]): Promise<string | undefined> {
     const weiValues = listPrices.map((price) => this.ethToWei(price));
-    return this.writeMarketContract('batchOfferPhunkForSale', [hashIds, weiValues, BigInt(0)]);
+    return this.writeMarketContract('batchOfferPhunkForSale', [hashIds, weiValues]);
   }
 
   async batchBuyPhunks(
@@ -401,13 +406,18 @@ export class Web3Service {
     await this.switchNetwork();
 
     const wallet = await getWalletClient(this.config);
-    return wallet?.sendTransaction({
+
+    const req = await wallet.prepareTransactionRequest({
       chain: wallet.chain,
       account: getAccount(this.config).address as `0x${string}`,
       to: toAddress as `0x${string}`,
       value: BigInt(0),
       data: hashId as `0x${string}`,
     });
+
+    console.log({req});
+
+    return wallet?.sendTransaction(req);
   }
 
   async batchTransferPhunks(hashIds: string[], toAddress: string | null): Promise<string | undefined> {
@@ -424,13 +434,18 @@ export class Web3Service {
     const data = hexArr.map((res) => res.replace('0x', '')).join('');
 
     const wallet = await getWalletClient(this.config);
-    return wallet?.sendTransaction({
+
+    const req = await wallet.prepareTransactionRequest({
       chain: wallet.chain,
       account: getAccount(this.config).address as `0x${string}`,
       to: environment.bridgeAddress as `0x${string}`,
       value: BigInt(1000000000000000),
       data: `0x${data}` as `0x${string}`,
     });
+
+    console.log({req});
+
+    return wallet?.sendTransaction(req);
   }
 
   async withdraw(): Promise<any> {
@@ -546,7 +561,7 @@ export class Web3Service {
     hashId: string,
     value: number,
     address?: string,
-    revShare = 0
+    // revShare = 0
   ): Promise<string | undefined> {
     const tokenId = await this.readTokenContractL2('hashToToken', [hashId]);
     const weiValue = this.ethToWei(value);

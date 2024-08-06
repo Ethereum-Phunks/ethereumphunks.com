@@ -95,7 +95,7 @@
                         @if (phunk.consensus) {
 
                           <!-- Bridge button -->
-                          @if ((owner | lowercase) === (address | lowercase)) {
+                          <!-- @if ((owner | lowercase) === (address | lowercase)) {
                             <button class="bridge" [class.active]="bridgeActive" (click)="bridgePhunkAction()">
                               <span>Bridge</span>
                               <ng-container *ngTemplateOutlet="pending; context:{ $implicit: 'bridgePhunk' }" />
@@ -104,7 +104,7 @@
                             @if (bridgeActive) {
                               <ng-container *ngTemplateOutlet="bridgeForm; context:{ $implicit: phunk }" />
                             }
-                          }
+                          } -->
 
                           <!-- Buy button -->
                           @if (
@@ -325,15 +325,15 @@
     }
 
     <div class="form-group">
-      <div class="row row-2">
-        <div class="list-price">
+      <!-- <div class="row row-2"> -->
+        <!-- <div class="list-price"> -->
           <label i18n for="list-price">Asking Price</label>
           <input #sellPriceInput type="number" id="list-price" [formControl]="listPrice" />
 
-          @if (listPrice.value && revShare.value) {
+          <!-- @if (listPrice.value && revShare.value) {
             <div class="sale-total">Upon sale you receive: Ξ{{ ((listPrice.value || 0) - ((listPrice.value || 0) * ((revShare.value || 0) / 100))) | number : '1.0-6' }}</div>
-          }
-        </div>
+          } -->
+        <!-- </div> -->
         <!-- <div class="rev-share">
           <label for="rev-share">
             <span>Rev Share</span>
@@ -351,7 +351,7 @@
             </div>
           }
         </div> -->
-      </div>
+      <!-- </div> -->
     </div>
 
     <div class="form-group">

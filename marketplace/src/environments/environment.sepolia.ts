@@ -3,7 +3,7 @@ export const environment = {
   production: true,
   chainId: 11155111,
 
-  rpcHttpProvider: 'https://eth-sepolia.g.alchemy.com/v2/yPJzT7r3rcFmI4ekjA9S7S1SP688b-au',
+  rpcHttpProvider: 'https://eth-sepolia.g.alchemy.com/v2/19IQKn99eagaaRKD-uSOCE1aYEHLSnmL',
   explorerUrl: 'https://sepolia.etherscan.io',
 
   magmaRpcHttpProvider: 'https://turbo.magma-rpc.com',

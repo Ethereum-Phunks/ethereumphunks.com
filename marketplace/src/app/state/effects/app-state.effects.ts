@@ -18,6 +18,7 @@ import * as appStateSelectors from '@/state/selectors/app-state.selectors';
 import { ChatService } from '@/services/chat.service';
 
 import { environment } from 'src/environments/environment';
+import { formatEther } from 'viem';
 
 @Injectable()
 export class AppStateEffects {
@@ -50,6 +51,7 @@ export class AppStateEffects {
     filter(([action, address]) => !!address),
     switchMap(([action, address]) => {
       return from(this.web3Svc.checkHasWithdrawal(address!)).pipe(
+        map(hasWithdrawal => Number(formatEther(hasWithdrawal))),
         catchError(() => of(0)),
       );
     }),
@@ -182,7 +184,7 @@ export class AppStateEffects {
     ),
     withLatestFrom(this.store.select(appStateSelectors.selectSearchHistory)),
     map(([action, searchHistory]) => {
-      localStorage.setItem('EtherPhunks_searchHistory', JSON.stringify(searchHistory));
+      localStorage.setItem(`EtherPhunks_searchHistory_${environment.chainId}`, JSON.stringify(searchHistory));
       return appStateActions.setSearchHistory({ searchHistory });
     })
   ));

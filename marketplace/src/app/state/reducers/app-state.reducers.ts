@@ -4,6 +4,7 @@ import { Action, ActionReducer, createReducer, on } from '@ngrx/store';
 import { Theme } from '@/models/theme';
 
 import * as actions from '../actions/app-state.actions';
+import { environment } from 'src/environments/environment';
 
 export const initialState: AppState = {
   connected: false,
@@ -26,9 +27,9 @@ export const initialState: AppState = {
   indexerBlock: 0,
   blocksBehind: 0,
 
-  cooldowns: JSON.parse(localStorage.getItem('EtherPhunks_cooldowns') || '{}'),
+  cooldowns: JSON.parse(localStorage.getItem(`EtherPhunks_cooldowns_${environment.chainId}`) || '{}'),
 
-  searchHistory: JSON.parse(localStorage.getItem('EtherPhunks_searchHistory') || '[]'),
+  searchHistory: JSON.parse(localStorage.getItem(`EtherPhunks_searchHistory_${environment.chainId}`) || '[]'),
   searchHistoryActive: false,
   isSearchResult: false,
 
@@ -133,7 +134,7 @@ export const appStateReducer: ActionReducer<AppState, Action> = createReducer(
         ...cooldowns
       }
     };
-    localStorage.setItem('EtherPhunks_cooldowns', JSON.stringify(cooldowns));
+    localStorage.setItem(`EtherPhunks_cooldowns_${environment.chainId}`, JSON.stringify(cooldowns));
     return removeCooldown
   }),
   on(actions.setCurrentBlock, (state, { currentBlock }) => {

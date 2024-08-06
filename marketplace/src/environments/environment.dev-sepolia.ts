@@ -4,6 +4,7 @@ export const environment = {
   chainId: 11155111,
 
   rpcHttpProvider: 'http://geth.sepolia-geth.dappnode:8545',
+  // rpcHttpProvider: 'https://eth-sepolia.g.alchemy.com/v2/19IQKn99eagaaRKD-uSOCE1aYEHLSnmL',
   explorerUrl: 'https://sepolia.etherscan.io',
 
   magmaRpcHttpProvider: 'https://turbo.magma-rpc.com',

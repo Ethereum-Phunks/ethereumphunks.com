@@ -3,7 +3,7 @@ export const environment = {
   production: true,
   chainId: 1,
 
-  rpcHttpProvider: 'https://eth-mainnet.g.alchemy.com/v2/DmQk3glk8ycdD_Wvtzoklb02lNCOAcSC',
+  rpcHttpProvider: 'https://eth-mainnet.g.alchemy.com/v2/19IQKn99eagaaRKD-uSOCE1aYEHLSnmL',
   explorerUrl: 'https://etherscan.io',
 
   magmaRpcHttpProvider: 'https://turbo.magma-rpc.com',

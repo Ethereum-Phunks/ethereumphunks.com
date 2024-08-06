@@ -45,20 +45,6 @@ import { upsertNotification } from '@/state/actions/notification.actions';
 
 import { setChat } from '@/state/actions/chat.actions';
 
-interface TxStatus {
-  title: string;
-  message: string | null;
-  active: boolean;
-}
-
-interface TxStatuses {
-  pending: TxStatus;
-  submitted: TxStatus;
-  escrow: TxStatus;
-  complete: TxStatus;
-  error: TxStatus;
-}
-
 @Component({
   standalone: true,
   imports: [
@@ -88,7 +74,7 @@ interface TxStatuses {
 export class ItemViewComponent implements AfterViewInit, OnDestroy {
 
   @ViewChild('sellPriceInput') sellPriceInput!: ElementRef<HTMLInputElement>;
-  @ViewChild('revShareInput') revShareInput!: ElementRef<HTMLInputElement>;
+  // @ViewChild('revShareInput') revShareInput!: ElementRef<HTMLInputElement>;
   @ViewChild('transferAddressInput') transferAddressInput!: ElementRef<HTMLInputElement>;
 
   explorerUrl = environment.explorerUrl
@@ -99,24 +85,16 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
   withdrawActive: boolean = false;
   transferActive: boolean = false;
   escrowActive: boolean = false;
-  bridgeActive: boolean = true;
+  bridgeActive: boolean = false;
 
   transferAddress = new FormControl<string | null>('');
   listPrice = new FormControl<number | undefined>(undefined);
-  revShare = new FormControl<number | undefined>(undefined);
+  // revShare = new FormControl<number | undefined>(undefined);
   listToAddress = new FormControl<string | null>('');
 
   objectValues = Object.values;
 
-  refreshPhunk$ = new Subject<void>();
-
-  isCooling$ = this.store.select(appStateSelectors.selectCooldowns).pipe(
-    filter((cooldowns) => !!cooldowns),
-    switchMap((cooldowns) => this.singlePhunk$.pipe(
-      filter((phunk) => !!phunk),
-      map((phunk) => cooldowns[phunk?.hashId || ''] > 0),
-    )),
-  );
+  singlePhunk$ = this.store.select(dataStateSelectors.selectSinglePhunk);
 
   pendingTx$ = this.store.select(selectNotifications).pipe(
     filter((transactions) => !!transactions),
@@ -126,15 +104,20 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
     )),
   );
 
+  isCooling$ = this.store.select(appStateSelectors.selectCooldowns).pipe(
+    filter((cooldowns) => !!cooldowns),
+    switchMap((cooldowns) => this.singlePhunk$.pipe(
+      filter((phunk) => !!phunk),
+      map((phunk) => cooldowns[phunk?.hashId || ''] > 0),
+    )),
+  );
+
   blocksBehind$ = this.store.select(appStateSelectors.selectBlocksBehind).pipe(
     filter((blocksBehind) => !!blocksBehind),
     map((blocksBehind) => blocksBehind > 6),
   );
 
   walletAddress$ = this.store.select(appStateSelectors.selectWalletAddress);
-  singlePhunk$ = this.store.select(dataStateSelectors.selectSinglePhunk).pipe(
-    tap((phunk) => console.log({phunk})),
-  );
   theme$ = this.store.select(appStateSelectors.selectTheme);
   usd$ = this.store.select(dataStateSelectors.selectUsd);
 
@@ -164,12 +147,12 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
     ).subscribe();
 
     // RevShare input validation
-    this.revShare.valueChanges.pipe(
-      tap((value) => {
-        if (value && value > 100) this.revShare.setValue(100);
-        if (value && value < 0) this.revShare.setValue(0);
-      })
-    ).subscribe();
+    // this.revShare.valueChanges.pipe(
+    //   tap((value) => {
+    //     if (value && value > 100) this.revShare.setValue(100);
+    //     if (value && value < 0) this.revShare.setValue(0);
+    //   })
+    // ).subscribe();
   }
 
   ngOnDestroy(): void {
@@ -239,10 +222,10 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
     if (!this.listPrice.value) return;
 
     const value = this.listPrice.value;
-    const revShare = (this.revShare.value || 0) * 1000;
+    // const revShare = (this.revShare.value || 0) * 1000;
     let address = this.listToAddress.value || undefined;
 
-    console.log({hashId, value, revShare, address});
+    console.log({hashId, value, address});
 
     let notification: Notification = {
       id: this.utilSvc.createIdFromString('offerPhunkForSale' + hashId),
@@ -272,11 +255,11 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
 
       let hash;
       if (phunk.isEscrowed) {
-        hash = await this.web3Svc.offerPhunkForSale(hashId, value, address, revShare);
+        hash = await this.web3Svc.offerPhunkForSale(hashId, value, address);
       } else if (phunk.nft) {
-        hash = await this.web3Svc.offerPhunkForSaleL2(hashId, value, address, revShare);
+        hash = await this.web3Svc.offerPhunkForSaleL2(hashId, value, address);
       } else {
-        hash = await this.web3Svc.escrowAndOfferPhunkForSale(hashId, value, address, revShare);
+        hash = await this.web3Svc.escrowAndOfferPhunkForSale(hashId, value, address);
       }
 
       // this.initNotificationMessage();

@@ -28,6 +28,7 @@ import * as dataStateSelectors from '@/state/selectors/data-state.selectors';
 import * as marketStateSelectors from '@/state/selectors/market-state.selectors';
 
 import { WeiToEthPipe } from '@/pipes/wei-to-eth.pipe';
+import { FormatCashPipe } from '@/pipes/format-cash.pipe';
 
 import { map, switchMap, tap } from 'rxjs';
 
@@ -48,6 +49,7 @@ import anime from 'animejs';
     CollectionsComponent,
 
     WeiToEthPipe,
+    FormatCashPipe,
 
     WalletAddressDirective
   ],

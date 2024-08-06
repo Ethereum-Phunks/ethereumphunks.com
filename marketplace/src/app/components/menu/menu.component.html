@@ -5,9 +5,9 @@
       <button
         (click)="withdraw()"
         [class.disabled]="(hasWithdrawal$ | async) === 0">
-
+        <!-- {{ hasWithdrawal$ | async }} -->
         <span>Withdraw Funds</span>
-        <span>({{ (hasWithdrawal$ | async) | weiToEth }} ETH)</span>
+        <span>({{ (hasWithdrawal$ | async) }} ETH)</span>
       </button>
       <button (click)="disconnect()">Disconnect</button>
     </div>
@@ -27,7 +27,7 @@
           <div class="button-content">
             <h4>Points Leaderboard</h4>
             <span class="top-points">
-              <div class="value">{{ leaderboard[0]?.points }}</div>
+              <div class="value">{{ leaderboard[0]?.points | formatCash }}</div>
               <div class="label">Points</div>
             </span>
             <div class="top-holder">

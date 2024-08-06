@@ -83,7 +83,7 @@ export class NotificationEffects {
     withLatestFrom(this.store.select(selectWalletAddress)),
     switchMap(([action, address]) => {
       const currentBlock = action.currentBlock;
-      const storedBlock = localStorage.getItem('EtherPhunks_currentBlock');
+      const storedBlock = localStorage.getItem(`EtherPhunks_currentBlock_${environment.chainId}`);
       // console.log({currentBlock, storedBlock}, currentBlock - Number(storedBlock));
       if (address && storedBlock && (currentBlock - Number(storedBlock)) > 0) {
         return this.dataSvc.fetchMissedEvents(address, Number(storedBlock)).pipe(
@@ -97,7 +97,7 @@ export class NotificationEffects {
       return of([]);
     }),
     withLatestFrom(this.store.select(selectCurrentBlock)),
-    tap(([_, blockNumber]) => localStorage.setItem('EtherPhunks_currentBlock', JSON.stringify(blockNumber))),
+    tap(([_, blockNumber]) => localStorage.setItem(`EtherPhunks_currentBlock_${environment.chainId}`, JSON.stringify(blockNumber))),
   ), { dispatch: false });
 
   constructor(
