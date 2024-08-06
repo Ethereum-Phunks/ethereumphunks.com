@@ -8,7 +8,7 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 const config: HardhatUserConfig = {
-  defaultNetwork: 'sepolia',
+  defaultNetwork: 'hardhat',
   solidity: {
     version: '0.8.20',
     settings: {
@@ -19,35 +19,32 @@ const config: HardhatUserConfig = {
     },
   },
   paths: {
-    sources: './contracts/V2SepoliaDowngrade',
+    sources: './contracts/V2MainnetUpgrade',
     tests: './test',
     cache: './cache',
     artifacts: './artifacts',
   },
   networks: {
     // hardhat: {
-    //   chainId: 1337,
-    //   // forking: {
-    //   //   enabled: true,
-    //   //   url: 'http://geth.dappnode:8545',
-    //   // },
-    //   accounts: {
-    //     count: 10,
-    //     initialIndex: 0,
+    //   chainId: 1,
+    //   forking: {
+    //     enabled: true,
+    //     url: 'https://eth-mainnet.g.alchemy.com/v2/yPJzT7r3rcFmI4ekjA9S7S1SP688b-au',
+    //     blockNumber: 20452276,
     //   },
     // },
-    // mainnet: {
-    //   url: 'http://nethermind.public.dappnode:8545',
-    //   chainId: 1,
-    //   from: process.env.MAINNET_ADDRESS as string,
-    //   accounts: [`0x${process.env.MAINNET_PK}`],
-    // },
-    sepolia: {
-      url: 'http://geth.sepolia-geth.dappnode:8545',
-      chainId: 11155111,
-      from: process.env.SEPOLIA_ADDRESS as string,
-      accounts: [`0x${process.env.SEPOLIA_PK}`],
+    mainnet: {
+      url: 'http://nethermind.public.dappnode:8545',
+      chainId: 1,
+      from: process.env.MAINNET_ADDRESS as string,
+      accounts: [`0x${process.env.MAINNET_PK}`],
     },
+    // sepolia: {
+    //   url: 'http://geth.sepolia-geth.dappnode:8545',
+    //   chainId: 11155111,
+    //   from: process.env.SEPOLIA_ADDRESS as string,
+    //   accounts: [`0x${process.env.SEPOLIA_PK}`],
+    // },
     // magma: {
     //   url: 'https://turbo.magma-rpc.com',
     //   chainId: 6969696969,
