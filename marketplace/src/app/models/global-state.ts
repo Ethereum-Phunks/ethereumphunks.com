@@ -1,8 +1,6 @@
 import { DataState } from './data.state';
-import { MarketState, MarketType } from './market.state';
+import { MarketState } from './market.state';
 
-import { Phunk } from './db';
-import { Sort, Sorts } from './pipes';
 import { Theme } from './theme';
 import { Conversation } from '@xmtp/xmtp-js';
 
@@ -44,11 +42,13 @@ export interface AppState {
   modalActive: boolean;
   collectionsMenuActive: boolean;
 
-  config: {
-    maintenance: boolean;
-    chat: boolean;
-  }
+  config: GlobalConfig;
 }
+
+export interface GlobalConfig {
+  maintenance: boolean;
+  chat: boolean;
+};
 
 export interface ChatState {
   active: boolean;

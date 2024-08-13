@@ -203,6 +203,26 @@ export class AppStateEffects {
     // map(([action, modalActive]) => appStateActions.setModalActive({ modalActive: !modalActive })),
   ), { dispatch: false });
 
+  globalConfig$ = createEffect(() => this.actions$.pipe(
+    ofType(appStateActions.setGlobalConfig),
+    withLatestFrom(this.web3Svc.checkContractPaused()),
+    // tap(([action, paused]) => console.log({ action, paused })),
+    map(([action, paused]) => {
+      const newConfig = {
+        ...action.config,
+        maintenance: paused || action.config.maintenance,
+      };
+
+      // Only dispatch if there's a change
+      if (JSON.stringify(newConfig) !== JSON.stringify(action.config)) {
+        return appStateActions.setGlobalConfig({ config: newConfig });
+      } else {
+        return { type: 'NO_ACTION' };
+      }
+    }),
+    filter(action => action.type !== 'NO_ACTION')
+  ));
+
   constructor(
     private store: Store<GlobalState>,
     private actions$: Actions,

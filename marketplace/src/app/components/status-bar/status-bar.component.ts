@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { AsyncPipe, JsonPipe, NgTemplateOutlet } from '@angular/common';
+import { AsyncPipe, DecimalPipe, JsonPipe, NgTemplateOutlet } from '@angular/common';
 
 import { Store } from '@ngrx/store';
 import { GlobalState } from '@/models/global-state';
@@ -20,6 +20,7 @@ import { environment } from 'src/environments/environment';
   imports: [
     AsyncPipe,
     JsonPipe,
+    DecimalPipe,
     NgTemplateOutlet,
 
     LoggerComponent

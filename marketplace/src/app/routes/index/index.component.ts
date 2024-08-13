@@ -25,7 +25,7 @@ import * as dataStateSelectors from '@/state/selectors/data-state.selectors';
 import * as appStateSelectors from '@/state/selectors/app-state.selectors';
 import * as marketStateSelectors from '@/state/selectors/market-state.selectors';
 
-import { filter } from 'rxjs';
+import { filter, tap } from 'rxjs';
 
 @Component({
   standalone: true,
@@ -55,7 +55,6 @@ export class IndexComponent {
   walletAddress$ = this.store.select(appStateSelectors.selectWalletAddress);
   activeCollection$ = this.store.select(dataStateSelectors.selectActiveCollection);
 
-  collectionSlug$ = this.store.select(marketStateSelectors.selectMarketSlug);
   owned$ = this.store.select(marketStateSelectors.selectOwned);
   listings$ = this.store.select(marketStateSelectors.selectListings);
   bids$ = this.store.select(marketStateSelectors.selectBids);

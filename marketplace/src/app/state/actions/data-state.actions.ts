@@ -4,7 +4,7 @@ import { createAction, props } from '@ngrx/store';
 import { Phunk } from '@/models/db';
 
 import { RealtimePostgresChangesPayload } from '@supabase/supabase-js';
-import { Collection, DataState } from '@/models/data.state';
+import { Collection } from '@/models/data.state';
 
 export const resetDataState = createAction(
   '[Data State] Reset Data State'
@@ -69,11 +69,6 @@ export const fetchCollections = createAction(
 export const setCollections = createAction(
   '[Data State] Set Collections',
   props<{ collections: GlobalState['dataState']['collections'] }>()
-);
-
-export const setCollectionsWithAssets = createAction(
-  '[Data State] Set Collections With Assets',
-  props<{ collectionsWithAssets: GlobalState['dataState']['collectionsWithAssets'] }>()
 );
 
 export const setActiveCollection = createAction(

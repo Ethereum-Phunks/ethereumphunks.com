@@ -14,7 +14,7 @@
     @if ((gasSvc.gas$ | async); as gas) {
       <div class="network-gas">
         <div class="gas">
-          {{ gas.ProposeGasPrice }} Gwei
+          {{ gas.ProposeGasPrice | number : '1.0-0' }} Gwei
         </div>
         <div class="network">
           {{ chain === 1 ? 'mainnet' : 'sepolia' }}

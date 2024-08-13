@@ -7,14 +7,11 @@ export interface Collection {
   name?: string;
   description?: string;
   image?: string;
-}
-
-export interface CollectionWAssets {
-  image: string;
-  name: string;
+  stats: {
+    sales: number;
+    volume: number;
+  };
   previews: Phunk[];
-  slug: string;
-  supply: number;
 }
 
 export interface DataState {
@@ -26,6 +23,5 @@ export interface DataState {
   txHistory: any[] | null;
   leaderboard: any[] | null;
   collections: Collection[];
-  collectionsWithAssets: CollectionWAssets[];
   activeCollection: Collection | null;
 }

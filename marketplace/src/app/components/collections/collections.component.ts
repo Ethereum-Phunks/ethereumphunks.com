@@ -1,10 +1,15 @@
 import { Component } from '@angular/core';
+import { AsyncPipe, NgTemplateOutlet } from '@angular/common';
+import { RouterLink } from '@angular/router';
+
+import { Store } from '@ngrx/store';
+import { GlobalState } from '@/models/global-state';
 
 import { DataService } from '@/services/data.service';
-import { AsyncPipe, NgTemplateOutlet } from '@angular/common';
-import { map, tap } from 'rxjs';
-import { RouterLink } from '@angular/router';
+
 import { PhunkGridComponent } from '../shared/phunk-grid/phunk-grid.component';
+import { selectCollections } from '@/state/selectors/data-state.selectors';
+import { filter, map } from 'rxjs';
 
 @Component({
   selector: 'app-collections',
@@ -21,13 +26,19 @@ import { PhunkGridComponent } from '../shared/phunk-grid/phunk-grid.component';
 })
 export class CollectionsComponent {
 
-  collections$ = this.dataSvc.fetchCollectionsWithAssets().pipe(
-    map(collections => collections.filter((collection, i) => i !== 0)),
-    // tap(collections => console.log(collections)),
-  );
+  collections$ = this.store.select(selectCollections).pipe(
+    filter(collections => !!collections),
+    map(collections => {
+      // remove first item in array
+      return collections.slice(1);
+    })
+  )
 
   constructor(
-    private dataSvc: DataService
-  ) {}
+    private dataSvc: DataService,
+    private store: Store<GlobalState>
+  ) {
+
+  }
 
 }

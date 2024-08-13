@@ -68,7 +68,7 @@ export class UserActivityComponent {
   ) {
 
     effect(() => {
-      console.log('UserActivityComponent: address', this.address());
+      // console.log('UserActivityComponent: address', this.address());
     });
   }
 }

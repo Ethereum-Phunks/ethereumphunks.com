@@ -37,7 +37,7 @@ export class ChatComponent {
         switchMap((config) => {
           return this.store.select(selectChatConnected).pipe(
             map((connected) => {
-              console.log({ toAddress, connected, config });
+              // console.log({ toAddress, connected, config });
 
               // if (!config.chat) return 'disabled';
               if (connected) return toAddress ? 'conversation' : 'conversations';

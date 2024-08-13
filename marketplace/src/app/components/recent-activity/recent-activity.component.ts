@@ -86,15 +86,11 @@ export class RecentActivityComponent {
     public dataSvc: DataService
   ) {
 
-    effect(() => {
-      console.log('RecentActivityComponent: events', this.events());
-    })
+    // effect(() => {
+    //   console.log('RecentActivityComponent: events', this.events());
+    // })
 
     this.store.dispatch(appStateActions.setEventTypeFilter({ eventTypeFilter: this._activeTxFilter }));
-  }
-
-  trackByFn(i: number, item: any): string {
-    return item.tokenId;
   }
 
   setActiveTxFilter(filter: TxFilterItem): void {

@@ -34,11 +34,6 @@ export const selectCollections = createSelector(
   (appState: DataState) => appState.collections
 );
 
-export const selectCollectionsWithAssets = createSelector(
-  selectDataState,
-  (appState: DataState) => appState.collectionsWithAssets
-);
-
 export const selectActiveCollection = createSelector(
   selectDataState,
   (appState: DataState) => appState.activeCollection

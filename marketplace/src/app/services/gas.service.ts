@@ -25,7 +25,9 @@ const socketConfig: SocketIoConfig = {
 })
 export class GasService extends Socket {
 
-  gas$ = this.fromEvent<any>('gasData');
+  gas$ = this.fromEvent<any>('gasData').pipe(
+    // tap((data: GasData) => console.log('GAS DATA', data))
+  );
 
   constructor() {
     super(socketConfig);

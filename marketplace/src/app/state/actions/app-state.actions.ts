@@ -1,6 +1,6 @@
 import { createAction, props } from '@ngrx/store';
 
-import { AppState, Cooldowns, EventType, HistoryItem, Notification } from '@/models/global-state';
+import { AppState, Cooldowns, EventType, GlobalConfig, HistoryItem } from '@/models/global-state';
 
 export const setConnected = createAction(
   '[App State] Set Wallet Connected',
@@ -168,5 +168,5 @@ export const setCollectionsMenuActive = createAction(
 
 export const setGlobalConfig = createAction(
   '[App State] Set Global Config State',
-  props<{ config: any }>()
+  props<{ config: GlobalConfig }>()
 );

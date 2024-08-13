@@ -17,7 +17,7 @@ import * as dataStateSelectors from '@/state/selectors/data-state.selectors';
 import * as marketStateActions from '@/state/actions/market-state.actions';
 import * as marketStateSelectors from '@/state/selectors/market-state.selectors';
 
-import { asyncScheduler, filter, forkJoin, from, map, mergeMap, of, switchMap, tap, throttleTime, withLatestFrom } from 'rxjs';
+import { asyncScheduler, distinctUntilChanged, filter, forkJoin, from, map, mergeMap, of, switchMap, tap, throttleTime, withLatestFrom } from 'rxjs';
 
 @Injectable()
 export class DataStateEffects {
@@ -42,28 +42,25 @@ export class DataStateEffects {
 
   fetchCollections$ = createEffect(() => this.actions$.pipe(
     ofType(dataStateActions.fetchCollections),
-    switchMap(() => {
-      return forkJoin([
-        this.dataSvc.fetchCollections(),
-        this.dataSvc.fetchCollectionsWithAssets(),
-      ]);
-    }),
-    mergeMap(([collections, withAssets]) => [
-      dataStateActions.setCollections({ collections }),
-      dataStateActions.setCollectionsWithAssets({ collectionsWithAssets: withAssets }),
-    ])
-    // ,
+    switchMap(() => this.dataSvc.fetchCollections().pipe(
+      map((collections) => dataStateActions.setCollections({ collections })),
+    )),
   ));
 
   setActiveCollection$ = createEffect(() => this.actions$.pipe(
     ofType(dataStateActions.setCollections),
     switchMap((action) => {
       return this.store.select(marketStateSelectors.selectMarketSlug).pipe(
-        map((slug) => {
-          const coll = action.collections.find((c) => c.slug === slug);
-          if (!coll) return dataStateActions.setActiveCollection({ activeCollection: action.collections[0] });
-          return dataStateActions.setActiveCollection({ activeCollection: coll });
-        })
+        switchMap((slug) => this.dataSvc.fetchStats(slug).pipe(
+          map((stats) => {
+            // console.log('setActiveCollection$', {action, stats, slug})
+            const coll = action.collections.find((c) => c.slug === slug);
+            if (!coll) return dataStateActions.setActiveCollection({ activeCollection: action.collections[0] });
+            const activeCollection = { ...coll!, stats };
+            // console.log({activeCollection})
+            return dataStateActions.setActiveCollection({ activeCollection });
+          })
+        )),
       );
     }),
   ));

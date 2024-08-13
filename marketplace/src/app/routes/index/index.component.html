@@ -1,11 +1,8 @@
-<app-splash [slug]="(activeCollection$ | async)?.slug" />
+<app-splash [collection]="(activeCollection$ | async)" />
 
 @if ((config$ | async)?.maintenance) {
   <app-brb />
 }
-
-
-<!-- {{ (activeCollection$ | async) | json }} -->
 
 <div class="sections-wrapper">
 

@@ -64,18 +64,6 @@ export class DataService {
     this.listenGlobalConfig();
 
     this.fetchUSDPrice();
-
-    this.fetchStats().subscribe((res: any) => {
-      // console.log('fetchStats', res);
-    });
-
-    // this.fetchUserEvents(
-    //   '0xf1Aa941d56041d47a9a18e99609A047707Fe96c7',
-    //   10,
-    //   0
-    // ).subscribe((res: any) => {
-    //   console.log('fetchUserEvents', res);
-    // });
   }
 
   listenEvents() {
@@ -89,12 +77,12 @@ export class DataService {
           table: 'events' + this.prefix
         },
         (payload) => {
-          console.log({payload});
+          // console.log({payload});
           if (!payload) return;
           this.store.dispatch(dataStateActions.dbEventTriggered({ payload }));
         },
       ).subscribe((status) => {
-        console.log('Channel status:', status);
+        // console.log('Channel status:', status);
       });
   }
 
@@ -484,7 +472,7 @@ export class DataService {
           this.checkConsensus([res]),
         ])),
         map(([[res], listing, [consensus]]) => {
-          console.log('fetchSinglePhunk::fetch', {res, listing, consensus});
+          // console.log('fetchSinglePhunk::fetch', {res, listing, consensus});
 
           const phunk = {
             ...res,
@@ -504,7 +492,7 @@ export class DataService {
 
     return timer(0, 5000).pipe(
       switchMap(() => fetch()),
-      tap(phunk => console.log('Fetch complete at', new Date().toISOString(), 'Consensus:', phunk?.consensus)),
+      // tap(phunk => console.log('Fetch complete at', new Date().toISOString(), 'Consensus:', phunk?.consensus)),
       takeWhile((phunk) => !phunk?.consensus, true)
     );
   }
@@ -540,7 +528,7 @@ export class DataService {
         return item;
       }),
       catchError((err) => {
-        console.log('fetchUnsupportedItem', err);
+        // console.log('fetchUnsupportedItem', err);
         return of({
           slug: '',
           hashId,
@@ -615,7 +603,7 @@ export class DataService {
 
       return listing;
     } catch (error) {
-      console.log('getListingFromHashId', error);
+      // console.log('getListingFromHashId', error);
       return null;
     }
   }
@@ -679,40 +667,53 @@ export class DataService {
   // COLLECTIONS ///////////////////////////////////////////////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  fetchCollections(): Observable<any[]> {
+  fetchCollections(previewLimit = 10): Observable<any[]> {
     const query = supabase
       .from('collections' + this.prefix)
       .select('*')
       .order('id', { ascending: false })
       .eq('active', true);
 
-    return from(query).pipe(
-      map((res: any) => res.data),
-      // tap((res) => console.log('fetchCollections', res)),
-    );
-  }
-
-  fetchCollectionsWithAssets(limit: number = 10): Observable<any[]> {
-    const query = supabase
+    const queryWithPrevs = supabase
       .rpc(
         'fetch_collections_with_previews' + this.prefix,
-        { preview_limit: limit }
+        { preview_limit: previewLimit }
       );
 
     return from(query).pipe(
-      map((res: any) => res.data.map((item: any) => ({ ...item.ethscription }))),
-      // tap((res) => console.log('fetchCollectionsWithAssets', res)),
+      switchMap((res) => {
+        return from(queryWithPrevs).pipe(
+          map((withPrevs) => {
+            const collections = res.data as any[];
+            const withPreviews = withPrevs.data.map((item: any) => item.ethscription);
+
+            for (let i = 0; i < collections.length; i++) {
+              collections[i].previews = withPreviews.find((p: any) => p.slug === collections[i].slug).previews;
+            }
+
+            return collections;
+          })
+
+        )
+      }),
     );
   }
 
-  fetchStats(): Observable<any> {
+  fetchStats(slug: string, days: number = 7): Observable<any> {
+
+    const endDate = new Date();
+    const startDate = new Date(endDate);
+    startDate.setDate(startDate.getDate() - days);
 
     const query = supabase
-      .rpc(`get_total_volume_sepolia`);
+      .rpc(
+        `get_total_volume${this.prefix}`,
+        { start_date: startDate, end_date: endDate, slug_filter: slug }
+      );
 
     return from(query).pipe(
       map((res: any) => res.data[0]),
-    )
+    );
   }
 
   fetchAllWithPagination(

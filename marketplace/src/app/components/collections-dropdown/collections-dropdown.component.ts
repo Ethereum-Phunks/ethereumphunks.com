@@ -25,7 +25,7 @@ import { firstValueFrom } from 'rxjs';
 })
 export class CollectionsDropdownComponent {
 
-  collections$ = this.store.select(dataStateSelectors.selectCollectionsWithAssets);
+  collections$ = this.store.select(dataStateSelectors.selectCollections);
   activeCollection$ = this.store.select(dataStateSelectors.selectActiveCollection);
   dropdownActive$ = this.store.select(appStateSelectors.selectCollectionsMenuActive);
 

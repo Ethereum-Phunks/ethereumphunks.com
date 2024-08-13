@@ -1,6 +1,8 @@
 @import 'abstracts/variables';
 @import 'abstracts/mixins';
 
+$size: 30rem;
+
 :host {
   display: block;
 
@@ -15,8 +17,8 @@
 
     img,
     app-phunk-image {
-      width: 31.5rem;
-      height: 31.5rem;
+      width: $size;
+      height: $size;
       image-rendering: pixelated;
 
       object-fit: contain;

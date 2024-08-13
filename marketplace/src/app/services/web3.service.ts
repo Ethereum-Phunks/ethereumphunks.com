@@ -209,6 +209,11 @@ export class Web3Service {
     return (pendingWithdrawals || BigInt(0)) + (pendingWithdrawalsV2 || BigInt(0));
   }
 
+  async checkContractPaused(): Promise<boolean> {
+    const paused = await this.readMarketContract('paused', []);
+    return paused;
+  }
+
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   // L1 CONTRACT METHODS ///////////////////////////////////////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -260,15 +265,8 @@ export class Web3Service {
 
     if (!publicClient) throw new Error('No public client');
 
-    const alwaysOnFunctions = ['phunkNoLongerForSale', 'withdrawPhunk'];
-
-    const [paused, { maintenance }] = await Promise.all([
-      this.readMarketContract('paused', []),
-      firstValueFrom(this.globalConfig$)
-    ]);
-
-    if (paused && (alwaysOnFunctions.indexOf(functionName) === -1)) throw new Error('Contract is paused');
-    if (maintenance && (alwaysOnFunctions.indexOf(functionName) === -1)) throw new Error('In maintenance mode');
+    const { maintenance } = await firstValueFrom(this.globalConfig$);
+    if (maintenance && environment.production) throw new Error('In maintenance mode');
 
     const tx: any = {
       address: marketAddress as `0x${string}`,
@@ -280,8 +278,7 @@ export class Web3Service {
     if (value) tx.value = value;
 
     const { request, result } = await publicClient.simulateContract(tx);
-
-    console.log({result})
+    // console.log('simulateContract()', {request, result});
 
     return await walletClient?.writeContract(request);
   }
@@ -343,12 +340,7 @@ export class Web3Service {
     toAddress = toAddress.toLowerCase().replace('0x', '').padStart(64, '0');
     // const revShareHex = numberToHex(revShare).replace('0x', '').padStart(64, '0');
 
-    // console.log('revShareHex', revShareHex, Number(revShareHex));
-    // console.log({ hashId, sig, bytes32Value, toAddress, revShare, revShareHex });
-
     return await this.batchTransferPhunks([hashId, sig, bytes32Value, toAddress], marketAddress);
-
-    // return;
   }
 
   async batchOfferPhunkForSale(hashIds: string[], listPrices: number[]): Promise<string | undefined> {
@@ -408,7 +400,6 @@ export class Web3Service {
     await this.switchNetwork();
 
     const wallet = await getWalletClient(this.config);
-
     const req = await wallet.prepareTransactionRequest({
       chain: wallet.chain,
       account: getAccount(this.config).address as `0x${string}`,
@@ -416,8 +407,6 @@ export class Web3Service {
       value: BigInt(0),
       data: hashId as `0x${string}`,
     });
-
-    console.log({req});
 
     return wallet?.sendTransaction(req);
   }
@@ -445,7 +434,7 @@ export class Web3Service {
       data: `0x${data}` as `0x${string}`,
     });
 
-    console.log({req});
+    // console.log({req});
 
     return wallet?.sendTransaction(req);
   }
