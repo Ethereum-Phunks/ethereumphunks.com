@@ -16,7 +16,7 @@
   </div>
 
   <div class="events-items">
-    @for (event of events(); track (event.hashId + event.type + event.from + event.tokenId)) {
+    @for (event of events(); track (event.hashId + '-' + event.type + '-' + event.from + '-' + event.tokenId + '-' + idx); let idx = $index) {
       <a
         [routerLink]="['/', 'details', event.hashId]"
         class="event-item"
