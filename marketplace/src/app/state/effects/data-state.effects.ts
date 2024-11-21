@@ -43,6 +43,7 @@ export class DataStateEffects {
   fetchCollections$ = createEffect(() => this.actions$.pipe(
     ofType(dataStateActions.fetchCollections),
     switchMap(() => this.dataSvc.fetchCollections().pipe(
+      map((collections) => collections.sort((a, b) => a.id - b.id)),
       map((collections) => dataStateActions.setCollections({ collections })),
     )),
   ));
@@ -112,6 +113,7 @@ export class DataStateEffects {
 
   fetchLeaderboard$ = createEffect(() => this.actions$.pipe(
     ofType(dataStateActions.fetchLeaderboard),
+    tap(() => console.log('fetchLeaderboard')),
     switchMap(() => this.dataSvc.fetchLeaderboard()),
     map((leaderboard) => dataStateActions.setLeaderboard({ leaderboard })),
   ));

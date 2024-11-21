@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
-import { AsyncPipe, JsonPipe, NgTemplateOutlet } from '@angular/common';
-import { ActivatedRoute, Router, RouterModule, RouterOutlet } from '@angular/router';
+import { AsyncPipe, NgTemplateOutlet } from '@angular/common';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 
 import { Store } from '@ngrx/store';
 import { GlobalState } from '@/models/global-state';
@@ -9,13 +9,13 @@ import * as dataStateSelectors from '@/state/selectors/data-state.selectors';
 
 import * as appStateSelectors from '@/state/selectors/app-state.selectors';
 import * as appStateActions from '@/state/actions/app-state.actions';
+
 import { firstValueFrom } from 'rxjs';
 
 @Component({
   standalone: true,
   imports: [
     AsyncPipe,
-    JsonPipe,
     NgTemplateOutlet,
     RouterModule,
   ],
