@@ -30,7 +30,7 @@ import * as marketStateSelectors from '@/state/selectors/market-state.selectors'
 import { WeiToEthPipe } from '@/pipes/wei-to-eth.pipe';
 import { FormatCashPipe } from '@/pipes/format-cash.pipe';
 
-import { map, switchMap, tap } from 'rxjs';
+import { filter, map, switchMap, tap } from 'rxjs';
 
 import anime from 'animejs';
 
@@ -66,7 +66,12 @@ export class MenuComponent {
   @ViewChild('menuCurated') menuCurated!: ElementRef;
 
   address$ = this.store.select(appStateSelectors.selectWalletAddress);
-  menuActive$ = this.store.select(appStateSelectors.selectMenuActive);
+  menuActive$ = this.store.select(appStateSelectors.selectMenuActive).pipe(
+    tap((active) => {
+      active && this.store.dispatch(dataStateActions.fetchLeaderboard());
+      !active && this.store.dispatch(appStateActions.setActiveMenuNav({ activeMenuNav: 'main' }));
+    }),
+  );
   activeMenuNav$ = this.store.select(appStateSelectors.selectActiveMenuNav);
   activeCollection$ = this.store.select(dataStateSelectors.selectActiveCollection);
 

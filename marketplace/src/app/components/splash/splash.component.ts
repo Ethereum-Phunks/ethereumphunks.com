@@ -27,9 +27,9 @@ import { environment } from 'src/environments/environment';
   templateUrl: './splash.component.html',
   styleUrls: ['./splash.component.scss'],
 })
-export class SplashComponent {
+export class SplashComponent implements OnChanges {
 
-  collection = input<Collection | null>();
+  @Input() collection!: Collection | null;
   lastCollectionSlug: string | null = null;
 
   images: string[] = [];
@@ -37,40 +37,30 @@ export class SplashComponent {
   constructor(
     private http: HttpClient
   ) {
+    // effect(async () => {
+    //   // console.log('SLUG', this.collection()!.slug, 'LAST SLUG', this.lastCollectionSlug);
 
-    // this.worker = new Worker(new URL('./image-processor.worker', import.meta.url), { type: 'module' });
-    // this.worker.onmessage = ({ data }) => {
-    //   if (data.error) {
-    //     console.error(`Error processing image ${data.sha}:`, data.error);
-    //   } else {
-    //     this.images.push(data.result);
-    //     if (this.images.length === 7) {
-    //       // All images processed
-    //       console.log('All images processed');
-    //     }
-    //   }
-    // };
+    //   // if (!this.collection()) return;
+    //   // if (!this.collection()!.previews?.length) return;
+    //   // if (this.collection()!.slug === this.lastCollectionSlug) return;
 
-    effect(async () => {
-      console.log('SLUG', this.collection()!.slug, 'LAST SLUG', this.lastCollectionSlug);
+    //   const imageArray = await this.getPixelsFromPng();
+    //   this.images = imageArray.filter((image: string, index: number) => index < 7) as string[];
 
-      if (!this.collection()) return;
-      if (!this.collection()!.previews?.length) return;
-      if (this.collection()!.slug === this.lastCollectionSlug) return;
+    //   // console.log(this.lastCollectionSlug)
+    //   this.lastCollectionSlug = this.collection()!.slug;
+    // });
+  }
 
-      const imageArray = await this.getPixelsFromPng();
-      this.images = imageArray.filter((image: string, index: number) => index < 7) as string[];
-
-      // console.log(this.lastCollectionSlug)
-      this.lastCollectionSlug = this.collection()!.slug;
-    });
+  ngOnChanges(changes: SimpleChanges): void {
+    // console.log('CHANGES', changes);
   }
 
   async getPixelsFromPng(): Promise<any> {
     const baseImageUrl = `${environment.staticUrl}/images`;
 
     const imageArray = await Promise.all(
-      this.collection()!.previews.map(({ sha }) => {
+      this.collection!.previews.map(({ sha }) => {
 
         const url = `${baseImageUrl}/${sha}.png`;
 

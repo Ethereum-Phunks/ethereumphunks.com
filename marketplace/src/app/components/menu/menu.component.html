@@ -81,6 +81,16 @@
           }
         }
 
+        <!-- <div class="stat">
+          <span class="label">Owned</span>
+          <span class="value">{{ stats.owned }}</span>
+        </div>
+
+        <div class="stat">
+          <span class="label">Escrowed</span>
+          <span class="value">{{ stats.escrowed }}</span>
+        </div> -->
+
         @if ((listedPhunks$ | async); as listed) {
           @if (listed.length) {
             <a

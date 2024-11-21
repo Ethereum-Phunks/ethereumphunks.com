@@ -75,9 +75,8 @@ export class AppComponent {
   ) {
     this.store.dispatch(appStateActions.setTheme({ theme: 'initial' }));
     this.store.dispatch(dataStateActions.fetchCollections());
-    this.store.dispatch(dataStateActions.fetchLeaderboard());
-    this.store.dispatch(appStateActions.fetchActiveMultiplier());
     this.store.dispatch(marketStateActions.fetchMarketData());
+    this.store.dispatch(appStateActions.fetchActiveMultiplier());
 
     this.router.events.pipe(
       ////////////////////////

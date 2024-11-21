@@ -22,13 +22,15 @@
   }
 </div>
 
-<!-- @if (collection(); as coll) {
+<!-- @if (collection; as coll) {
   <div class="info">
     <h1>{{ coll.name }}</h1>
     @if (coll.stats; as stats) {
-      <div>7 Day</div>
+      <div class="days">7 Day</div>
       <div>Sales {{ stats.sales }}</div>
       <div>Volume Ξ{{ stats.volume | number : '1.0-3' }}</div>
     }
   </div>
 } -->
+
+<!-- {{ activeCollection$ | async | json }} -->

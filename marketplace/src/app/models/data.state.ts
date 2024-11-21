@@ -1,6 +1,7 @@
 import { Event, Phunk } from './db';
 
 export interface Collection {
+  id: number;
   slug: string;
   singleName: string;
   supply: number;
