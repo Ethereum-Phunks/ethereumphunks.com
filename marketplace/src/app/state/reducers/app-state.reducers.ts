@@ -10,6 +10,7 @@ export const initialState: AppState = {
   connected: false,
   walletAddress: '',
   hasWithdrawal: 0,
+  isBanned: false,
   userPoints: 0,
   activeMultiplier: 1,
   theme: localStorage.getItem('EtherPhunks_theme') as Theme || 'initial',
@@ -66,6 +67,13 @@ export const appStateReducer: ActionReducer<AppState, Action> = createReducer(
       hasWithdrawal,
     };
     return setHasWithdrawal
+  }),
+  on(actions.setIsBanned, (state, { isBanned }) => {
+    const setIsBanned = {
+      ...state,
+      isBanned,
+    };
+    return setIsBanned
   }),
   on(actions.setUserPoints, (state, { userPoints }) => {
     const setUserPoints = {

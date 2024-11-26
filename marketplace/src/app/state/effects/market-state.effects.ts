@@ -30,12 +30,33 @@ export class MarketStateEffects {
       this.store.select(getRouterSelectors().selectQueryParams),
       this.store.select(getRouterSelectors().selectRouteParams),
     ),
-    mergeMap(([_, queryParams, routeParams]) => {
-      return [
+    mergeMap(([action, queryParams, routeParams]) => {
+      // console.log({queryParams, routeParams});
+
+      const actions: any[] = [
         marketStateActions.setMarketType({ marketType: routeParams['marketType'] }),
-        marketStateActions.setMarketSlug({ marketSlug: routeParams['slug'] || 'ethereum-phunks' }),
-        marketStateActions.setActiveTraitFilters({ traitFilters: queryParams }),
       ];
+
+      // Use route params if available
+      let marketSlug = routeParams['slug'];
+
+      // Use default slug if no slug is available
+      const { event } = (action as any).payload;
+      if (event.urlAfterRedirects === '/') marketSlug = 'ethereum-phunks';
+
+      if (routeParams['marketType'] === 'user') marketSlug = 'user';
+
+      // Set market slug if available
+      if (marketSlug) actions.push(marketStateActions.setMarketSlug({ marketSlug }));
+      actions.push(marketStateActions.setActiveTraitFilters({ traitFilters: queryParams }));
+      // console.log({marketSlug});
+      return actions;
+
+      // return [
+      //   marketStateActions.setMarketType({ marketType: routeParams['marketType'] }),
+      //   marketStateActions.setMarketSlug({ marketSlug: routeParams['slug'] || 'ethereum-phunks' }),
+      //   marketStateActions.setActiveTraitFilters({ traitFilters: queryParams }),
+      // ];
     })
   ));
 
@@ -50,6 +71,8 @@ export class MarketStateEffects {
     filter(([, marketType]) => marketType !== 'all'),
     switchMap(([action, marketType, marketSlug, queryAddress]) => {
       // Likely exited market route so we clear some state
+
+      console.log({ action, marketType, marketSlug, queryAddress });
 
       if (!marketType) {
         this.store.dispatch(marketStateActions.clearActiveMarketRouteData());

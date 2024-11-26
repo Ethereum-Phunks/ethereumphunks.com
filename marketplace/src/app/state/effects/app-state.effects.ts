@@ -10,7 +10,7 @@ import { ThemeService } from '@/services/theme.service';
 
 import { GlobalState } from '@/models/global-state';
 
-import { catchError, filter, from, map, mergeMap, of, switchMap, tap, withLatestFrom } from 'rxjs';
+import { catchError, distinctUntilChanged, filter, from, map, mergeMap, of, switchMap, tap, withLatestFrom } from 'rxjs';
 
 import * as appStateActions from '@/state/actions/app-state.actions';
 import * as appStateSelectors from '@/state/selectors/app-state.selectors';
@@ -19,6 +19,7 @@ import { ChatService } from '@/services/chat.service';
 
 import { environment } from 'src/environments/environment';
 import { formatEther } from 'viem';
+import { DataService } from '@/services/data.service';
 
 @Injectable()
 export class AppStateEffects {
@@ -43,6 +44,13 @@ export class AppStateEffects {
         appStateActions.reconnectChat(),
       ];
     }),
+  ));
+
+  checkIsBanned$ = createEffect(() => this.actions$.pipe(
+    ofType(appStateActions.setWalletAddress),
+    filter((action) => !!action.walletAddress),
+    switchMap((action) => this.dataSvc.checkIsBanned(action.walletAddress!)),
+    map(isBanned => appStateActions.setIsBanned({ isBanned })),
   ));
 
   checkHasWithdrawal$ = createEffect(() => this.actions$.pipe(
@@ -229,5 +237,6 @@ export class AppStateEffects {
     private web3Svc: Web3Service,
     private themeSvc: ThemeService,
     private chatSvc: ChatService,
+    private dataSvc: DataService,
   ) {}
 }

@@ -21,6 +21,11 @@ export const setHasWithdrawal = createAction(
   props<{ hasWithdrawal: number }>()
 );
 
+export const setIsBanned = createAction(
+  '[App State] Set Is Banned',
+  props<{ isBanned: boolean }>()
+);
+
 export const resetAppState = createAction(
   '[App State] Reset App State'
 );

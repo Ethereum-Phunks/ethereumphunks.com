@@ -52,16 +52,12 @@ export class DataStateEffects {
     ofType(dataStateActions.setCollections),
     switchMap((action) => {
       return this.store.select(marketStateSelectors.selectMarketSlug).pipe(
-        switchMap((slug) => this.dataSvc.fetchStats(slug).pipe(
-          map((stats) => {
-            // console.log('setActiveCollection$', {action, stats, slug})
-            const coll = action.collections.find((c) => c.slug === slug);
-            if (!coll) return dataStateActions.setActiveCollection({ activeCollection: action.collections[0] });
-            const activeCollection = { ...coll!, stats };
-            // console.log({activeCollection})
-            return dataStateActions.setActiveCollection({ activeCollection });
-          })
-        )),
+        map((slug) => {
+          const coll = action.collections.find((c) => c.slug === slug);
+          const activeCollection = { ...coll! };
+          console.log({ slug, coll, activeCollection });
+          return dataStateActions.setActiveCollection({ activeCollection });
+        })
       );
     }),
   ));

@@ -19,6 +19,11 @@ export const selectHasWithdrawal = createSelector(
   (appState: AppState) => appState.hasWithdrawal
 );
 
+export const selectIsBanned = createSelector(
+  selectAppState,
+  (appState: AppState) => appState.isBanned
+);
+
 // export const selectActiveFilters = createSelector(
 //   selectAppState,
 //   (appState: AppState) => appState.activeFilters

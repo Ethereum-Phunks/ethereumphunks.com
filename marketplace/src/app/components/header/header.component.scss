@@ -57,21 +57,17 @@
       app-search {
         // border: 1px solid red;
         width: 100%;
-        max-width: 50rem;
+        max-width: 42rem;
 
         pointer-events: all;
       }
 
       app-collections-dropdown {
         width: 100%;
-        max-width: 26rem;
+        max-width: 28rem;
         padding-left: 2rem;
 
         pointer-events: all;
-
-        @media (max-width: 1000px) {
-          max-width: 7rem;
-        }
       }
     }
 
@@ -82,7 +78,7 @@
       align-items: center;
       justify-content: flex-end;
 
-      padding-left: 3rem;
+      padding-left: 2rem;
       pointer-events: all;
 
       .connect-menu {
@@ -293,6 +289,15 @@
           overflow: visible;
           width: 20rem;
           // transform: translate(0, .25rem);
+        }
+      }
+
+      .search-wrapper {
+        justify-content: space-between;
+
+        app-collections-dropdown {
+          width: auto;
+          max-width: 100%;
         }
       }
     }

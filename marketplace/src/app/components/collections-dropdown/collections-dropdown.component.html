@@ -1,6 +1,16 @@
 <div class="curated-wrapper" [class.active]="(dropdownActive$ | async)">
   <button class="curated-button" (click)="toggleDropdown()">
-    <span>Collections</span>
+
+    @if ((activeCollection$ | async); as collection) {
+      <div class="image-wrapper">
+        <img [src]="collection.image" />
+      </div>
+      <span>{{ collection.name }}</span>
+    } @else {
+      <div class="placeholder">
+        <span>Loading...</span>
+      </div>
+    }
 
     <div class="arrow">
       <ng-template [ngTemplateOutlet]="arrowIcon" />

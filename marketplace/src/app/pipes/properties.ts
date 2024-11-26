@@ -34,8 +34,9 @@ export class PropertiesPipe implements PipeTransform {
       filtered = filtered.filter((res: Phunk) => {
         if (!res.attributes) return false;
         const matches = res.attributes.filter((attr) => {
-          const key = attr?.k?.replace(/ /g, '-')?.toLowerCase();
-          const val = attr?.v?.replace(/ /g, '-')?.toLowerCase();
+          // console.log({ attr });
+          const key = attr?.k?.toString()?.replace(/ /g, '-')?.toLowerCase();
+          const val = attr?.v?.toString()?.replace(/ /g, '-')?.toLowerCase();
           return traitFilters[key] === val;
         });
         return matches.length === filtersLength - (traitCountFilter !== undefined ? 1 : 0);

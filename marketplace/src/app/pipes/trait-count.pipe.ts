@@ -1,6 +1,6 @@
 import { Pipe, PipeTransform } from '@angular/core';
 
-import { traits } from '@/constants/traits';
+import { rarityData } from '@/constants/collections';
 
 @Pipe({
   standalone: true,
@@ -10,6 +10,7 @@ import { traits } from '@/constants/traits';
 export class TraitCountPipe implements PipeTransform {
 
   transform(value: string, slug: string): string {
-    return traits[slug][value];
+    // console.log({value, slug});
+    return rarityData[slug][value];
   }
 }
