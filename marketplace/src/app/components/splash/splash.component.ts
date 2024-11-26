@@ -1,6 +1,8 @@
-import { Component, DestroyRef, effect, input, Input, OnChanges, OnDestroy, SimpleChanges } from '@angular/core';
+import { Component, DestroyRef, effect, input, Input, OnChanges, OnDestroy, signal, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
+
+import { computedPrevious } from 'ngxtension/computed-previous';
 
 import { LazyLoadImageModule } from 'ng-lazyload-image';
 
@@ -11,7 +13,7 @@ import { PhunkImageComponent } from '../shared/phunk-image/phunk-image.component
 import { INode, parse, stringify } from 'svgson';
 import tinycolor from 'tinycolor2';
 
-import { catchError, firstValueFrom, from, map, of, switchMap, tap } from 'rxjs';
+import { catchError, filter, firstValueFrom, from, map, of, switchMap, tap } from 'rxjs';
 
 import { environment } from 'src/environments/environment';
 
@@ -29,38 +31,48 @@ import { environment } from 'src/environments/environment';
 })
 export class SplashComponent implements OnChanges {
 
-  @Input() collection!: Collection | null;
-  lastCollectionSlug: string | null = null;
+  collection = input<Collection | null>();
+  collectionPrev = computedPrevious(this.collection);
 
-  images: string[] = [];
+  random = signal<string[]>([]);
+  images = signal<string[]>([]);
 
   constructor(
     private http: HttpClient
   ) {
-    // effect(async () => {
-    //   // console.log('SLUG', this.collection()!.slug, 'LAST SLUG', this.lastCollectionSlug);
-
-    //   // if (!this.collection()) return;
-    //   // if (!this.collection()!.previews?.length) return;
-    //   // if (this.collection()!.slug === this.lastCollectionSlug) return;
-
-    //   const imageArray = await this.getPixelsFromPng();
-    //   this.images = imageArray.filter((image: string, index: number) => index < 7) as string[];
-
-    //   // console.log(this.lastCollectionSlug)
-    //   this.lastCollectionSlug = this.collection()!.slug;
-    // });
+    effect(async () => {
+      console.log('effect', this.collection(), this.collectionPrev())
+      if (!this.collection()) return;
+      this.images.set(await this.getPixelsFromPng());
+    })
   }
 
-  ngOnChanges(changes: SimpleChanges): void {
-    // console.log('CHANGES', changes);
+  async ngOnChanges(changes: SimpleChanges): Promise<void> {
+  //   if (
+  //     changes.collection &&
+  //     changes.collection.currentValue &&
+  //     changes.collection.currentValue.slug === 'ethereum-phunks' &&
+  //     changes.collection.currentValue.slug !== changes.collection.previousValue?.slug
+  //   ) {
+  //     console.log('SLUG CHANGED');
+  //     const random = this.getRandomNumbers();
+  //     const images = await Promise.all(random.map(num => this.getPhunkByTokenId(num)));
+  //     this.random.set(random);
+  //     this.images.set(images);
+  //   } else {
+  //     this.random.set([]);
+  //     this.images.set([]);
+  //   }
   }
 
   async getPixelsFromPng(): Promise<any> {
+    if (!this.collection()?.previews?.length) return [];
+
     const baseImageUrl = `${environment.staticUrl}/images`;
 
     const imageArray = await Promise.all(
-      this.collection!.previews.map(({ sha }) => {
+      this.collection()!.previews.map(({ sha }) => {
+        // console.log(sha);
 
         const url = `${baseImageUrl}/${sha}.png`;
 
@@ -145,8 +157,8 @@ export class SplashComponent implements OnChanges {
       attributes: {
         xmlns: 'http://www.w3.org/2000/svg',
         viewBox: `0 0 ${width} ${height}`,
-        // width: `${width}`,
-        // height: `${height}`,
+        width: `${width}`,
+        height: `${height}`,
       },
       children: [],
       value: ''
@@ -167,7 +179,7 @@ export class SplashComponent implements OnChanges {
             width: '1',
             height: '1',
             fill: `#${color}`,
-            shapeRendering: 'crispEdges',
+            'shape-rendering': 'crispEdges',
           },
           children: [],
           value: ''
@@ -181,8 +193,7 @@ export class SplashComponent implements OnChanges {
 
   convertToBase64(node: INode): string {
     const string = stringify(node);
-    const decoded = unescape(encodeURIComponent(string));
-    const base64 = btoa(decoded);
+    const base64 = btoa(string);
     return `data:image/svg+xml;base64,${base64}`;
   }
 
@@ -201,30 +212,34 @@ export class SplashComponent implements OnChanges {
     return String(num).padStart(4, '0');
   }
 
-  // async getPhunkByTokenId(tokenId: string): Promise<any> {
-  //   const url = `https://punkcdn.com/data/images/phunk${('000' + tokenId).slice(-4)}.svg`;
+  async getPhunkByTokenId(tokenId: string): Promise<any> {
+    const url = `https://punkcdn.com/data/images/phunk${('000' + tokenId).slice(-4)}.svg`;
 
-  //   return await firstValueFrom(
-  //     this.http.get(url, { responseType: 'text' }).pipe(
-  //       filter(data => !!data),
-  //       switchMap(data => from(parse(data))),
-  //       map(data => this.stripColors(data)),
-  //       map(data => this.convertToBase64(data)),
-  //       catchError((err) => {
-  //         console.error(err);
-  //         return of(null);
-  //       })
-  //     )
-  //   );
-  // }
+    return await firstValueFrom(
+      this.http.get(url, { responseType: 'text' }).pipe(
+        filter((data): data is string => !!data),
+        switchMap(data => from(parse(data))),
+        map(data => this.stripColors(data)),
+        map(data => this.convertToBase64(data)),
+        catchError((err) => {
+          console.error(err);
+          return of(null);
+        })
+      )
+    );
+  }
 
   stripColors(node: INode): INode {
+    const colorMap: Record<string, number> = {};
+
     for (const child of node.children) {
       if (child.name === 'rect' && child.attributes?.fill) {
         const color = tinycolor(child.attributes.fill);
-        const alpha = tinycolor(color).getBrightness() / 255;
-        const opaque = tinycolor({ r: 0, g: 0, b: 0, a: 1 - alpha });
-        // 255, 4, 180
+        const alpha = (tinycolor(color).getBrightness() / 255);
+        const opaque = tinycolor({ r: 0, g: 0, b: 0, a: (1 - alpha) });
+
+        // console.log({color, alpha});
+
         const filter = [
           '#ffffffff', // White
           '#ead9d9ff', // Albino Skin Tone
@@ -234,7 +249,11 @@ export class SplashComponent implements OnChanges {
           '#7da269ff', // Zombie Skin Tone
           '#352410ff', // Ape Skin Tone
           '#c8fbfbff', // Alien Skin Tone
+
+          '#79a4f9ff', // Mingos background
         ];
+
+        colorMap[child.attributes.fill] = (colorMap[child.attributes.fill] || 0) + 1;
 
         // Remove Skin Tone
         if (filter.indexOf(child.attributes.fill) > -1) child.attributes.fill = '#00000000';
@@ -243,25 +262,8 @@ export class SplashComponent implements OnChanges {
         else child.attributes.fill = opaque.toString('hex8');
       }
     }
+
+    // console.log(colorMap);
     return node;
   }
 }
-
-
-    // effect(async () => {
-    //   await this.getPixelsFromPng();
-    //   // if (
-    //   //   changes.slug &&
-    //   //   changes.slug.currentValue &&
-    //   //   changes.slug.currentValue === 'ethereum-phunks' &&
-    //   //   changes.slug.currentValue !== changes.slug.previousValue
-    //   // ) {
-    //   //   const random = this.getRandomNumbers();
-    //   //   const images = await Promise.all(random.map(num => this.getPhunkByTokenId(num)));
-    //   //   this.random = random;
-    //   //   this.images = images;
-    //   // } else {
-    //   //   this.random = [];
-    //   //   this.images = [];
-    //   // }
-    // })
