@@ -94,7 +94,8 @@ export class MarketComponent {
     all: 'All %collectionName%s',
     listings: ' %collectionName%s for Sale',
     bids: 'Current Bids',
-    owned: ' %collectionName%s Owned'
+    owned: ' %collectionName%s Owned',
+    user: 'Owned Inscriptions'
   };
 
   sorts: { label: string, value: Sorts }[] = [
@@ -139,6 +140,7 @@ export class MarketComponent {
 
   activeCollection$ = this.store.select(dataStateSelectors.selectActiveCollection);
   walletAddress$ = this.store.select(appStateSelectors.selectWalletAddress);
+
   slideoutActive$ = this.store.select(appStateSelectors.selectSlideoutActive).pipe(
     tap((slideoutActive: boolean) => {
       if (!slideoutActive) this.resetState();
@@ -146,9 +148,8 @@ export class MarketComponent {
   );
 
   marketType$ = this.store.select(marketStateSelectors.selectMarketType);
-  activeMarketRouteData$ = this.store.select(marketStateSelectors.selectActiveMarketRouteData).pipe(
-    tap((routeData: any) => console.log({ routeData }))
-  );
+  activeMarketRouteData$ = this.store.select(marketStateSelectors.selectActiveMarketRouteData);
+
   activeTraitFilters$ = this.store.select(marketStateSelectors.selectActiveTraitFilters).pipe(
     map((traitFilters: any) => {
       const traitFiltersCopy = { ...traitFilters };
@@ -156,6 +157,7 @@ export class MarketComponent {
       return traitFiltersCopy as TraitFilter;
     })
   );
+
   activeSort$ = this.store.select(marketStateSelectors.selectActiveSort).pipe(
     tap((sort: any) => this.activeSortModel = sort)
   );

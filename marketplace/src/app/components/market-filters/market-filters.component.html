@@ -1,5 +1,5 @@
 @if (activeTraitFilters$ | async; as filters) {
-  @for (key of objectKeys(dataSvc.filterData); track key; let i = $index) {
+  @for (key of objectKeys(filterData); track key; let i = $index) {
     <div
       [id]="key"
       class="filter-group-wrapper">
@@ -11,7 +11,7 @@
         [searchable]="true"
         [class.active]="filters[key]">
 
-        @for (item of dataSvc.filterData[key]; track item) {
+        @for (item of filterData[key]; track item) {
           <ng-option [value]="item">
             {{ item.replaceAll('-', ' ') | titlecase }}
           </ng-option>

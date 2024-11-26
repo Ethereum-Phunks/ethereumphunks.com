@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, effect, input } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { HttpParams } from '@angular/common/http';
 import { CommonModule, Location } from '@angular/common';
@@ -14,6 +14,8 @@ import { selectActiveTraitFilters } from '@/state/selectors/market-state.selecto
 
 import { Subject, switchMap, tap } from 'rxjs';
 
+import { filterData } from '@/constants/collections';
+
 @Component({
   selector: 'app-market-filters',
   standalone: true,
@@ -28,6 +30,9 @@ import { Subject, switchMap, tap } from 'rxjs';
 
 export class MarketFiltersComponent {
 
+  slug = input.required<string | undefined>();
+
+  filterData: any = {};
   traitCount!: number;
   objectKeys = Object.keys;
 
@@ -40,10 +45,14 @@ export class MarketFiltersComponent {
     private store: Store<GlobalState>,
     public dataSvc: DataService,
     private location: Location,
-  ) {}
+  ) {
+    effect(() => {
+      if (!this.slug()) return;
+      this.filterData = filterData[this.slug()!];
+    });
+  }
 
   selectFilter($event: any, key: string): void {
-
     const filters = { ...this.activeFiltersModel };
     let urlParams = new HttpParams();
     Object.keys(filters).forEach((key) => {

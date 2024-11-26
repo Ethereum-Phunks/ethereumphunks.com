@@ -138,7 +138,7 @@
 
       @if (filtersVisible) {
         <div class="filter-wrapper">
-          <app-market-filters />
+          <app-market-filters [slug]="(activeCollection$ | async)?.slug" />
         </div>
       }
 
