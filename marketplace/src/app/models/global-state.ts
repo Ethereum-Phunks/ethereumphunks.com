@@ -16,6 +16,7 @@ export interface AppState {
   walletAddress: string | undefined;
   connected: boolean;
   hasWithdrawal: number;
+  isBanned: boolean;
   userPoints: number;
   activeMultiplier: number;
   theme: Theme;

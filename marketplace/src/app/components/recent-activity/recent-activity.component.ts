@@ -1,4 +1,4 @@
-import { Component, effect, input } from '@angular/core';
+import { Component, input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
@@ -12,10 +12,7 @@ import { WalletAddressDirective } from '@/directives/wallet-address.directive';
 
 import { DataService } from '@/services/data.service';
 
-import { TokenIdParsePipe } from '@/pipes/token-id-parse.pipe';
 import { WeiToEthPipe } from '@/pipes/wei-to-eth.pipe';
-import { CalcPipe } from '@/pipes/calculate.pipe';
-import { FormatCashPipe } from '@/pipes/format-cash.pipe';
 
 import { EventType, GlobalState, TxFilterItem } from '@/models/global-state';
 import { Event } from '@/models/db';
@@ -35,11 +32,7 @@ import * as appStateActions from '@/state/actions/app-state.actions';
     FormsModule,
 
     WalletAddressDirective,
-
-    TokenIdParsePipe,
     WeiToEthPipe,
-    CalcPipe,
-    FormatCashPipe
   ],
   selector: 'app-recent-activity',
   templateUrl: './recent-activity.component.html',
@@ -85,11 +78,6 @@ export class RecentActivityComponent {
     private store: Store<GlobalState>,
     public dataSvc: DataService
   ) {
-
-    // effect(() => {
-    //   console.log('RecentActivityComponent: events', this.events());
-    // })
-
     this.store.dispatch(appStateActions.setEventTypeFilter({ eventTypeFilter: this._activeTxFilter }));
   }
 

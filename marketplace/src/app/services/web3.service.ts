@@ -1,4 +1,4 @@
-import { Injectable, NgZone } from '@angular/core';
+import { Inject, Injectable, NgZone } from '@angular/core';
 
 import { Store } from '@ngrx/store';
 
@@ -29,6 +29,8 @@ import { Web3Modal } from '@web3modal/wagmi/dist/types/src/client';
 import { createWeb3Modal } from '@web3modal/wagmi';
 
 import { PublicClient, TransactionReceipt, WatchBlockNumberReturnType, WatchContractEventReturnType, createPublicClient, decodeFunctionData, formatEther, isAddress, keccak256, numberToHex, parseEther, stringToBytes, zeroAddress } from 'viem';
+import { DataService } from './data.service';
+import { selectIsBanned } from '@/state/selectors/app-state.selectors';
 
 const marketAddress = environment.marketAddress;
 const marketAddressL2 = environment.marketAddressL2;
@@ -78,7 +80,7 @@ export class Web3Service {
     private store: Store<GlobalState>,
     private ngZone: NgZone
   ) {
-    const chains: [Chain, ...Chain[]] = environment.chainId === 1 ? [mainnet] : [sepolia, magma];
+    const chains: [Chain, ...Chain[]] = environment.chainId === 1 ? [mainnet] : [sepolia];
 
     this.l1Client = createPublicClient({
       chain: chains[0],
@@ -278,8 +280,6 @@ export class Web3Service {
     if (value) tx.value = value;
 
     const { request, result } = await publicClient.simulateContract(tx);
-    // console.log('simulateContract()', {request, result});
-
     return await walletClient?.writeContract(request);
   }
 
@@ -351,15 +351,18 @@ export class Web3Service {
   async batchBuyPhunks(
     phunks: Phunk[]
   ): Promise<string | undefined> {
-
     const address = getAccount(this.config).address;
-
     const escrowAndListing = await this.fetchMultipleEscrowAndListing(phunks);
 
     const hashIds = [];
     const minSalePricesInWei = [];
 
     let total = BigInt(0);
+
+    if (environment.chainId === 11155111) {
+      const isBanned = await firstValueFrom(this.store.select(selectIsBanned));
+      if (isBanned) throw new Error('User is banned from buying');
+    }
 
     for (const [i, phunk] of phunks.entries()) {
       const hashId = phunk.hashId;

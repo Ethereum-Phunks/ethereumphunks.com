@@ -1,18 +1,16 @@
-import { Injectable } from '@angular/core';
+import { Inject, Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 
 import { Store } from '@ngrx/store';
 
 import { Web3Service } from '@/services/web3.service';
 
-import { filterData } from '@/constants/filterData';
-
 import { EventType, GlobalState } from '@/models/global-state';
 import { Attribute, Bid, Event, Listing, Phunk } from '@/models/db';
 
 import { createClient } from '@supabase/supabase-js'
 
-import { Observable, of, BehaviorSubject, from, forkJoin, firstValueFrom, EMPTY, fromEvent, timer } from 'rxjs';
+import { Observable, of, BehaviorSubject, from, forkJoin, firstValueFrom, EMPTY, timer } from 'rxjs';
 import { catchError, expand, map, reduce, switchMap, takeWhile, tap } from 'rxjs/operators';
 
 import { NgForage } from 'ngforage';
@@ -23,7 +21,6 @@ import * as dataStateActions from '@/state/actions/data-state.actions';
 import * as appStateActions from '@/state/actions/app-state.actions';
 
 import { MarketState } from '@/models/market.state';
-import { DOCUMENT } from '@angular/common';
 
 const supabaseUrl = environment.supabaseUrl;
 const supabaseKey = environment.supabaseKey;
@@ -46,16 +43,14 @@ export class DataService {
   private currentFloor = new BehaviorSubject<number>(0);
   currentFloor$ = this.currentFloor.asObservable();
 
-  filterData = filterData;
-
   attributes!: any;
 
   walletAddress$ = this.store.select(state => state.appState.walletAddress);
 
   constructor(
+    @Inject(Web3Service) private web3Svc: Web3Service,
     private store: Store<GlobalState>,
     private http: HttpClient,
-    private web3Svc: Web3Service,
     private ngForage: NgForage,
   ) {
 
@@ -478,10 +473,12 @@ export class DataService {
             ...res,
             listing: listing?.listedBy.toLowerCase() === res.prevOwner?.toLowerCase() ? listing : null,
             consensus: consensus?.consensus,
-            attributes: [ ...(res.attributes || []) ].sort((a: Attribute, b: Attribute) => {
-              if (a.k === "Sex") return -1;
-              if (b.k === "Sex") return 1;
-              return 0;
+            attributes: [ ...(res.attributes || []) ]
+              .filter((a: Attribute) => typeof a.v !== 'number')
+              .sort((a: Attribute, b: Attribute) => {
+                if (a.k === "Sex" || a.k === "Type") return -1;
+                if (b.k === "Sex" || b.k === "Type") return 1;
+                return 0;
             }),
           };
 
@@ -663,32 +660,51 @@ export class DataService {
     );
   }
 
+  async checkIsBanned(address: string): Promise<boolean> {
+    if (!address) return false;
+
+    const { data, error } = await supabase
+      .from('buyBans' + this.prefix)
+      .select('*')
+      .eq('id', address.toLowerCase());
+
+    if (!data) return false;
+    return data?.length > 0;
+  }
+
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   // COLLECTIONS ///////////////////////////////////////////////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   fetchCollections(previewLimit = 10): Observable<any[]> {
-    const query = supabase
+    const devMode = environment.production === false;
+
+    let query = supabase
       .from('collections' + this.prefix)
       .select('*')
-      .order('id', { ascending: false })
-      .eq('active', true);
+      .order('id', { ascending: false });
+
+    if (!devMode) query = query.eq('active', true);
+
+    let params: any = { preview_limit: previewLimit };
+    if (!devMode) params.show_inactive = true;
 
     const queryWithPrevs = supabase
       .rpc(
         'fetch_collections_with_previews' + this.prefix,
-        { preview_limit: previewLimit }
+        params
       );
 
     return from(query).pipe(
       switchMap((res) => {
         return from(queryWithPrevs).pipe(
           map((withPrevs) => {
+            console.log({res, withPrevs});
             const collections = res.data as any[];
             const withPreviews = withPrevs.data.map((item: any) => item.ethscription);
 
             for (let i = 0; i < collections.length; i++) {
-              collections[i].previews = withPreviews.find((p: any) => p.slug === collections[i].slug).previews;
+              collections[i].previews = withPreviews.find((p: any) => p.slug === collections[i].slug)?.previews;
             }
 
             return collections;
@@ -699,7 +715,7 @@ export class DataService {
     );
   }
 
-  fetchStats(slug: string, days: number = 7): Observable<any> {
+  fetchStats(slug: string, days: number = 30): Observable<any> {
 
     const endDate = new Date();
     const startDate = new Date(endDate);
@@ -717,7 +733,7 @@ export class DataService {
   }
 
   fetchAllWithPagination(
-    slug: string = 'ethereum-phunks',
+    slug: string,
     fromNum: number,
     toNum: number,
     filters?: any,

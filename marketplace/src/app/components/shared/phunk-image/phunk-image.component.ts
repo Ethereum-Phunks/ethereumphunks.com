@@ -106,9 +106,13 @@ export class PhunkImageComponent {
 
   async getPhunkByHashId(hashId: string): Promise<any> {
     const tx = await this.web3Svc.getTransactionL1(hashId);
-    // console.log(tx);
-    this.phunkImgSrc = hexToString(tx.input);
-    // console.log(tx.input, hexToString(tx.input))
+    const isDevMode = environment.chainId === 11155111;
+
+    if (isDevMode && hexToString(tx.input).startsWith('data:application/phunky')) {
+      this.getPhunkBySha(hexToString(tx.input).split(',')[1]);
+    } else {
+      this.phunkImgSrc = hexToString(tx.input);
+    }
   }
 
   decodeDataURI(dataURI: string): DecodedData {

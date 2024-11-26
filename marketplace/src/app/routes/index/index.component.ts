@@ -12,9 +12,7 @@ import { RecentActivityComponent } from '@/components/recent-activity/recent-act
 import { SplashComponent } from '@/components/splash/splash.component';
 import { BrbComponent } from '@/components/brb/brb.component';
 
-import { WeiToEthPipe } from '@/pipes/wei-to-eth.pipe';
 import { CalcPipe } from '@/pipes/calculate.pipe';
-import { TokenIdParsePipe } from '@/pipes/token-id-parse.pipe';
 
 import { DataService } from '@/services/data.service';
 import { ThemeService } from '@/services/theme.service';
@@ -24,8 +22,6 @@ import { GlobalState } from '@/models/global-state';
 import * as dataStateSelectors from '@/state/selectors/data-state.selectors';
 import * as appStateSelectors from '@/state/selectors/app-state.selectors';
 import * as marketStateSelectors from '@/state/selectors/market-state.selectors';
-
-import { filter, tap } from 'rxjs';
 
 @Component({
   standalone: true,
@@ -41,9 +37,7 @@ import { filter, tap } from 'rxjs';
     RecentActivityComponent,
     BrbComponent,
 
-    WeiToEthPipe,
     CalcPipe,
-    TokenIdParsePipe
   ],
   selector: 'app-index',
   templateUrl: './index.component.html',

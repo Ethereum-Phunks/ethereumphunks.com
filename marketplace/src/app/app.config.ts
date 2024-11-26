@@ -28,7 +28,7 @@ import { ChatEffects } from '@/state/effects/chat.effects';
 import { TokenIdParsePipe } from '@/pipes/token-id-parse.pipe';
 import { WeiToEthPipe } from '@/pipes/wei-to-eth.pipe';
 
-import { routes } from '@/routes';
+import { routes } from '@/routes/routes';
 
 export const config = {
   providers: [
