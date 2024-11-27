@@ -687,7 +687,7 @@ export class DataService {
     if (!devMode) query = query.eq('active', true);
 
     let params: any = { preview_limit: previewLimit };
-    if (!devMode) params.show_inactive = true;
+    if (devMode) params.show_inactive = true;
 
     const queryWithPrevs = supabase
       .rpc(

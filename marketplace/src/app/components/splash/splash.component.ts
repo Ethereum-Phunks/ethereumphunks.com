@@ -232,31 +232,56 @@ export class SplashComponent implements OnChanges {
   stripColors(node: INode): INode {
     const colorMap: Record<string, number> = {};
 
+    // Get image dimensions from viewBox attribute
+    const viewBox = node.attributes?.viewBox?.split(' ') || [];
+    const width = parseInt(viewBox[2]) || 0;
+    const height = parseInt(viewBox[3]) || 0;
+
+    const backgroundColors = node.children.filter((child) => child.attributes.x === '0');
+    const filters = [
+      ...new Set(backgroundColors.map((child) => child.attributes.fill)),
+      ...[
+        // Phunks
+        '#ffffffff', // White
+        '#ead9d9ff', // Albino Skin Tone
+        '#dbb180ff', // Light Skin Tone
+        '#ae8b61ff', // Mid Skin Tone
+        '#713f1dff', // Dark Skin Tone
+        '#7da269ff', // Zombie Skin Tone
+        '#352410ff', // Ape Skin Tone
+        '#c8fbfbff', // Alien Skin Tone
+
+        // Dystophunks
+        '#dbb180ff', // Light Skin Tone
+        '#ead9d9ff', // Pink
+        '#73aa57ff', // Zombie Skin Tone
+        '#cba68cff', // Skin Tone
+        '#c3ff01ff', // Yellow/Green
+
+        // Mingos
+        '#79a4f9ff', // Mingos background
+        '#78a4f9ff', // Mingos background
+        '#78a4f8ff', // Mingos background
+        '#79a5f8ff', // Mingos background
+        '#78a5f9ff', // Mingos background
+        '#78a5f8ff', // Mingos background
+        '#79a4f8ff', // Mingos background
+        '#79a5f9ff', // Mingos background
+        '#648596ff', // Mingos background
+      ]
+    ];
+    console.log({width, height, backgroundColors, filters});
+
     for (const child of node.children) {
       if (child.name === 'rect' && child.attributes?.fill) {
         const color = tinycolor(child.attributes.fill);
         const alpha = (tinycolor(color).getBrightness() / 255);
         const opaque = tinycolor({ r: 0, g: 0, b: 0, a: (1 - alpha) });
 
-        // console.log({color, alpha});
-
-        const filter = [
-          '#ffffffff', // White
-          '#ead9d9ff', // Albino Skin Tone
-          '#dbb180ff', // Light Skin Tone
-          '#ae8b61ff', // Mid Skin Tone
-          '#713f1dff', // Dark Skin Tone
-          '#7da269ff', // Zombie Skin Tone
-          '#352410ff', // Ape Skin Tone
-          '#c8fbfbff', // Alien Skin Tone
-
-          '#79a4f9ff', // Mingos background
-        ];
-
         colorMap[child.attributes.fill] = (colorMap[child.attributes.fill] || 0) + 1;
 
         // Remove Skin Tone
-        if (filter.indexOf(child.attributes.fill) > -1) child.attributes.fill = '#00000000';
+        if (filters.indexOf(child.attributes.fill) > -1) child.attributes.fill = '#00000000';
         // Remove Transparent
         else if (child.attributes.fill === '#000000ff') continue;
         else child.attributes.fill = opaque.toString('hex8');
