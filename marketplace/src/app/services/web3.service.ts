@@ -120,6 +120,10 @@ export class Web3Service {
     this.startPointsWatcher();
   }
 
+  /**
+   * Creates and initializes Web3 event listeners for account changes and blockchain events
+   * @returns Promise that resolves when listeners are set up
+   */
   async createListeners(): Promise<void> {
 
     this.connectedState = new Observable((observer) => watchAccount(this.config, {
@@ -141,6 +145,10 @@ export class Web3Service {
     await reconnect(this.config);
   }
 
+  /**
+   * Starts watching for new blocks on the L1 chain
+   * Updates the current block number in the store when new blocks arrive
+   */
   blockWatcher!: WatchBlockNumberReturnType | undefined;
   startBlockWatcher(): void {
     if (this.blockWatcher) return;
@@ -153,6 +161,10 @@ export class Web3Service {
     });
   }
 
+  /**
+   * Starts watching for points-related events from the Points contract
+   * Dispatches store actions when points are added or multipliers change
+   */
   pointsWatcher!: WatchContractEventReturnType | undefined;
   startPointsWatcher(): void {
     if (this.pointsWatcher) return;
@@ -169,6 +181,10 @@ export class Web3Service {
     });
   }
 
+  /**
+   * Opens the Web3Modal for wallet connection
+   * @throws Error if connection fails
+   */
   async connect(): Promise<void> {
     try {
       await this.modal.open();
@@ -178,6 +194,10 @@ export class Web3Service {
     }
   }
 
+  /**
+   * Disconnects the currently connected Web3 wallet
+   * Clears wallet address and connection state from store
+   */
   async disconnectWeb3(): Promise<void> {
     if (getAccount(this.config).isConnected) {
       await disconnect(this.config);
@@ -186,6 +206,10 @@ export class Web3Service {
     }
   }
 
+  /**
+   * Switches the connected wallet to the specified network
+   * @param l Network to switch to - 'l1' for mainnet/testnet or 'l2' for Magma
+   */
   async switchNetwork(l: 'l1' | 'l2' = 'l1'): Promise<void> {
     const walletClient = await getWalletClient(this.config);
     const chainId = getChainId(this.config);
@@ -200,10 +224,19 @@ export class Web3Service {
     }
   }
 
+  /**
+   * Gets the active wallet client
+   * @returns Promise resolving to the wallet client instance
+   */
   async getActiveWalletClient(): Promise<GetWalletClientReturnType> {
     return await getWalletClient(this.config);
   }
 
+  /**
+   * Checks if an address has any pending withdrawals
+   * @param address The address to check for withdrawals
+   * @returns Promise resolving to the total pending withdrawal amount as a bigint
+   */
   async checkHasWithdrawal(address: string): Promise<bigint> {
     const pendingWithdrawals = await this.readMarketContract('pendingWithdrawals', [address]);
     const pendingWithdrawalsV2 = await this.readMarketContract('pendingWithdrawalsV2', [address]);
@@ -211,6 +244,10 @@ export class Web3Service {
     return (pendingWithdrawals || BigInt(0)) + (pendingWithdrawalsV2 || BigInt(0));
   }
 
+  /**
+   * Checks if the marketplace contract is currently paused
+   * @returns Promise resolving to true if paused, false otherwise
+   */
   async checkContractPaused(): Promise<boolean> {
     const paused = await this.readMarketContract('paused', []);
     return paused;
@@ -220,6 +257,11 @@ export class Web3Service {
   // L1 CONTRACT METHODS ///////////////////////////////////////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+  /**
+   * Checks if a token is currently in escrow
+   * @param tokenId The token ID to check
+   * @returns Promise resolving to true if token is in escrow, false otherwise
+   */
   async isInEscrow(tokenId: string): Promise<boolean> {
     const address = getAccount(this.config).address;
     if (!address) return false;
@@ -228,23 +270,46 @@ export class Web3Service {
     return !!isInEscrow;
   }
 
+  /**
+   * Sends an ethscription to the marketplace contract
+   * @param tokenId The token ID to send
+   * @returns Promise resolving to the transaction hash if successful
+   * @throws Error if token is already in escrow
+   */
   async sendEthscriptionToContract(tokenId: string): Promise<string | undefined> {
     const escrowed = await this.isInEscrow(tokenId);
     if (escrowed) throw new Error('Phunk already in escrow');
     return await this.transferPhunk(tokenId, marketAddress as `0x${string}`);
   }
 
+  /**
+   * Withdraws a phunk from escrow
+   * @param hashId The hash ID of the phunk to withdraw
+   * @returns Promise resolving to the transaction hash if successful
+   * @throws Error if phunk is not in escrow
+   */
   async withdrawPhunk(hashId: string): Promise<string | undefined> {
     const escrowed = await this.isInEscrow(hashId);
     if (!escrowed) throw new Error('Phunk not in escrow');
     return await this.writeMarketContract('withdrawPhunk', [hashId]);
   }
 
+  /**
+   * Withdraws multiple phunks from escrow in a single transaction
+   * @param hashIds Array of hash IDs to withdraw
+   * @returns Promise resolving to the transaction hash if successful
+   * @throws Error if no phunks are selected
+   */
   async withdrawBatch(hashIds: string[]): Promise<string | undefined> {
     if (!hashIds.length) throw new Error('No phunks selected');
     return await this.writeMarketContract('withdrawBatchPhunks', [hashIds]);
   }
 
+  /**
+   * Decodes input data from a transaction
+   * @param data The transaction input data to decode
+   * @returns Promise resolving to the decoded function data
+   */
   async decodeInputData(data: string): Promise<any> {
     const decoded = decodeFunctionData({
       abi: EtherPhunksMarketABI,
@@ -253,6 +318,14 @@ export class Web3Service {
     return decoded;
   }
 
+  /**
+   * Executes a write operation on the marketplace contract
+   * @param functionName The name of the function to call
+   * @param args The arguments to pass to the function
+   * @param value Optional value in wei to send with the transaction
+   * @returns Promise resolving to the transaction hash if successful
+   * @throws Error if no public client or in maintenance mode
+   */
   async writeMarketContract(
     functionName: string,
     args: any[],
@@ -283,6 +356,12 @@ export class Web3Service {
     return await walletClient?.writeContract(request);
   }
 
+  /**
+   * Reads data from the marketplace contract
+   * @param functionName The name of the function to call
+   * @param args The arguments to pass to the function
+   * @returns Promise resolving to the function result or null if error
+   */
   async readMarketContract(functionName: any, args: (string | undefined)[]): Promise<any | null> {
     try {
       const call: any = await this.l1Client.readContract({
@@ -298,6 +377,12 @@ export class Web3Service {
     }
   }
 
+  /**
+   * Waits for a transaction to be mined and returns the receipt
+   * @param hash The transaction hash to wait for
+   * @returns Promise resolving to the transaction receipt
+   * @throws Error if no public client
+   */
   async waitForTransaction(hash: string): Promise<TransactionReceipt> {
     const chainId = getChainId(this.config);
     const publicClient = getPublicClient(this.config, { chainId });
@@ -306,6 +391,14 @@ export class Web3Service {
     return transaction;
   }
 
+  /**
+   * Lists a phunk for sale
+   * @param hashId The hash ID of the phunk to list
+   * @param value The price in ETH
+   * @param toAddress Optional specific address that can buy the phunk
+   * @returns Promise resolving to the transaction hash if successful
+   * @throws Error if toAddress is invalid
+   */
   async offerPhunkForSale(
     hashId: string,
     value: number,
@@ -327,6 +420,13 @@ export class Web3Service {
     );
   }
 
+  /**
+   * Escrows and lists a phunk for sale in one transaction
+   * @param hashId The hash ID of the phunk
+   * @param value The price in ETH
+   * @param toAddress The address that can buy the phunk (defaults to zero address)
+   * @returns Promise resolving to the transaction hash if successful
+   */
   async escrowAndOfferPhunkForSale(
     hashId: string,
     value: number,
@@ -343,11 +443,23 @@ export class Web3Service {
     return await this.batchTransferPhunks([hashId, sig, bytes32Value, toAddress], marketAddress);
   }
 
+  /**
+   * Lists multiple phunks for sale in one transaction
+   * @param hashIds Array of hash IDs to list
+   * @param listPrices Array of prices in ETH corresponding to each hash ID
+   * @returns Promise resolving to the transaction hash if successful
+   */
   async batchOfferPhunkForSale(hashIds: string[], listPrices: number[]): Promise<string | undefined> {
     const weiValues = listPrices.map((price) => this.ethToWei(price));
     return this.writeMarketContract('batchOfferPhunkForSale', [hashIds, weiValues]);
   }
 
+  /**
+   * Buys multiple phunks in one transaction
+   * @param phunks Array of Phunk objects to buy
+   * @returns Promise resolving to the transaction hash if successful
+   * @throws Error if user is banned or no phunks are selected
+   */
   async batchBuyPhunks(
     phunks: Phunk[]
   ): Promise<string | undefined> {
@@ -392,10 +504,22 @@ export class Web3Service {
     );
   }
 
+  /**
+   * Cancels a phunk listing
+   * @param hashId The hash ID of the phunk to delist
+   * @returns Promise resolving to the transaction hash if successful
+   */
   async phunkNoLongerForSale(hashId: string): Promise<string | undefined> {
     return this.writeMarketContract('phunkNoLongerForSale', [hashId]);
   }
 
+  /**
+   * Transfers a phunk to another address
+   * @param hashId The hash ID of the phunk to transfer
+   * @param toAddress The recipient address
+   * @returns Promise resolving to the transaction hash if successful
+   * @throws Error if no phunk selected or no address provided
+   */
   async transferPhunk(hashId: string, toAddress: string): Promise<string | undefined> {
     if (!hashId) throw new Error('No phunk selected');
     if (!toAddress) throw new Error('No address provided');
@@ -414,6 +538,13 @@ export class Web3Service {
     return wallet?.sendTransaction(req);
   }
 
+  /**
+   * Transfers multiple phunks in one transaction
+   * @param hashIds Array of hash IDs to transfer
+   * @param toAddress The recipient address
+   * @returns Promise resolving to the transaction hash if successful
+   * @throws Error if no phunks selected or no address provided
+   */
   async batchTransferPhunks(hashIds: string[], toAddress: string | null): Promise<string | undefined> {
     if (!hashIds.length) throw new Error('No phunks selected');
     if (!toAddress) throw new Error('No address provided');
@@ -421,6 +552,12 @@ export class Web3Service {
     return await this.transferPhunk(`0x${hash}`, toAddress);
   }
 
+  /**
+   * Locks a phunk in the bridge contract
+   * @param hexArr Array of hex values for the lock transaction
+   * @returns Promise resolving to the transaction hash if successful
+   * @throws Error if no phunk selected
+   */
   async lockPhunk(hexArr: string[]): Promise<string | undefined> {
     if (!hexArr.length) throw new Error('No phunk selected');
     await this.switchNetwork();
@@ -442,12 +579,21 @@ export class Web3Service {
     return wallet?.sendTransaction(req);
   }
 
+  /**
+   * Withdraws accumulated ETH from sales
+   * @returns Promise resolving to the remaining withdrawal balance
+   */
   async withdraw(): Promise<any> {
     const hash = await this.writeMarketContract('withdraw', []);
     const receipt = await this.waitForTransaction(hash!);
     return await this.checkHasWithdrawal(receipt.from);
   }
 
+  /**
+   * Gets the points balance for a user
+   * @param address The address to check points for
+   * @returns Promise resolving to the points balance as a number
+   */
   async getUserPoints(address: string): Promise<number> {
     const points = await this.l1Client.readContract({
       address: pointsAddress as `0x${string}`,
@@ -458,6 +604,10 @@ export class Web3Service {
     return Number(points);
   }
 
+  /**
+   * Gets the current points multiplier
+   * @returns Promise resolving to the current multiplier value
+   */
   async getMultiplier(): Promise<any> {
     const multiplier = await this.l1Client.readContract({
       address: pointsAddress as `0x${string}`,
@@ -472,7 +622,7 @@ export class Web3Service {
    * Fetches on-chain escrow and listing information for a given previous owner and hash ID.
    * @param prevOwner The previous owner's address.
    * @param hashId The hash ID of the item.
-   * @returns A Promise that resolves to the escrow and listing information.
+   * @returns Promise resolving to the escrow and listing information.
    */
   async fetchEscrowAndListing(prevOwner: string, hashId: string): Promise<any> {
     const contract = {
@@ -498,7 +648,7 @@ export class Web3Service {
   /**
    * Fetches multiple on-chain escrow and listing information for an array of Phunks.
    * @param phunks - An array of Phunks for which to fetch the information.
-   * @returns A Promise that resolves to an object containing the combined escrow and listing information.
+   * @returns Promise resolving to an object containing the combined escrow and listing information.
    */
   async fetchMultipleEscrowAndListing(phunks: Phunk[]): Promise<any> {
     const contract = {
@@ -540,6 +690,11 @@ export class Web3Service {
   // L2 CONTRACT METHODS ///////////////////////////////////////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+  /**
+   * Fetches the sale offer details for a phunk on L2
+   * @param hashId The hash ID of the phunk to check
+   * @returns Promise resolving to the offer details, or null if error
+   */
   async phunksOfferedForSaleL2(hashId: string): Promise<any> {
     try {
       const tokenId = await this.readTokenContractL2('hashToToken', [hashId]);
@@ -551,6 +706,14 @@ export class Web3Service {
     }
   }
 
+  /**
+   * Lists a phunk for sale on L2
+   * @param hashId The hash ID of the phunk to list
+   * @param value The sale price in ETH
+   * @param address Optional specific address to sell to
+   * @returns Promise resolving to the transaction hash if successful
+   * @throws Error if address is invalid
+   */
   async offerPhunkForSaleL2(
     hashId: string,
     value: number,
@@ -577,6 +740,12 @@ export class Web3Service {
     }
   }
 
+  /**
+   * Purchases a phunk listed for sale on L2
+   * @param hashId The hash ID of the phunk to buy
+   * @returns Promise resolving to the transaction hash if successful
+   * @throws Error if phunk is not for sale
+   */
   async buyPhunkL2(hashId: string): Promise<string | undefined> {
     const tokenId = await this.readTokenContractL2('hashToToken', [hashId]);
     const offer = await this.readMarketContractL2('phunksOfferedForSale', [tokenId]);
@@ -589,11 +758,24 @@ export class Web3Service {
     return this.writeMarketContractL2('buyPhunk', [tokenId], value);
   }
 
+  /**
+   * Cancels a phunk listing on L2
+   * @param hashId The hash ID of the phunk listing to cancel
+   * @returns Promise resolving to the transaction hash if successful
+   */
   async phunkNoLongerForSaleL2(hashId: string): Promise<string | undefined> {
     const tokenId = await this.readTokenContractL2('hashToToken', [hashId]);
     return this.writeMarketContractL2('phunkNoLongerForSale', [tokenId]);
   }
 
+  /**
+   * Executes a write operation on the L2 marketplace contract
+   * @param functionName The name of the contract function to call
+   * @param args The arguments to pass to the function
+   * @param value Optional value in wei to send with the transaction
+   * @returns Promise resolving to the transaction hash if successful
+   * @throws Error if contract is paused or in maintenance mode
+   */
   async writeMarketContractL2(
     functionName: string,
     args: any[],
@@ -624,6 +806,14 @@ export class Web3Service {
     return await walletClient?.writeContract(request);
   }
 
+  /**
+   * Executes a write operation on the L2 token contract
+   * @param functionName The name of the contract function to call
+   * @param args The arguments to pass to the function
+   * @param value Optional value in wei to send with the transaction
+   * @returns Promise resolving to the transaction hash if successful
+   * @throws Error if contract is paused or in maintenance mode
+   */
   async writeTokenContractL2(
     functionName: string,
     args: any[],
@@ -654,6 +844,12 @@ export class Web3Service {
     return await walletClient?.writeContract(request);
   }
 
+  /**
+   * Reads data from the L2 marketplace contract
+   * @param functionName The name of the contract function to call
+   * @param args The arguments to pass to the function
+   * @returns Promise resolving to the function result
+   */
   async readMarketContractL2(functionName: any, args: (string | undefined)[]): Promise<any> {
     // console.log('l2client', this.l2Client);
     if (!this.l2Client?.chain) return null;
@@ -667,6 +863,12 @@ export class Web3Service {
     return call;
   }
 
+  /**
+   * Reads data from the L2 token contract
+   * @param functionName The name of the contract function to call
+   * @param args The arguments to pass to the function
+   * @returns Promise resolving to the function result
+   */
   async readTokenContractL2(functionName: any, args: (string | undefined)[]): Promise<any> {
     // console.log('l2client', this.l2Client);
     if (!this.l2Client?.chain) return null;
@@ -684,16 +886,31 @@ export class Web3Service {
   // TXNS //////////////////////////
   //////////////////////////////////
 
+  /**
+   * Gets transaction details for a transaction on L1
+   * @param hash The transaction hash to look up
+   * @returns Promise resolving to the transaction details
+   */
   async getTransactionL1(hash: string): Promise<any> {
     const transaction = await this.l1Client.getTransaction({ hash: hash as `0x${string}` });
     return transaction;
   }
 
+  /**
+   * Gets the transaction receipt for a transaction on L1
+   * @param hash The transaction hash to get the receipt for
+   * @returns Promise resolving to the transaction receipt if found
+   */
   async getTransactionReceiptL1(hash: string): Promise<TransactionReceipt | undefined> {
     const receipt = await this.l1Client.getTransactionReceipt({ hash: hash as `0x${string}` });
     return receipt;
   }
 
+  /**
+   * Continuously polls for a transaction receipt until it is found
+   * @param hash The transaction hash to poll for
+   * @returns Promise resolving to the transaction receipt once found
+   */
   pollReceipt(hash: string): Promise<TransactionReceipt> {
     let resolved = false;
     return new Promise(async (resolve, reject) => {
@@ -716,24 +933,47 @@ export class Web3Service {
   // UTILS /////////////////////////
   //////////////////////////////////
 
+  /**
+   * Gets the currently connected wallet address
+   * @returns Promise resolving to the connected address or undefined if not connected
+   */
   async getCurrentAddress(): Promise<`0x${string}` | undefined> {
     const account = getAccount(this.config);
     return account.address;
   }
 
+  /**
+   * Gets the current block number on L1
+   * @returns Promise resolving to the current block number
+   */
   async getCurrentBlockL1(): Promise<number> {
     const blockNum = await this.l1Client.getBlockNumber();
     return Number(blockNum);
   }
 
+  /**
+   * Converts ETH amount to Wei
+   * @param eth Amount in ETH to convert
+   * @returns The amount in Wei as a bigint
+   */
   ethToWei(eth: number): bigint {
     return parseEther(`${eth}`, 'wei');
   }
 
+  /**
+   * Converts Wei amount to ETH
+   * @param wei Amount in Wei to convert
+   * @returns The amount in ETH as a string
+   */
   weiToEth(wei: any): string {
     return formatEther(wei);
   }
 
+  /**
+   * Verifies if a string is a valid Ethereum address or ENS name
+   * @param address The address or ENS name to verify
+   * @returns Promise resolving to the verified address or null if invalid
+   */
   async verifyAddressOrEns(address: string | null): Promise<string | null> {
     try {
       if (!address) throw new Error('No address provided');
@@ -755,6 +995,11 @@ export class Web3Service {
     }
   }
 
+  /**
+   * Verifies if a string is a valid Ethereum address
+   * @param address The address to verify
+   * @returns The lowercase address if valid, null if invalid
+   */
   verifyAddress(address: string | null): string | null {
     if (!address) return null;
     const valid = isAddress(address);
@@ -762,10 +1007,20 @@ export class Web3Service {
     return null;
   }
 
+  /**
+   * Gets the Ethereum address associated with an ENS name
+   * @param name The ENS name to lookup
+   * @returns Promise resolving to the associated address
+   */
   async getEnsOwner(name: string) {
     return await this.l1Client.getEnsAddress({ name });
   }
 
+  /**
+   * Gets the ENS name associated with an Ethereum address
+   * @param address The address to lookup
+   * @returns Promise resolving to the associated ENS name or null if not found
+   */
   async getEnsFromAddress(address: string | null | undefined): Promise<string | null> {
     if (!address) return null;
     try {
@@ -775,6 +1030,11 @@ export class Web3Service {
     }
   }
 
+  /**
+   * Gets the avatar associated with an ENS name
+   * @param name The ENS name to lookup
+   * @returns Promise resolving to the avatar URL or null if not found
+   */
   async getEnsAvatar(name: string): Promise<string | null> {
     if (!name) return null;
     return await this.l1Client.getEnsAvatar({ name });

@@ -55,7 +55,7 @@ export class DataStateEffects {
         map((slug) => {
           const coll = action.collections.find((c) => c.slug === slug);
           const activeCollection = { ...coll! };
-          console.log({ slug, coll, activeCollection });
+          // console.log({ slug, coll, activeCollection });
           return dataStateActions.setActiveCollection({ activeCollection });
         })
       );
@@ -109,7 +109,7 @@ export class DataStateEffects {
 
   fetchLeaderboard$ = createEffect(() => this.actions$.pipe(
     ofType(dataStateActions.fetchLeaderboard),
-    tap(() => console.log('fetchLeaderboard')),
+    // tap(() => console.log('fetchLeaderboard')),
     switchMap(() => this.dataSvc.fetchLeaderboard()),
     map((leaderboard) => dataStateActions.setLeaderboard({ leaderboard })),
   ));

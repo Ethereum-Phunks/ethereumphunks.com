@@ -41,7 +41,7 @@ export class SplashComponent implements OnChanges {
     private http: HttpClient
   ) {
     effect(async () => {
-      console.log('effect', this.collection(), this.collectionPrev())
+      // console.log('effect', this.collection(), this.collectionPrev())
       if (!this.collection()) return;
       this.images.set(await this.getPixelsFromPng());
     })
@@ -270,7 +270,7 @@ export class SplashComponent implements OnChanges {
         '#648596ff', // Mingos background
       ]
     ];
-    console.log({width, height, backgroundColors, filters});
+    // console.log({width, height, backgroundColors, filters});
 
     for (const child of node.children) {
       if (child.name === 'rect' && child.attributes?.fill) {

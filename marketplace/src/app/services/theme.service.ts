@@ -3,11 +3,18 @@ import { Inject, Injectable } from '@angular/core';
 
 import { Theme, ThemeProperties, ThemeStyles } from '@/models/theme';
 
+/**
+ * Service for managing application themes and styles
+ */
 @Injectable({
   providedIn: 'root'
 })
 export class ThemeService {
 
+  /**
+   * Theme style configurations for dark and light modes
+   * Contains color variables and other theme properties
+   */
   themeStyles: ThemeStyles = {
     dark: {
       label: 'Dark',
@@ -39,6 +46,10 @@ export class ThemeService {
     }
   }
 
+  /**
+   * Initializes theme service and sets up system theme change listener
+   * @param document Injected Document object for DOM manipulation
+   */
   constructor(
     @Inject(DOCUMENT) private document: Document
   ) {
@@ -47,6 +58,10 @@ export class ThemeService {
     });
   }
 
+  /**
+   * Applies theme styles to the document
+   * @param theme Theme to apply ('dark' or 'light')
+   */
   setThemeStyles(theme: Theme) {
     const themeStyles = this.themeStyles[theme as keyof ThemeStyles];
     Object.keys(themeStyles).map((property: string) => {
@@ -59,6 +74,10 @@ export class ThemeService {
     localStorage.setItem('EtherPhunks_theme', theme);
   }
 
+  /**
+   * Gets the initial theme based on stored preference or system setting
+   * @returns Theme to use initially ('dark' or 'light')
+   */
   getInitialTheme(): Theme {
     let mode = localStorage.getItem('EtherPhunks_theme') as Theme | undefined;
     if (mode) return mode;

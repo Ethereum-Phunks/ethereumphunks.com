@@ -72,7 +72,7 @@ export class MarketStateEffects {
     switchMap(([action, marketType, marketSlug, queryAddress]) => {
       // Likely exited market route so we clear some state
 
-      console.log({ action, marketType, marketSlug, queryAddress });
+      // console.log({ action, marketType, marketSlug, queryAddress });
 
       if (!marketType) {
         this.store.dispatch(marketStateActions.clearActiveMarketRouteData());

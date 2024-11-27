@@ -53,14 +53,16 @@ export class DataService {
     private http: HttpClient,
     private ngForage: NgForage,
   ) {
-
+    // Initialize listeners and data fetching
     this.listenEvents();
     this.listenForBlocks();
     this.listenGlobalConfig();
-
     this.fetchUSDPrice();
   }
 
+  /**
+   * Sets up real-time listener for events from Supabase
+   */
   listenEvents() {
     supabase
       .channel('events')
@@ -72,15 +74,15 @@ export class DataService {
           table: 'events' + this.prefix
         },
         (payload) => {
-          // console.log({payload});
           if (!payload) return;
           this.store.dispatch(dataStateActions.dbEventTriggered({ payload }));
         },
-      ).subscribe((status) => {
-        // console.log('Channel status:', status);
-      });
+      ).subscribe();
   }
 
+  /**
+   * Sets up real-time listener for global config changes
+   */
   listenGlobalConfig() {
     supabase
       .from('_global_config')
@@ -109,6 +111,9 @@ export class DataService {
       ).subscribe();
   }
 
+  /**
+   * Sets up real-time listener for new blocks
+   */
   listenForBlocks() {
     const blockQuery = supabase
       .from('blocks')
@@ -144,14 +149,20 @@ export class DataService {
       ).subscribe();
   }
 
+  /**
+   * Gets current floor price
+   */
   getFloor(): number {
     return this.currentFloor.getValue();
   }
 
+  /**
+   * Fetches attributes for a collection
+   * @param slug Collection slug
+   */
   getAttributes(slug: string): Observable<any> {
     return from(this.ngForage.getItem(`${slug}__attributes`)).pipe(
       switchMap((res: any) => {
-        // console.log('getAttributes', res);
         if (res) return of(res);
         return this.http.get(`${environment.staticUrl}/data/${slug}_attributes.json`).pipe(
           tap((res: any) => this.ngForage.setItem(`${slug}__attributes`, res)),
@@ -160,6 +171,11 @@ export class DataService {
     );
   }
 
+  /**
+   * Adds attributes to an array of Phunks
+   * @param slug Collection slug
+   * @param phunks Array of Phunks to add attributes to
+   */
   addAttributes(slug: string | undefined, phunks: Phunk[]): Observable<Phunk[]> {
     if (!phunks.length) return of(phunks);
     if (!slug) return of(phunks);
@@ -178,12 +194,15 @@ export class DataService {
   // OWNED /////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+  /**
+   * Fetches Phunks owned by an address
+   * @param address Owner address
+   * @param slug Collection slug
+   */
   fetchOwned(
     address: string,
     slug: string | undefined,
   ): Observable<Phunk[]> {
-    // console.log('fetchOwned', {address, slug});
-
     if (!address) return of([]);
     address = address.toLowerCase();
 
@@ -192,11 +211,9 @@ export class DataService {
       { address, collection_slug: slug }
     );
     return from(query).pipe(
-      // tap((res) => console.log('fetchOwned', res)),
       map((res: any) => res.data),
       map((res: any[]) => res.map((item: any) => {
         const ethscription = item.ethscription;
-        // console.log('fetchOwned', ethscription);
         return {
           ...ethscription.phunk,
           listing: ethscription.listing ? ethscription.listing[0] : null,
@@ -214,6 +231,11 @@ export class DataService {
     ) as Observable<Phunk[]>;
   }
 
+  /**
+   * Fetches missed events for an address from a specific block
+   * @param address User address
+   * @param fromBlock Starting block number
+   */
   fetchMissedEvents(address: string, fromBlock: number): Observable<Event[]> {
     address = address.toLowerCase();
 
@@ -237,7 +259,6 @@ export class DataService {
           ...collection,
         };
       })),
-      // tap((res) => console.log('fetchMissedEvents', res[0])),
     );
   }
 
@@ -245,6 +266,10 @@ export class DataService {
   // MARKET DATA ///////////////////////////////////////////////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+  /**
+   * Fetches market data for a collection
+   * @param slug Collection slug
+   */
   fetchMarketData(slug: string): Observable<Phunk[]> {
     if (!slug) return of([]);
     return from(
@@ -269,6 +294,12 @@ export class DataService {
   // EVENTS ////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+  /**
+   * Fetches events with optional filters
+   * @param limit Number of events to fetch
+   * @param type Event type filter
+   * @param slug Collection slug filter
+   */
   fetchEvents(
     limit: number,
     type?: EventType,
@@ -280,7 +311,6 @@ export class DataService {
       p_collection_slug: slug
     })).pipe(
       map((res: any) => {
-        // console.log('fetchEvents', res);
         const result = res.data.map((tx: any) => {
           let type = tx.type;
           if (type === 'transfer') {
@@ -291,10 +321,13 @@ export class DataService {
         });
         return result;
       }),
-      // tap((res) => console.log('fetchEvents', res)),
     );
   }
 
+  /**
+   * Fetches events for a single token
+   * @param hashId Token hash ID
+   */
   fetchSingleTokenEvents(hashId: string): Observable<(Event & { [key: string]: string })[]> {
     const response = supabase
       .from('events' + this.prefix)
@@ -330,6 +363,10 @@ export class DataService {
     );
   }
 
+  /**
+   * Fetches events for an unsupported token from Ethscriptions API
+   * @param hashId Token hash ID
+   */
   fetchUnsupportedTokenEvents(hashId: string): Observable<(Event & { [key: string]: string })[]> {
     const prefix = this.prefix.replace('_', '');
 
@@ -367,6 +404,12 @@ export class DataService {
     );
   }
 
+  /**
+   * Fetches events for a specific user
+   * @param address User address
+   * @param limit Number of events to fetch
+   * @param fromBlock Starting block number
+   */
   fetchUserEvents(
     address: string,
     limit: number,
@@ -388,6 +431,10 @@ export class DataService {
   // TOP SALES /////////////////////////////////////////////////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+  /**
+   * Fetches top sales
+   * @param limit Number of sales to fetch
+   */
   fetchTopSales(limit: number): Observable<any> {
     return of([]);
     // return this.apollo.watchQuery({
@@ -406,6 +453,10 @@ export class DataService {
   // SINGLE PHUNK //////////////////////////////////////////////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+  /**
+   * Gets hash ID from token ID
+   * @param tokenId Token ID
+   */
   async getHashIdFromTokenId(tokenId: string): Promise<string | null> {
     const query = supabase
       .from('ethscriptions' + this.prefix)
@@ -417,6 +468,10 @@ export class DataService {
     return null;
   }
 
+  /**
+   * Fetches data for a single Phunk
+   * @param tokenId Token ID
+   */
   fetchSinglePhunk(tokenId: string): Observable<Phunk> {
 
     const fetch = () => {
@@ -467,8 +522,6 @@ export class DataService {
           this.checkConsensus([res]),
         ])),
         map(([[res], listing, [consensus]]) => {
-          // console.log('fetchSinglePhunk::fetch', {res, listing, consensus});
-
           const phunk = {
             ...res,
             listing: listing?.listedBy.toLowerCase() === res.prevOwner?.toLowerCase() ? listing : null,
@@ -489,20 +542,20 @@ export class DataService {
 
     return timer(0, 5000).pipe(
       switchMap(() => fetch()),
-      // tap(phunk => console.log('Fetch complete at', new Date().toISOString(), 'Consensus:', phunk?.consensus)),
       takeWhile((phunk) => !phunk?.consensus, true)
     );
   }
 
+  /**
+   * Fetches data for an unsupported item
+   * @param hashId Token hash ID
+   */
   fetchUnsupportedItem(hashId: string): Observable<Phunk> {
     const prefix = this.prefix.replace('_', '');
 
     const baseUrl = `https://${prefix ? (prefix + '-') : ''}api-v2.ethscriptions.com`;
 
-    // api-v2.ethscriptions.com
-    // sepolia-api.ethscriptions.com
     return this.http.get<any>(`${baseUrl}/ethscriptions/${hashId}`).pipe(
-      // tap((res) => console.log('fetchUnsupportedItem', res)),
       map((res: any) => {
         const { result } = res;
         const item: Phunk = {
@@ -525,7 +578,6 @@ export class DataService {
         return item;
       }),
       catchError((err) => {
-        // console.log('fetchUnsupportedItem', err);
         return of({
           slug: '',
           hashId,
@@ -576,11 +628,14 @@ export class DataService {
     // loading: boolean
   }
 
+  /**
+   * Gets listing data for a token
+   * @param hashId Token hash ID
+   */
   async getListingFromHashId(hashId: string | undefined): Promise<Listing | null> {
     if (!hashId) return null;
 
     try {
-
       const [ callL1, callL2 ] = await Promise.all([
         this.web3Svc.readMarketContract('phunksOfferedForSale', [hashId]),
         this.web3Svc.phunksOfferedForSaleL2(hashId),
@@ -600,11 +655,14 @@ export class DataService {
 
       return listing;
     } catch (error) {
-      // console.log('getListingFromHashId', error);
       return null;
     }
   }
 
+  /**
+   * Checks consensus status for Phunks
+   * @param phunks Array of Phunks to check
+   */
   async checkConsensus(phunks: Phunk[]): Promise<Phunk[]> {
     if (!phunks.length) return [];
 
@@ -620,17 +678,13 @@ export class DataService {
       if (key) {
         params = params.set('page_key', key);
       }
-      return this.http.get<any>(`https://ethscriptions-api${prefix ? ('-' + prefix) : ''}.flooredape.io/ethscriptions`, { params }).pipe(
-        // tap((res: any) => { if (res) console.log('checkConsensus', res); }),
-      );
+      return this.http.get<any>(`https://ethscriptions-api${prefix ? ('-' + prefix) : ''}.flooredape.io/ethscriptions`, { params });
     };
 
     return await firstValueFrom(
       fetchPage().pipe(
-        // Use expand to recursively call fetchPage until there's no more data
         expand((res: any) => res.pagination.has_more ? fetchPage(res.pagination.page_key) : EMPTY),
         reduce((acc: any, res) => res ? [...acc, ...res.result] : acc, []),
-        // Map the final result to your structure
         map((res: any) => res.map((item: any) => {
           const phunk = phunks.find(p => p.hashId === item.transaction_hash);
           const consensus = !!phunk && phunk.owner === item.current_owner && (phunk.prevOwner === item.previous_owner || !phunk.prevOwner);
@@ -648,6 +702,10 @@ export class DataService {
   // CHECKS ////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+  /**
+   * Checks if addresses are holders
+   * @param addresses Array of addresses to check
+   */
   addressesAreHolders(addresses: string[]): Observable<any> {
     if (!addresses.length) return of([]);
 
@@ -655,11 +713,14 @@ export class DataService {
       .rpc('addresses_are_holders_sepolia', { addresses });
 
     return from(query).pipe(
-      // tap((res) => console.log(res)),
       map((res: any) => res.data),
     );
   }
 
+  /**
+   * Checks if an address is banned
+   * @param address Address to check
+   */
   async checkIsBanned(address: string): Promise<boolean> {
     if (!address) return false;
 
@@ -676,6 +737,10 @@ export class DataService {
   // COLLECTIONS ///////////////////////////////////////////////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+  /**
+   * Fetches collections with preview data
+   * @param previewLimit Number of preview items per collection
+   */
   fetchCollections(previewLimit = 10): Observable<any[]> {
     const devMode = environment.production === false;
 
@@ -699,7 +764,6 @@ export class DataService {
       switchMap((res) => {
         return from(queryWithPrevs).pipe(
           map((withPrevs) => {
-            console.log({res, withPrevs});
             const collections = res.data as any[];
             const withPreviews = withPrevs.data.map((item: any) => item.ethscription);
 
@@ -709,14 +773,17 @@ export class DataService {
 
             return collections;
           })
-
         )
       }),
     );
   }
 
+  /**
+   * Fetches stats for a collection
+   * @param slug Collection slug
+   * @param days Number of days to fetch stats for
+   */
   fetchStats(slug: string, days: number = 30): Observable<any> {
-
     const endDate = new Date();
     const startDate = new Date(endDate);
     startDate.setDate(startDate.getDate() - days);
@@ -732,6 +799,13 @@ export class DataService {
     );
   }
 
+  /**
+   * Fetches paginated data with filters
+   * @param slug Collection slug
+   * @param fromNum Starting number
+   * @param toNum Ending number
+   * @param filters Optional filters
+   */
   fetchAllWithPagination(
     slug: string,
     fromNum: number,
@@ -747,7 +821,6 @@ export class DataService {
         p_filters: filters,
       })
     ).pipe(
-      // tap((res) => console.log('fetchAllWithPagination', {slug, fromNum, toNum, filters, res})),
       switchMap((res: any) => {
         if (res.error) throw res.error;
         return this.getAttributes(slug).pipe(
@@ -764,7 +837,6 @@ export class DataService {
         )
       }),
       catchError((err) => {
-        // console.log('fetchAllWithPagination', err);
         return of({ data: [], total: 0 });
       })
     );
@@ -792,6 +864,9 @@ export class DataService {
   // USD ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+  /**
+   * Fetches current USD price of ETH
+   */
   fetchUSDPrice() {
     this.http.get('https://min-api.cryptocompare.com/data/price', {
       params: {
@@ -804,6 +879,10 @@ export class DataService {
     ).subscribe();
   }
 
+  /**
+   * Fetches merkle proofs for a token
+   * @param hashId Token hash ID
+   */
   fetchProofs(hashId: string): Observable<any> {
     return this.http.get(`http://localhost:3000/merkle-proofs`, {
       params: {
@@ -813,6 +892,9 @@ export class DataService {
     });
   }
 
+  /**
+   * Fetches leaderboard data
+   */
   fetchLeaderboard(): Observable<any> {
     return from(from(supabase.rpc('fetch_leaderboard' + this.prefix))).pipe(
       map((res: any) => res.data),
