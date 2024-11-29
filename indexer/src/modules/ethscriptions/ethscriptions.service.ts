@@ -165,7 +165,6 @@ export class EthscriptionsService {
         transaction,
         createdAt
       );
-      this.notifsSvc.handleNotificationsFromEvents(eventArr);
       if (eventArr?.length) events.push(...eventArr);
     }
 
@@ -179,8 +178,6 @@ export class EthscriptionsService {
         transaction.hash
       );
       const eventArr = await this.processEsip2(esip2Transfers, transaction, createdAt);
-      this.notifsSvc.handleNotificationsFromEvents(eventArr);
-
       if (eventArr?.length) events.push(...eventArr);
     }
 

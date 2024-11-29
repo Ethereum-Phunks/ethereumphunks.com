@@ -3,19 +3,41 @@
   "collection": "@nestjs/schematics",
   "sourceRoot": "src",
   "compilerOptions": {
-    "deleteOutDir": true
+    "deleteOutDir": true,
+    "watchAssets": true,
+    "assets": [
+      {
+        "include": "_static/**/*",
+        "outDir": "dist",
+        "watchAssets": true
+      }
+    ]
   },
   "projects": {
     "sepolia": {
       "sourceRoot": "src",
       "compilerOptions": {
-        "tsConfigPath": "tsconfig.sepolia.json"
+        "tsConfigPath": "tsconfig.sepolia.json",
+        "assets": [
+          {
+            "include": "_static/**/*",
+            "outDir": "dist/sepolia",
+            "watchAssets": true
+          }
+        ]
       }
     },
     "mainnet": {
       "sourceRoot": "src",
       "compilerOptions": {
-        "tsConfigPath": "tsconfig.mainnet.json"
+        "tsConfigPath": "tsconfig.mainnet.json",
+        "assets": [
+          {
+            "include": "_static/**/*",
+            "outDir": "dist/mainnet",
+            "watchAssets": true
+          }
+        ]
       }
     }
   }

@@ -60,6 +60,12 @@ export interface Ethscription {
   locked: boolean;
 }
 
+export interface Collection {
+  name: string;
+  singleName: string;
+  id: number;
+}
+
 export interface Event {
   txId: string;
   type: EventType;

@@ -26,13 +26,15 @@ export class AppService {
     private readonly utilSvc: UtilityService
   ) {
 
-    Promise.all([
-      this.blockQueue.clearQueue(),
-      this.bridgeQueue.clearQueue()
-    ]).then(() => {
-      Logger.debug('Queue Cleared', chain.toUpperCase());
-      this.startIndexer();
-    });
+    if (Number(process.env.INDEXER)) {
+      Promise.all([
+        this.blockQueue.clearQueue(),
+        this.bridgeQueue.clearQueue()
+      ]).then(() => {
+        Logger.debug('Queue Cleared', chain.toUpperCase());
+        this.startIndexer();
+      });
+    }
   }
 
   /**

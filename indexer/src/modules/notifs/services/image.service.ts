@@ -1,11 +1,14 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 
-import { createCanvas, Image } from 'canvas';
+import { createCanvas, Image, registerFont } from 'canvas';
 
-import { Ethscription } from '@/models/db';
+import { Collection, Ethscription } from '@/models/db';
 import { catchError, firstValueFrom, of } from 'rxjs';
-import { writeFile } from 'fs/promises';
+import { readFile } from 'fs/promises';
+import path from 'path';
+
+import { rarityData } from '../constants/collections';
 
 @Injectable()
 export class ImageService {
@@ -14,7 +17,117 @@ export class ImageService {
     private readonly http: HttpService
   ) {}
 
-  async generateImage(
+  async generateImage(data: {
+    ethscription: Ethscription,
+    collection: Collection,
+    attributes: {
+      k: string,
+      v: string,
+      rarity: number,
+    }[],
+  }): Promise<Buffer> {
+    const canvasMax = 800;
+
+    const canvasWidth = canvasMax;
+    const canvasHeight = canvasMax;
+
+    registerFont(path.join(__dirname, '../../../_static/retro-computer.woff'), { family: 'RetroComputer' });
+
+    const colors = {
+      base: '#C3FF00',
+      pink: '#FF03B4',
+      blue: '#00FFC9',
+    };
+
+    const canvas = createCanvas(canvasWidth, canvasHeight);
+    const ctx = canvas.getContext('2d');
+    ctx.imageSmoothingEnabled = false;
+
+    ctx.fillStyle = colors.base;
+    ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+
+    const bottomBarPos = canvasHeight - 200;
+
+    // Top bar
+    ctx.fillStyle = colors.pink;
+    ctx.fillRect(0, 0, canvasWidth, 20);
+
+    // Bottom bar
+    ctx.fillStyle = colors.pink;
+    ctx.fillRect(0, bottomBarPos, canvasWidth, 200);
+
+    // Collection Name
+    ctx.fillStyle = colors.base;
+    ctx.font = 'bold 34px RetroComputer';
+    ctx.fillText(data.collection.singleName, 25, bottomBarPos + 65);
+
+    // Token Id
+    ctx.fillStyle = colors.base;
+    ctx.font = 'bold 100px RetroComputer';
+    ctx.fillText(`${data.ethscription.tokenId}`, 20, canvasHeight - 35);
+
+    // Rarity Number
+    ctx.fillStyle = colors.blue;
+    ctx.font = 'bold 22px RetroComputer';
+    const rarityNumberWidth = ctx.measureText(`${data.attributes[0].rarity}`).width;
+    ctx.fillText(`${data.attributes[0].rarity}`, (canvasWidth - rarityNumberWidth) - 40, bottomBarPos + 65);
+
+    // Rarity Line 1
+    ctx.fillStyle = colors.base;
+    ctx.font = 'bold 22px RetroComputer';
+    const text = `One of`;
+    const textWidth = ctx.measureText(text).width;
+    ctx.fillText(text, (canvasWidth - textWidth) - 40 - (rarityNumberWidth + 10), bottomBarPos + 65);
+
+    // Rarity Line 2
+    ctx.fillStyle = colors.blue;
+    ctx.font = 'bold 22px RetroComputer';
+    const text2 = `${data.attributes[0].v}`;
+    const text2Width = ctx.measureText(text2).width;
+    ctx.fillText(text2, (canvasWidth - text2Width) - 40, bottomBarPos + 95);
+
+    // Rarity Line 3
+    ctx.fillStyle = colors.base;
+    ctx.font = 'bold 22px RetroComputer';
+    const text3 = `${data.collection.singleName}s`;
+    const text3Width = ctx.measureText(text3).width;
+    ctx.fillText(text3, (canvasWidth - text3Width) - 40, bottomBarPos + 125);
+
+    const baseImageUrl = `https://kcbuycbhynlmsrvoegzp.supabase.co/storage/v1/object/public/images`;
+    let image: ArrayBuffer | null = null;
+    try {
+      const response = await fetch(`${baseImageUrl}/${data.ethscription.sha}.png`);
+      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+      image = await response.arrayBuffer();
+    } catch (err) {
+      Logger.error(err);
+      image = null;
+    }
+
+    if (image) {
+      const img = new Image();
+      img.onload = () => {
+        const x = canvasWidth / 4;
+        const y = canvasHeight - bottomBarPos;
+        ctx.drawImage(img, x, y, canvasWidth / 2, canvasHeight / 2);
+      };
+      img.onerror = err => { throw err };
+      img.src = Buffer.from(image);
+    }
+
+    // Add logo
+    const logo = new Image();
+    const logoSrc = path.join(__dirname, '../../../_static/eplogo.png');
+    logo.onload = () => {
+      ctx.drawImage(logo, 40, 60, 320, 65);
+    };
+    logo.onerror = err => { throw err };
+    logo.src = Buffer.from(await readFile(logoSrc));
+    const buffer = canvas.toBuffer('image/png');
+    return buffer;
+  }
+
+  async generateImages(
     items: Ethscription[],
   ): Promise<Buffer> {
     const canvasMax = 1200;
