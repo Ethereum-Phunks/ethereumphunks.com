@@ -12,6 +12,5 @@ export class NotifsController {
   @Get('resend/:hashId')
   async resendNotification(@Param('hashId') hashId: string): Promise<void> {
     await this.notifsSvc.handleNotificationFromHashId(hashId);
-
   }
 }

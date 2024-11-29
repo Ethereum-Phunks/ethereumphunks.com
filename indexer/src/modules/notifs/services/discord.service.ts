@@ -77,7 +77,7 @@ export class DiscordService {
       .setURL(link)
       .setDescription(codeBlock(description))
       .setImage(`attachment://${filename}.png`)
-      .setTimestamp()
+      // .setTimestamp()
       .setFooter({ text: 'Be Phree. Be Phunky. 👍' });
 
     await channel.send({ embeds: [exampleEmbed], files: [attachment] });
