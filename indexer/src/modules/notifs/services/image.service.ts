@@ -31,7 +31,7 @@ export class ImageService {
     const canvasWidth = canvasMax;
     const canvasHeight = canvasMax;
 
-    registerFont(path.join(__dirname, '../../../_static/retro-computer.woff'), { family: 'RetroComputer' });
+    registerFont(path.join(__dirname, '../../_static/retro-computer.ttf'), { family: 'RetroComputer' });
 
     const colors = {
       base: '#C3FF00',
