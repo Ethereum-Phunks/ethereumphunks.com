@@ -38,6 +38,8 @@ export class NotifsService {
         filter: 'type=eq.PhunkBought'
       }, payload => {
         this.handleNotificationsFromEvents(payload.new as Event);
+
+        // console.log(payload.new);
       })
       .subscribe()
 
@@ -56,12 +58,22 @@ export class NotifsService {
       .select('*')
       .eq('type', 'PhunkBought')
       .eq('hashId', hashId)
+      .order('blockTimestamp', { ascending: false })
       .limit(1)
       .single();
 
     const { data, error } = await response;
 
+    // console.log(data);
+
     await this.handleNotificationsFromEvents(data);
+  }
+
+  async handleNotificationsFromEvents(phunkBoughtEvent: Event): Promise<void> {
+    const ethscription = await this.getEthscription(phunkBoughtEvent.hashId);
+    const imageBuffer = await this.imgSvc.generateImage(ethscription);
+    // await writeFile(`temp/${phunkBoughtEvent.hashId}.png`, imageBuffer);
+    await this.discordSvc.postMessage({ ...ethscription, event: phunkBoughtEvent, usdPrice: this.usdPrice }, imageBuffer);
   }
 
   async getEthscription(hashId: string): Promise<{
@@ -91,6 +103,8 @@ export class NotifsService {
 
     const { data } = await response;
 
+    // console.log(data);
+
     const result = {
       ethscription: data,
       collection: data[`collections${suffix}`],
@@ -109,13 +123,6 @@ export class NotifsService {
 
     delete result.ethscription[`collections${suffix}`];
     return result;
-  }
-
-  async handleNotificationsFromEvents(phunkBoughtEvent: Event): Promise<void> {
-    const ethscription = await this.getEthscription(phunkBoughtEvent.hashId);
-    const imageBuffer = await this.imgSvc.generateImage(ethscription);
-    await writeFile(`temp/${phunkBoughtEvent.hashId}.png`, imageBuffer);
-    await this.discordSvc.postMessage({ ...ethscription, event: phunkBoughtEvent, usdPrice: this.usdPrice }, imageBuffer);
   }
 
   async fetchUSDPrice(): Promise<number> {
