@@ -2,9 +2,11 @@
   <button class="curated-button" (click)="toggleDropdown()">
 
     @if ((activeCollection$ | async); as collection) {
-      <div class="image-wrapper">
-        <img [src]="collection.image" />
-      </div>
+      @if (collection.image; as image) {
+        <div class="image-wrapper">
+          <img [src]="image" />
+        </div>
+      }
       <span>{{ collection.name }}</span>
     } @else {
       <div class="placeholder">
@@ -19,18 +21,16 @@
 
   <div class="curated-dropdown">
     @for (item of (collections$ | async); track item.slug) {
-      @if ((activeCollection$ | async)?.slug; as activeSlug) {
-        <a
-          [routerLink]="['/curated', item.slug]"
-          [class.active]="activeSlug === item.slug">
+      <a
+        [routerLink]="['/curated', item.slug]"
+        [class.active]="(activeCollection$ | async)?.slug === item.slug">
 
-          <div class="image-wrapper">
-            <img [src]="item.image" />
-          </div>
+        <div class="image-wrapper">
+          <img [src]="item.image" />
+        </div>
 
-          <span>{{ item.name }}</span>
-        </a>
-      }
+        <span>{{ item.name }}</span>
+      </a>
     }
   </div>
 </div>
