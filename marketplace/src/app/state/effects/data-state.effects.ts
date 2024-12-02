@@ -44,6 +44,7 @@ export class DataStateEffects {
     ofType(dataStateActions.fetchCollections),
     switchMap(() => this.dataSvc.fetchCollections().pipe(
       map((collections) => collections.sort((a, b) => a.id - b.id)),
+      // tap((collections) => console.log({ collections })),
       map((collections) => dataStateActions.setCollections({ collections })),
     )),
   ));

@@ -28,10 +28,10 @@ export class CollectionsComponent {
 
   collections$ = this.store.select(selectCollections).pipe(
     filter(collections => !!collections),
-    map(collections => {
-      // remove first item in array
-      return collections.slice(1);
-    })
+    // map(collections => {
+    //   // remove first item in array
+    //   return collections.slice(1);
+    // })
   )
 
   constructor(
