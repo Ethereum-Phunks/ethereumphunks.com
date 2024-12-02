@@ -29,3 +29,20 @@ main {
   bottom: 0;
   right: 0;
 }
+
+app-ordex-withdrawal {
+  position: fixed;
+  z-index: 99300;
+  top: 2rem;
+  right: 2rem;
+
+  width: calc(100% - 4rem);
+  max-width: 36rem;
+
+  @media (max-width: $mobile) {
+    top: 1rem;
+    right: 1rem;
+    width: calc(100% - 2rem);
+    max-width: 100%;
+  }
+}

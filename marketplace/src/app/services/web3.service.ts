@@ -750,7 +750,7 @@ export class Web3Service {
     const tokenId = await this.readTokenContractL2('hashToToken', [hashId]);
     const offer = await this.readMarketContractL2('phunksOfferedForSale', [tokenId]);
 
-    console.log({tokenId, offer});
+    // console.log({tokenId, offer});
     if (!offer[0]) throw new Error('Phunk not for sale');
 
     const value = offer[3];
@@ -933,11 +933,26 @@ export class Web3Service {
   // UTILS /////////////////////////
   //////////////////////////////////
 
+  async writeContract(args: any) {
+    const chainId = getChainId(this.config);
+    const walletClient = await getWalletClient(this.config, { chainId });
+    return await walletClient?.writeContract(args);
+  }
+
+  async signMessage(message: string): Promise<string> {
+    const chainId = getChainId(this.config);
+    const walletClient = await getWalletClient(this.config, { chainId });
+    return await walletClient?.signMessage({
+      account: walletClient?.account?.address as `0x${string}`,
+      message
+    });
+  }
+
   /**
    * Gets the currently connected wallet address
-   * @returns Promise resolving to the connected address or undefined if not connected
+   * @returns The connected address
    */
-  async getCurrentAddress(): Promise<`0x${string}` | undefined> {
+  getCurrentAddress(): `0x${string}` | undefined {
     const account = getAccount(this.config);
     return account.address;
   }

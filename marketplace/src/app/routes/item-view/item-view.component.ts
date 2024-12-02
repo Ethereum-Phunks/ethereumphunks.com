@@ -225,7 +225,7 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
     // const revShare = (this.revShare.value || 0) * 1000;
     let address = this.listToAddress.value || undefined;
 
-    console.log({hashId, value, address});
+    // console.log({hashId, value, address});
 
     let notification: Notification = {
       id: this.utilSvc.createIdFromString('offerPhunkForSale' + hashId),

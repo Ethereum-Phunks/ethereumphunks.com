@@ -3,7 +3,8 @@ export const environment = {
   production: false,
   chainId: 1,
 
-  rpcHttpProvider: 'http://nethermind.public.dappnode:8545',
+  rpcHttpProvider: 'https://eth-mainnet.g.alchemy.com/v2/19IQKn99eagaaRKD-uSOCE1aYEHLSnmL',
+  // rpcHttpProvider: 'http://nethermind.public.dappnode:8545',
   // rpcHttpProvider: 'https://eth-mainnet.g.alchemy.com/v2/19IQKn99eagaaRKD-uSOCE1aYEHLSnmL',
   explorerUrl: 'https://etherscan.io',
 

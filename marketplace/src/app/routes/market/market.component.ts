@@ -674,7 +674,7 @@ export class MarketComponent {
       (phunk: Phunk) => phunk.owner.toLowerCase() !== environment.marketAddress.toLowerCase()
     );
 
-    console.log({ notInEscrow, inEscrow, invalid });
+    // console.log({ notInEscrow, inEscrow, invalid });
     return { notInEscrow, inEscrow, invalid };
   }
 

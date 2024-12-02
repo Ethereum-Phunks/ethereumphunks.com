@@ -1,0 +1,7 @@
+@import 'abstracts/variables';
+@import 'abstracts/mixins';
+
+:host {
+  display: block;
+  padding-top: calc(var(--header-height) + 4rem)
+}

@@ -15,16 +15,16 @@ import { NotificationsComponent } from '@/components/notifications/notifications
 import { StatusBarComponent } from '@/components/status-bar/status-bar.component';
 import { ModalComponent } from '@/components/shared/modal/modal.component';
 import { ChatComponent } from '@/components/chat/chat.component';
-import { CollectionsComponent } from '@/components/collections/collections.component';
-import { LoggerComponent } from '@/components/status-bar/logger/logger.component';
+import { OrdexWithdrawalComponent } from '@/components/ordex-withdrawal/ordex-withdrawal.component';
 
 import { Web3Service } from '@/services/web3.service';
 import { DataService } from '@/services/data.service';
 import { ThemeService } from '@/services/theme.service';
 import { SocketService } from '@/services/socket.service';
-import { GasService } from './services/gas.service';
+import { GasService } from '@/services/gas.service';
 
 import { selectChatActive } from '@/state/selectors/chat.selectors';
+import { selectWalletAddress } from '@/state/selectors/app-state.selectors';
 
 import * as appStateActions from '@/state/actions/app-state.actions';
 import * as dataStateActions from '@/state/actions/data-state.actions';
@@ -32,6 +32,7 @@ import * as marketStateActions from '@/state/actions/market-state.actions';
 
 import { debounceTime, filter, map, observeOn, scan, tap } from 'rxjs/operators';
 import { asyncScheduler, fromEvent } from 'rxjs';
+
 import { environment } from 'src/environments/environment';
 
 @Component({
@@ -42,15 +43,14 @@ import { environment } from 'src/environments/environment';
     LazyLoadImageModule,
     IntersectionObserverModule,
 
-    LoggerComponent,
     MenuComponent,
-    CollectionsComponent,
     HeaderComponent,
     FooterComponent,
     NotificationsComponent,
     StatusBarComponent,
     ModalComponent,
     ChatComponent,
+    OrdexWithdrawalComponent,
   ],
   selector: 'app-root',
   templateUrl: './app.component.html',
