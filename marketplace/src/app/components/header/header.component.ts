@@ -50,6 +50,7 @@ export class HeaderComponent {
   userPoints$ = this.store.select(appStateSelectors.selectUserPoints);
   activeMultiplier$ = this.store.select(appStateSelectors.selectActiveMultiplier);
   activeCollection$ = this.store.select(dataStateSelectors.selectActiveCollection);
+  activeSlug$ = this.activeCollection$.pipe(map((res) => res?.slug));
   menuActive$ = this.store.select(appStateSelectors.selectMenuActive);
   theme$ = this.store.select(appStateSelectors.selectTheme);
   notifications$ = this.store.select(notificationSelectors.selectNotifications).pipe(
