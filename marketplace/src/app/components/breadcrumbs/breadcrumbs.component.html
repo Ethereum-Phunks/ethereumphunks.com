@@ -1,8 +1,8 @@
+<div class="breadcrumb">
+  <div class="inner">
+    @if (phunk(); as phunk) {
 
-  <div class="breadcrumb">
-    <div class="inner">
-
-      @if (phunk(); as phunk) {
+      @if (phunk.tokenId > -1) {
         @if (pfpOptionsActive) {
           <div class="pfp-options-wrapper">
 
@@ -27,7 +27,7 @@
 
         <div class="crumbs-wrapper">
           <div class="crumbs">
-            <button (click)="history.back()">
+            <button [routerLink]="['/', 'curated', phunk.slug]">
               {{ phunk.collectionName }}
             </button>
             <span class="divider">/</span>
@@ -43,22 +43,22 @@
             </button>
           </div>
         </div>
-
-      } @else {
-        <div class="crumbs-wrapper">
-          <div class="crumbs">
-            <button>Loading...</button>
-            <span class="divider">&nbsp;</span>
-            <span class="number">&nbsp;</span>
-          </div>
-
-          <div class="save-pfp">
-            <button class="disabled">Download</button>
-          </div>
-        </div>
       }
-    </div>
-  </div>
 
-<canvas #pfp id="pfp" width="480" height="480" style="display: none;">
-</canvas>
+    } @else {
+      <div class="crumbs-wrapper">
+        <div class="crumbs">
+          <button>Loading...</button>
+          <span class="divider">&nbsp;</span>
+          <span class="number">&nbsp;</span>
+        </div>
+
+        <div class="save-pfp">
+          <button class="disabled">Download</button>
+        </div>
+      </div>
+    }
+  </div>
+</div>
+
+<canvas #pfp id="pfp" width="480" height="480" style="display: none;"></canvas>
