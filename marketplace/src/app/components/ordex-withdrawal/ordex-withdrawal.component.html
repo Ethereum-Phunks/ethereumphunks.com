@@ -1,0 +1,33 @@
+@if (!dismiss() && stillEscrowedIds()?.length) {
+  <div class="withdrawal-wrapper">
+    <button class="dismiss" (click)="close()">x</button>
+
+    <p>You have <span>{{ stillEscrowedIds()!.length }}</span> ethscription{{ stillEscrowedIds()!.length === 1 ? '' : 's' }} escrowed on Ordex. If you don't withdraw them now, they may be gone for ever!</p>
+
+    @if (transactionPending()) {
+      <button class="disabled">
+        Withdrawing...
+      </button>
+    } @else if (transactionComplete()) {
+      <button class="disabled">
+        Withdraw Complete
+      </button>
+    } @else {
+      <button (click)="withdraw(stillEscrowedIds()!)">
+        Withdraw NOW
+      </button>
+    }
+
+    @if (transactionError()) {
+      <span class="error">{{ transactionError()!.details || transactionError().error?.message || (transactionError() | json) }}</span>
+    } @else if ((transactionPending() && transactionHash()) || transactionComplete()) {
+      <span>Transaction Hash: <a href="https://etherscan.io/tx/{{ transactionHash() }}" target="_blank">
+        <app-address
+          [address]="transactionHash()"
+        />
+      </a></span>
+    } @else {
+      <span>You will be required to sign a message & submit a transaction to withdraw.</span>
+    }
+  </div>
+}

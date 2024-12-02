@@ -1,0 +1,70 @@
+@import 'abstracts/variables';
+@import 'abstracts/mixins';
+
+:host {
+  display: block;
+
+  font-family: $secondary-font-stack;
+  font-weight: 400;
+}
+
+.withdrawal-wrapper {
+  background-color: rgba(var(--escrow-color), 1);
+  color: rgba(var(--black), 1);
+
+  box-shadow: -.3rem .3rem 0 0 rgba(var(--bid-color), 1);
+
+  width: 100%;
+  padding: 2rem;
+
+  display: flex;
+  flex-direction: column;
+}
+
+p {
+  padding: 0;
+  margin: 0;
+  padding-bottom: 1rem;
+
+  font-size: 1rem;
+  text-align: center;
+
+  span {
+    color: rgba(var(--bid-color), 1);
+  }
+}
+
+button {
+  font-family: $secondary-font-stack;
+  font-weight: 400;
+  font-size: 1.2rem;
+  justify-content: center;
+
+  width: 100%;
+
+  background-color: rgba(var(--bid-color), 1);
+
+  &.dismiss {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 2rem;
+    height: 2rem;
+  }
+}
+
+span {
+  padding-top: 1rem;
+  font-size: 1rem;
+  text-align: center;
+
+  color: rgba(var(--black), .65);
+
+  a {
+    color: rgba(var(--black), 1);
+  }
+
+  &.error {
+    color: rgba(var(--magma), 1);
+  }
+}
