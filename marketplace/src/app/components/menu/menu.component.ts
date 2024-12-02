@@ -47,7 +47,6 @@ import anime from 'animejs';
     NotificationsComponent,
     LeaderboardComponent,
     CollectionsComponent,
-
     WeiToEthPipe,
     FormatCashPipe,
 

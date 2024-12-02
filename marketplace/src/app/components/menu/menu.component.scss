@@ -174,10 +174,12 @@ section {
 
     .user-actions {
       margin-bottom: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: .5rem;
 
       button {
         width: 100%;
-        margin-bottom: .5rem;
         height: 3rem;
 
         font-size: 1.2rem;
