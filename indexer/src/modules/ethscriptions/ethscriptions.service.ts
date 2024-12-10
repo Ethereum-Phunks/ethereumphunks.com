@@ -206,17 +206,17 @@ export class EthscriptionsService {
       events.push(...eventArr);
     }
 
-    const bridgeMainnetLogs = receipt.logs.filter(
-      (log: any) => log.address.toLowerCase() === bridgeAddressL1.toLowerCase()
-    );
-    if (bridgeMainnetLogs.length) {
-      Logger.debug(
-        `Processing Points event (${chain})`,
-        transaction.hash
-      );
-      await this.processBridgeMainnetEvents(bridgeMainnetLogs);
-      return events;
-    }
+    // const bridgeMainnetLogs = receipt.logs.filter(
+    //   (log: any) => log.address.toLowerCase() === bridgeAddressL1.toLowerCase()
+    // );
+    // if (bridgeMainnetLogs.length) {
+    //   Logger.debug(
+    //     `Processing Points event (${chain})`,
+    //     transaction.hash
+    //   );
+    //   await this.processBridgeMainnetEvents(bridgeMainnetLogs);
+    //   return events;
+    // }
 
     const pointsLogs = receipt.logs.filter(
       (log: any) => log.address.toLowerCase() === pointsAddressL1.toLowerCase()

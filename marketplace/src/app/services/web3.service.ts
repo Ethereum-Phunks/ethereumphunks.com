@@ -1,4 +1,4 @@
-import { Inject, Injectable, NgZone } from '@angular/core';
+import { Injectable, NgZone } from '@angular/core';
 
 import { Store } from '@ngrx/store';
 
@@ -25,11 +25,10 @@ import * as appStateActions from '@/state/actions/app-state.actions';
 import { Chain, mainnet, sepolia } from 'viem/chains';
 import { magma } from '@/constants/magmaChain';
 
-import { Web3Modal } from '@web3modal/wagmi/dist/types/src/client';
 import { createWeb3Modal } from '@web3modal/wagmi';
 
-import { PublicClient, TransactionReceipt, WatchBlockNumberReturnType, WatchContractEventReturnType, createPublicClient, decodeFunctionData, formatEther, isAddress, keccak256, numberToHex, parseEther, stringToBytes, zeroAddress } from 'viem';
-import { DataService } from './data.service';
+import { PublicClient, TransactionReceipt, WatchBlockNumberReturnType, WatchContractEventReturnType, createPublicClient, decodeFunctionData, formatEther, isAddress, keccak256, parseEther, stringToBytes, zeroAddress } from 'viem';
+
 import { selectIsBanned } from '@/state/selectors/app-state.selectors';
 
 const marketAddress = environment.marketAddress;
@@ -67,7 +66,7 @@ export class Web3Service {
   l2Client!: PublicClient;
 
   config!: Config;
-  modal!: Web3Modal;
+  modal;
 
   globalConfig$ = this.store.select(state => state.appState.config).pipe(
     map((res) => ({
