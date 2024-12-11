@@ -292,12 +292,11 @@ export class SupabaseService {
     if (error) throw error.message;
     Logger.log('Ethscription created', txn.hash.toLowerCase());
 
-    const { error: attributesError }: AttributesResponse = await supabase
-      .from('attributes')
-      .insert([attributesData]);
-
-    if (attributesError) console.log(attributesError.message);
-    Logger.log('Attributes created', txn.hash.toLowerCase());
+    // const { error: attributesError }: AttributesResponse = await supabase
+    //   .from('attributes')
+    //   .insert([attributesData]);
+    // if (attributesError) console.log(attributesError.message);
+    // Logger.log('Attributes created', txn.hash.toLowerCase());
   }
 
   async addEvent(
