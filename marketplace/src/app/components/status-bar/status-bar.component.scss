@@ -3,15 +3,77 @@
 
 :host {
   display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  // cursor: default;
+  align-items: center;
+  gap: 1rem;
+  background-color: rgba(var(--black), 1);
+  padding: 1rem 1.5rem;
+
+  height: 4.5rem;
 }
 
-app-logger {
-  width: 100%;
-  max-width: 100%;
-  height: 30rem;
+.logger {
+
+  position: fixed;
+  bottom: 4.5rem;
+  right: 0;
+  z-index: 1000;
+
+  .title-bar {
+    display: flex;
+    align-items: center;
+    padding: .5rem 1rem;
+
+    font-family: $secondary-font-stack;
+    font-weight: 400;
+    font-size: 1rem;
+
+    color: rgba(var(--black), 1);
+    background-color: rgba(var(--base-color), 1);
+  }
+
+  app-logger {
+    max-width: 60rem;
+    height: 30rem;
+    border: .2rem solid rgba(var(--base-color), 1);
+    border-top: none;
+  }
+}
+
+.chat-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: none;
+  padding: 0;
+  margin: 0;
+
+  border-right: 2px solid rgba(var(--white), .1);
+
+  svg {
+    width: 2rem;
+    height: 2rem;
+    margin-right: 1rem;
+    path {
+      fill: rgba(var(--white), .75);
+    }
+  }
+}
+
+.network-gas {
+  display: flex;
+  flex-direction: column;
+
+  font-family: $secondary-font-stack;
+
+  .gas {
+    font-size: 1.2rem;
+    padding-right: 1rem
+  }
+  .network {
+    font-size: .8rem;
+    color: rgba(var(--white), .75);
+  }
 }
 
 .blocks-wrapper {
@@ -20,27 +82,10 @@ app-logger {
 
   cursor: pointer;
 
-  background-color: rgba(var(--black), 1);
-  padding: 1rem;
-
   font-family: $secondary-font-stack;
   font-size: .8rem;
   font-weight: normal;
   color: rgba(var(--white), .75);
-
-  .network-gas {
-    display: flex;
-    flex-direction: column;
-
-    .gas {
-      font-size: 1.2rem;
-      padding-right: 1rem
-    }
-    .network {
-      font-size: .8rem;
-      color: rgba(var(--white), .75);
-    }
-  }
 
   .indexer {}
 

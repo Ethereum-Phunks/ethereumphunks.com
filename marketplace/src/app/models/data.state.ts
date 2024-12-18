@@ -13,6 +13,7 @@ export interface Collection {
     volume: number;
   };
   previews: Phunk[];
+  isMinting: boolean;
 }
 
 export interface DataState {

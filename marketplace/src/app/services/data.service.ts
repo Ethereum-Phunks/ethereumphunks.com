@@ -10,7 +10,7 @@ import { Attribute, Bid, Event, Listing, Phunk } from '@/models/db';
 
 import { createClient } from '@supabase/supabase-js'
 
-import { Observable, of, BehaviorSubject, from, forkJoin, firstValueFrom, EMPTY, timer } from 'rxjs';
+import { Observable, of, BehaviorSubject, from, forkJoin, firstValueFrom, EMPTY, timer, merge } from 'rxjs';
 import { catchError, expand, map, reduce, switchMap, takeWhile, tap } from 'rxjs/operators';
 
 import { NgForage } from 'ngforage';
@@ -783,9 +783,9 @@ export class DataService {
    * @param slug Collection slug
    * @param days Number of days to fetch stats for
    */
-  fetchStats(slug: string, days: number = 30): Observable<any> {
+  fetchStats(slug: string, days: number = 1000): Observable<any> {
     const endDate = new Date();
-    const startDate = new Date(endDate);
+    const startDate = new Date();
     startDate.setDate(startDate.getDate() - days);
 
     const query = supabase
@@ -794,8 +794,18 @@ export class DataService {
         { start_date: startDate, end_date: endDate, slug_filter: slug }
       );
 
-    return from(query).pipe(
-      map((res: any) => res.data[0]),
+    const queryTopSales = supabase
+      .rpc(
+        `fetch_top_sales${this.prefix}`,
+        { p_slug: slug, p_limit: 100 }
+      );
+
+    return forkJoin([from(query), from(queryTopSales)]).pipe(
+      map(([res, topSales]) => ({
+        totalVolume: res.data[0],
+        topSales: topSales.data,
+      })),
+      tap((res) => console.log('fetchStats', res)),
     );
   }
 

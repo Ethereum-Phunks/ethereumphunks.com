@@ -66,4 +66,8 @@ export class StatusBarComponent {
   expandCollapse() {
     this.expanded = !this.expanded;
   }
+
+  openChat() {
+    console.log('openChat');
+  }
 }

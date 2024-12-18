@@ -1,0 +1,23 @@
+@import 'abstracts/variables';
+@import 'abstracts/mixins';
+
+:host {
+  width: 100%;
+  height: var(--billboard-height);
+
+  // background-color: rgba(red, 1);
+
+  border: 1px solid red;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: center;
+
+  padding: 2rem;
+}
+
+p {
+  border: 1px solid blue;
+  color: white;
+}

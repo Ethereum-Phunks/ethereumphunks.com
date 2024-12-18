@@ -11,7 +11,7 @@ import { PhunkGridComponent } from '@/components/shared/phunk-grid/phunk-grid.co
 import { RecentActivityComponent } from '@/components/recent-activity/recent-activity.component';
 import { SplashComponent } from '@/components/splash/splash.component';
 import { BrbComponent } from '@/components/brb/brb.component';
-
+import { MintComponent } from '@/components/mint/mint.component';
 import { CalcPipe } from '@/pipes/calculate.pipe';
 
 import { DataService } from '@/services/data.service';
@@ -22,6 +22,7 @@ import { GlobalState } from '@/models/global-state';
 import * as dataStateSelectors from '@/state/selectors/data-state.selectors';
 import * as appStateSelectors from '@/state/selectors/app-state.selectors';
 import * as marketStateSelectors from '@/state/selectors/market-state.selectors';
+import { tap } from 'rxjs';
 
 @Component({
   standalone: true,
@@ -36,7 +37,7 @@ import * as marketStateSelectors from '@/state/selectors/market-state.selectors'
     PhunkGridComponent,
     RecentActivityComponent,
     BrbComponent,
-
+    MintComponent,
     CalcPipe,
   ],
   selector: 'app-index',
@@ -47,7 +48,9 @@ import * as marketStateSelectors from '@/state/selectors/market-state.selectors'
 export class IndexComponent {
 
   walletAddress$ = this.store.select(appStateSelectors.selectWalletAddress);
-  activeCollection$ = this.store.select(dataStateSelectors.selectActiveCollection);
+  activeCollection$ = this.store.select(dataStateSelectors.selectActiveCollection).pipe(
+    tap((activeCollection) => console.log({activeCollection}))
+  );
 
   owned$ = this.store.select(marketStateSelectors.selectOwned);
   listings$ = this.store.select(marketStateSelectors.selectListings);

@@ -31,8 +31,6 @@ export class MarketStateEffects {
       this.store.select(getRouterSelectors().selectRouteParams),
     ),
     mergeMap(([action, queryParams, routeParams]) => {
-      // console.log({queryParams, routeParams});
-
       const actions: any[] = [
         marketStateActions.setMarketType({ marketType: routeParams['marketType'] }),
       ];
@@ -43,7 +41,6 @@ export class MarketStateEffects {
       // Use default slug if no slug is available
       const { event } = (action as any).payload;
       if (event.urlAfterRedirects === '/') marketSlug = 'ethereum-phunks';
-
       if (routeParams['marketType'] === 'user') marketSlug = 'user';
 
       // Set market slug if available
@@ -51,14 +48,15 @@ export class MarketStateEffects {
       actions.push(marketStateActions.setActiveTraitFilters({ traitFilters: queryParams }));
       // console.log({marketSlug});
       return actions;
-
-      // return [
-      //   marketStateActions.setMarketType({ marketType: routeParams['marketType'] }),
-      //   marketStateActions.setMarketSlug({ marketSlug: routeParams['slug'] || 'ethereum-phunks' }),
-      //   marketStateActions.setActiveTraitFilters({ traitFilters: queryParams }),
-      // ];
     })
   ));
+
+  // fetchMarketStats$ = createEffect(() => this.actions$.pipe(
+  //   ofType(marketStateActions.setMarketSlug),
+  //   switchMap((action) => this.dataSvc.fetchStats(action.marketSlug).pipe(
+  //     tap((stats) => console.log('fetchMarketStats$', action, stats)),
+  //   )),
+  // ), { dispatch: false });
 
   // Set active market data based on market type
   onMarketTypeChanged$ = createEffect(() => this.actions$.pipe(
