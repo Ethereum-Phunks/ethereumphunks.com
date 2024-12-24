@@ -105,6 +105,7 @@ export class TwitterService {
    * @throws Error if tweet fails to send
    */
   async sendTweet(data: NotificationMessage): Promise<void> {
+    if (process.env.CHAIN_ID !== '1') return;
     if (Number(process.env.TWITTER)) await this.initialize();
     try {
       const { title, message, link, imageBuffer, filename } = data;
