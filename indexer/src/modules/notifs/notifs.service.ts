@@ -107,7 +107,7 @@ export class NotifsService {
     if (!weiValue) return;
 
     const value = formatUnits(weiValue, 18);
-    const filename = new Date().getTime().toString();
+    const filename = `${new Date().getTime().toString()}.png`;
 
     const [fromAddress, toAddress] = await Promise.all([
       this.formatAddress(event.from),
