@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 
-import { BlockTag, Chain, Transaction, TransactionReceipt, WriteContractParameters, toHex } from 'viem';
+import { BlockTag, Chain, Transaction, TransactionReceipt, WriteContractParameters, getAddress, toHex } from 'viem';
 import { bridgeAbiL1, bridgeAddressL1, l1Client, l2Client, pointsAbiL1, pointsAddressL1 } from '@/constants/ethereum';
 
 import dotenv from 'dotenv';
@@ -199,6 +199,15 @@ export class Web3Service {
     try {
       return await l1Client.getEnsName({ address: address as `0x${string}` });
     } catch (e) {
+      return null;
+    }
+  }
+
+  validateAddress(address: string): string {
+    try {
+      return getAddress(address);
+    } catch (error) {
+      console.log(error);
       return null;
     }
   }

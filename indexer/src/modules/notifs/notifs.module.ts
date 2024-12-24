@@ -11,6 +11,7 @@ import { SupabaseService } from '@/services/supabase.service';
 
 import { NotifsService } from './notifs.service';
 import { NotifsController } from './notifs.controller';
+import { TwitterService } from './services/twitter.service';
 
 @Module({
   controllers: [
@@ -26,6 +27,7 @@ import { NotifsController } from './notifs.controller';
     TelegramService,
     DiscordService,
     ImageService,
+    TwitterService,
 
     SupabaseService
   ],

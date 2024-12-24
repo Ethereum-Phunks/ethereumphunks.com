@@ -19,6 +19,7 @@ import { SupabaseService } from '@/services/supabase.service';
 import { ProcessingService } from '@/services/processing.service';
 
 import { ApiKeyMiddleware } from '@/middleware/api-key.middleware';
+import { MintModule } from './modules/mint/mint.module';
 
 @Module({
   imports: [
@@ -34,6 +35,8 @@ import { ApiKeyMiddleware } from '@/middleware/api-key.middleware';
     NotifsModule,
     CardModule,
     SharedModule,
+
+    MintModule,
   ],
   controllers: [AppController],
   providers: [

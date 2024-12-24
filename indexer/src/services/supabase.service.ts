@@ -220,6 +220,19 @@ export class SupabaseService {
     return results.length ? results : null;
   }
 
+  async fetchEthscriptionBySlugAndTokenId(slug: string, id: number): Promise<Ethscription> {
+    const response: EthscriptionResponse = await supabase
+      .from('ethscriptions' + this.suffix)
+      .select('*')
+      .eq('tokenId', id)
+      .eq('slug', slug);
+
+    const { data, error } = response;
+    if (error) throw error;
+    if (data?.length) return data[0];
+    return null;
+  }
+
   // async checkEthscriptionsExistsByHashIds(hashes: string[]): Promise<Ethscription[]> {
   //   if (!hashes.length) return null;
 
