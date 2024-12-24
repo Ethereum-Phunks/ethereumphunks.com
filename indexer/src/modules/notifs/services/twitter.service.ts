@@ -103,8 +103,11 @@ export class TwitterService {
    * @throws Error if tweet fails to send
    */
   async sendTweet(data: NotificationMessage): Promise<void> {
-    if (Number(process.env.TWITTER)) await this.initialize();
+    if (!Number(process.env.TWITTER)) return;
+
     try {
+      await this.initialize();
+
       const { title, message, link, imageBuffer, filename } = data;
       await this.scraper.sendTweet(
         `${title}\n\n${message}\n\n${link}`,
