@@ -1,12 +1,12 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { Scraper } from 'agent-twitter-client';
+import { NotificationMessage } from '../models/message.model';
 
 import dotenv from 'dotenv';
 dotenv.config();
 
 import * as fs from 'fs';
 import * as path from 'path';
-import { NotificationMessage } from '../models/message.model';
 
 /**
  * Service for interacting with Twitter to send tweets and manage authentication
@@ -36,8 +36,6 @@ export class TwitterService {
       // If no valid cookies, perform fresh login
       console.log('Performing fresh login...');
       await this.scraper.login(
-        // 'tr33horn',
-        // 'sPL4Xwry6TB_s4HX6zFK.KFk-'
         process.env.TWITTER_USERNAME,
         process.env.TWITTER_PASSWORD,
         undefined,
@@ -105,7 +103,6 @@ export class TwitterService {
    * @throws Error if tweet fails to send
    */
   async sendTweet(data: NotificationMessage): Promise<void> {
-    if (process.env.CHAIN_ID !== '1') return;
     if (Number(process.env.TWITTER)) await this.initialize();
     try {
       const { title, message, link, imageBuffer, filename } = data;

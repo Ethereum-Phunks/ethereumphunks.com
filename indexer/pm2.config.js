@@ -9,6 +9,7 @@ module.exports = {
         PORT: "3002",
         QUEUE: 1,
         DISCORD: 1,
+        TWITTER: 1,
       },
     },
     {
@@ -20,6 +21,7 @@ module.exports = {
         PORT: "3003",
         QUEUE: 1,
         DISCORD: 1,
+        TWITTER: 0,
       },
     },
   ],
