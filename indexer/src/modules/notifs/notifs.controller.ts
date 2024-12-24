@@ -9,6 +9,11 @@ export class NotifsController {
     private readonly notifsSvc: NotifsService
   ) {}
 
+  /**
+   * Resends a notification for a specific hash ID
+   * @param hashId The transaction hash ID
+   * @returns Promise resolving when the notification is sent
+   */
   @Get('resend/:hashId')
   async resendNotification(@Param('hashId') hashId: string): Promise<void> {
     await this.notifsSvc.handleNotificationFromHashId(hashId);

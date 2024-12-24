@@ -1,30 +1,26 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
 
-import { ImageService } from '@/modules/notifs/services/image.service';
-import { Web3Service } from '@/modules/shared/services/web3.service';
-
-import { SupabaseService } from '@/services/supabase.service';
-import { Ethscription, Event, Collection } from '@/models/db';
+import { NotificationMessage } from '../models/message.model';
 
 import { AttachmentBuilder, Client, codeBlock, EmbedBuilder, Events, GatewayIntentBits, TextChannel } from 'discord.js';
-
-import { formatUnits } from 'viem';
 
 import dotenv from 'dotenv';
 dotenv.config();
 
+/**
+ * Service for interacting with Discord to send notifications
+ */
 @Injectable()
 export class DiscordService {
 
+  /** Discord client instance */
   private client: Client;
 
-  constructor(
-    @Inject('WEB3_SERVICE_L1') private readonly web3Svc: Web3Service,
-    private readonly imgSvc: ImageService,
-    private readonly sbSvc: SupabaseService,
-  ) {}
-
-  // Initialize the bot
+  /**
+   * Initializes the Discord bot client
+   * Creates a new client if one doesn't exist and logs in using the bot token
+   * @returns Promise that resolves when the bot is ready
+   */
   initializeBot(): Promise<void> {
     if (this.client) return Promise.resolve();
 
@@ -40,66 +36,35 @@ export class DiscordService {
     })
   }
 
-  async postMessage(data: {
-    ethscription: Ethscription,
-    collection: Collection,
-    event: Event,
-    usdPrice: number
-  }, imageBuffer: Buffer): Promise<void> {
+  /**
+   * Posts a notification message to Discord
+   * @param data The notification message data containing title, message, image etc
+   * @returns Promise that resolves when the message is sent
+   */
+  async postMessage(data: NotificationMessage): Promise<void> {
     if (Number(process.env.DISCORD)) await this.initializeBot();
 
-    const weiValue = BigInt(data.event.value);
-    if (!weiValue) return;
-
-    const value = formatUnits(weiValue, 18);
-    const filename = new Date().getTime().toString();
-
+    // Get appropriate channel based on chain ID
     const chainId = Number(process.env.CHAIN_ID);
     const channel = this.client.channels.cache.get(chainId === 1 ? '1202621714127912994' : '1227387575723888722') as TextChannel;
-    // const channel = this.client.channels.cache.get('1311779467064119357') as TextChannel;
 
-    const attachment = new AttachmentBuilder(imageBuffer, { name: `${filename}.png` });
+    // Create image attachment
+    const attachment = new AttachmentBuilder(data.imageBuffer, { name: `${data.filename}.png` });
 
-    const baseUrl = chainId === 1 ? 'https://etherphunks.eth.limo' : 'https://sepolia.etherphunks.eth.limo';
-
-    const [fromAddress, toAddress] = await Promise.all([
-      this.formatAddress(data.event.from),
-      this.formatAddress(data.event.to)
-    ]);
-
-    const title = `${data.collection.singleName} #${data.ethscription.tokenId} was flipped`;
-    const description = `From: ${fromAddress}\nTo: ${toAddress}\n\nFor: ${value} ETH ($${this.formatCash(Number(value) * data.usdPrice)})`;
-    const link = `${baseUrl}/details/${data.ethscription.hashId}`;
-
+    // Build rich embed message
     const exampleEmbed = new EmbedBuilder()
       .setColor(0xC3FF00)
-      .setTitle(title)
-      .setURL(link)
-      .setDescription(codeBlock(description))
-      .setImage(`attachment://${filename}.png`)
+      .setTitle(data.title)
+      .setURL(data.link)
+      .setDescription(codeBlock(data.message))
+      .setImage(`attachment://${data.filename}.png`)
       // .setTimestamp()
       .setFooter({ text: 'Be Phree. Be Phunky. 👍' });
 
+    // Send the message with embed and attachment
     await channel.send({ embeds: [exampleEmbed], files: [attachment] });
   }
-
-  async formatAddress(address: string): Promise<string> {
-    let fmatAddress = await this.web3Svc.getEnsFromAddress(address);
-    if (!fmatAddress) fmatAddress = address.slice(0, 6) + '...' + address.slice(-4);
-    return fmatAddress;
-  }
-
-  formatCash(n: number, decimals: number = 2): string {
-    if (n === 0) return '0';
-    if (n < 1) return n.toFixed(2) + '';
-    if (n < 1e3) return n.toFixed(decimals) + '';
-    // if (n < 1e3) return String(n);
-    if (n >= 1e3 && n < 1e6) return +(n / 1e3).toFixed(1) + 'K';
-    if (n >= 1e6 && n < 1e9) return +(n / 1e6).toFixed(1) + 'M';
-    if (n >= 1e9 && n < 1e12) return +(n / 1e9).toFixed(1) + 'B';
-    if (n >= 1e12) return +(n / 1e12).toFixed(1) + 'T';
-    return 0 + '';
-  };
 }
 
+// Bot invite URL
 // # https://discord.com/api/oauth2/authorize?client_id=1226779608406294588&permissions=2147485696&scope=bot%20applications.commands

@@ -1,17 +1,19 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 
 import { Collection, Ethscription, Event } from '@/models/db';
-
-import { DiscordService } from './services/discord.service';
-
-import { createClient } from '@supabase/supabase-js';
-
-import { ImageService } from './services/image.service';
-import { writeFile } from 'fs/promises';
+import { EthscriptionWithCollectionAndAttributes, NotificationMessage } from './models/message.model';
 
 import { rarityData } from './constants/collections';
 
+import { ImageService } from './services/image.service';
+import { DiscordService } from './services/discord.service';
+import { Web3Service } from '../shared/services/web3.service';
+
+import { createClient } from '@supabase/supabase-js';
+import { formatUnits } from 'viem';
+
 import dotenv from 'dotenv';
+import { TwitterService } from './services/twitter.service';
 dotenv.config();
 
 const supabaseUrl = process.env.SUPABASE_URL;
@@ -19,16 +21,23 @@ const serviceRole = process.env.SUPABASE_SERVICE_ROLE;
 const supabase = createClient(supabaseUrl, serviceRole);
 const suffix = process.env.CHAIN_ID === '1' ? '' : '_sepolia';
 
+/**
+ * Service for handling notifications about marketPlace sales
+ */
 @Injectable()
 export class NotifsService {
 
+  /** Current ETH/USD price */
   usdPrice: number = 0;
 
   constructor(
-    private readonly discordSvc: DiscordService,
+    @Inject('WEB3_SERVICE_L1') private readonly web3Svc: Web3Service,
     private readonly imgSvc: ImageService,
+    private readonly twitterSvc: TwitterService,
+    private readonly discordSvc: DiscordService,
   ) {
 
+    // Subscribe to Phunk sale events from Supabase
     supabase
       .channel(`sales${suffix}`)
       .on('postgres_changes', {
@@ -37,13 +46,13 @@ export class NotifsService {
         table: `events${suffix}`,
         filter: 'type=eq.PhunkBought'
       }, payload => {
-        this.handleNotificationsFromEvents(payload.new as Event);
+        this.handleNotification(payload.new as Event);
 
         // console.log(payload.new);
       })
       .subscribe()
 
-    // fetch USD price every 10 minutes
+    // Fetch USD price every 10 minutes
     this.fetchUSDPrice().then(price => {
       this.usdPrice = price;
       setInterval(async () => {
@@ -52,6 +61,11 @@ export class NotifsService {
     });
   }
 
+  /**
+   * Handles notification for a specific hash ID
+   * Sends based on last sale of hash ID
+   * @param hashId The transaction hash ID
+   */
   async handleNotificationFromHashId(hashId: string) {
     const response = supabase
       .from(`events${suffix}`)
@@ -64,27 +78,61 @@ export class NotifsService {
 
     const { data, error } = await response;
 
-    // console.log(data);
-
-    await this.handleNotificationsFromEvents(data);
+    await this.handleNotification(data);
   }
 
-  async handleNotificationsFromEvents(phunkBoughtEvent: Event): Promise<void> {
-    const ethscription = await this.getEthscription(phunkBoughtEvent.hashId);
-    const imageBuffer = await this.imgSvc.generateImage(ethscription);
-    // await writeFile(`temp/${phunkBoughtEvent.hashId}.png`, imageBuffer);
-    await this.discordSvc.postMessage({ ...ethscription, event: phunkBoughtEvent, usdPrice: this.usdPrice }, imageBuffer);
+  /**
+   * Processes notifications for Phunk sale events
+   * @param phunkBoughtEvent The sale event data
+   */
+  async handleNotification(phunkBoughtEvent: Event): Promise<void> {
+    const message = await this.createMessage(phunkBoughtEvent);
+    await this.twitterSvc.sendTweet(message);
+    await this.discordSvc.postMessage(message);
   }
 
-  async getEthscription(hashId: string): Promise<{
-    ethscription: Ethscription,
-    collection: Collection,
-    attributes: {
-      k: string,
-      v: string,
-      rarity: number,
-    }[],
-  }> {
+  /**
+   * Creates a notification message for a Phunk sale event
+   * @param event The sale event data
+   * @returns Formatted notification message object
+   */
+  async createMessage(event: Event): Promise<NotificationMessage> {
+    const chainId = Number(process.env.CHAIN_ID);
+    const baseUrl = chainId === 1 ? 'https://etherphunks.eth.limo' : 'https://sepolia.etherphunks.eth.limo';
+
+    const data = await this.getEthscriptionWithCollectionAndAttributes(event.hashId);
+    const imageBuffer = await this.imgSvc.generateImage(data);
+
+    const weiValue = BigInt(event.value);
+    if (!weiValue) return;
+
+    const value = formatUnits(weiValue, 18);
+    const filename = new Date().getTime().toString();
+
+    const [fromAddress, toAddress] = await Promise.all([
+      this.formatAddress(event.from),
+      this.formatAddress(event.to)
+    ]);
+
+    const title = `${data.collection.singleName} #${data.ethscription.tokenId} was flipped`;
+    const message = `From: ${fromAddress}\nTo: ${toAddress}\n\nFor: ${value} ETH ($${this.formatCash(Number(value) * this.usdPrice)})`;
+    const link = `${baseUrl}/details/${data.ethscription.hashId}`;
+
+    return {
+      title,
+      message,
+      link,
+      imageBuffer,
+      filename,
+    };
+  }
+
+  /**
+   * Retrieves full Ethscription data including collection and attributes
+   * @param hashId The Ethscription hash ID
+   * @returns Ethscription data with collection and attributes
+   */
+  async getEthscriptionWithCollectionAndAttributes(hashId: string): Promise<EthscriptionWithCollectionAndAttributes> {
     const response = supabase
       .from(`ethscriptions${suffix}`)
       .select(`
@@ -102,8 +150,6 @@ export class NotifsService {
       .single();
 
     const { data } = await response;
-
-    // console.log(data);
 
     const result = {
       ethscription: data,
@@ -125,6 +171,10 @@ export class NotifsService {
     return result;
   }
 
+  /**
+   * Fetches current ETH/USD price from CoinGecko API
+   * @returns Current ETH price in USD
+   */
   async fetchUSDPrice(): Promise<number> {
     const url = `https://api.coingecko.com/api/v3/simple/price`;
 
@@ -143,4 +193,32 @@ export class NotifsService {
       return 0;
     }
   }
+
+  /**
+   * Formats an Ethereum address, using ENS name if available
+   * @param address The Ethereum address
+   * @returns Formatted address or ENS name
+   */
+  async formatAddress(address: string): Promise<string> {
+    let fmatAddress = await this.web3Svc.getEnsFromAddress(address);
+    if (!fmatAddress) fmatAddress = address.slice(0, 6) + '...' + address.slice(-4);
+    return fmatAddress;
+  }
+
+  /**
+   * Formats a number into a human-readable currency string with K/M/B/T suffixes
+   * @param n The number to format
+   * @param decimals Number of decimal places (default 2)
+   * @returns Formatted currency string
+   */
+  formatCash(n: number, decimals: number = 2): string {
+    if (n === 0) return '0';
+    if (n < 1) return n.toFixed(2) + '';
+    if (n < 1e3) return n.toFixed(decimals) + '';
+    if (n >= 1e3 && n < 1e6) return +(n / 1e3).toFixed(1) + 'K';
+    if (n >= 1e6 && n < 1e9) return +(n / 1e6).toFixed(1) + 'M';
+    if (n >= 1e9 && n < 1e12) return +(n / 1e9).toFixed(1) + 'B';
+    if (n >= 1e12) return +(n / 1e12).toFixed(1) + 'T';
+    return 0 + '';
+  };
 }

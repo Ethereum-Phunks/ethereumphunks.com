@@ -10,6 +10,9 @@ import path from 'path';
 
 import { rarityData } from '../constants/collections';
 
+/**
+ * Service for generating notification images
+ */
 @Injectable()
 export class ImageService {
 
@@ -17,6 +20,14 @@ export class ImageService {
     private readonly http: HttpService
   ) {}
 
+  /**
+   * Generates a notification image for a single ethscription
+   * @param data Object containing ethscription, collection and attribute data
+   * @param data.ethscription The ethscription details
+   * @param data.collection The collection details
+   * @param data.attributes Array of attribute objects with key, value and rarity
+   * @returns Promise resolving to image buffer
+   */
   async generateImage(data: {
     ethscription: Ethscription,
     collection: Collection,
@@ -31,68 +42,73 @@ export class ImageService {
     const canvasWidth = canvasMax;
     const canvasHeight = canvasMax;
 
+    // Register custom font
     registerFont(path.join(__dirname, '../../../_static/retro-computer.ttf'), { family: 'RetroComputer' });
 
+    // Define brand colors
     const colors = {
       base: '#C3FF00',
       pink: '#FF03B4',
       blue: '#00FFC9',
     };
 
+    // Initialize canvas
     const canvas = createCanvas(canvasWidth, canvasHeight);
     const ctx = canvas.getContext('2d');
     ctx.imageSmoothingEnabled = false;
 
+    // Draw base background
     ctx.fillStyle = colors.base;
     ctx.fillRect(0, 0, canvasWidth, canvasHeight);
 
     const bottomBarPos = canvasHeight - 200;
 
-    // Top bar
+    // Draw top bar
     ctx.fillStyle = colors.pink;
     ctx.fillRect(0, 0, canvasWidth, 20);
 
-    // Bottom bar
+    // Draw bottom bar
     ctx.fillStyle = colors.pink;
     ctx.fillRect(0, bottomBarPos, canvasWidth, 200);
 
-    // Collection Name
+    // Draw collection name
     ctx.fillStyle = colors.base;
     ctx.font = 'bold 34px RetroComputer';
     ctx.fillText(data.collection.singleName, 25, bottomBarPos + 65);
 
-    // Token Id
+    // Draw token ID
     ctx.fillStyle = colors.base;
     ctx.font = 'bold 100px RetroComputer';
     ctx.fillText(`${data.ethscription.tokenId}`, 20, canvasHeight - 35);
 
-    // Rarity Number
+    // Draw rarity number
     ctx.fillStyle = colors.blue;
     ctx.font = 'bold 22px RetroComputer';
     const rarityNumberWidth = ctx.measureText(`${data.attributes[0].rarity}`).width;
     ctx.fillText(`${data.attributes[0].rarity}`, (canvasWidth - rarityNumberWidth) - 40, bottomBarPos + 65);
 
-    // Rarity Line 1
+    // Draw rarity text line 1
     ctx.fillStyle = colors.base;
     ctx.font = 'bold 22px RetroComputer';
     const text = `One of`;
     const textWidth = ctx.measureText(text).width;
     ctx.fillText(text, (canvasWidth - textWidth) - 40 - (rarityNumberWidth + 10), bottomBarPos + 65);
 
-    // Rarity Line 2
+    // Draw rarity text line 2
     ctx.fillStyle = colors.blue;
     ctx.font = 'bold 22px RetroComputer';
     const text2 = `${data.attributes[0].v}`;
     const text2Width = ctx.measureText(text2).width;
     ctx.fillText(text2, (canvasWidth - text2Width) - 40, bottomBarPos + 95);
 
-    // Rarity Line 3
+    // Draw rarity text line 3
     ctx.fillStyle = colors.base;
     ctx.font = 'bold 22px RetroComputer';
     const text3 = `${data.collection.singleName}s`;
     const text3Width = ctx.measureText(text3).width;
     ctx.fillText(text3, (canvasWidth - text3Width) - 40, bottomBarPos + 125);
 
+    // Load and draw ethscription image
     const baseImageUrl = `https://kcbuycbhynlmsrvoegzp.supabase.co/storage/v1/object/public/images`;
     let image: ArrayBuffer | null = null;
     try {
@@ -115,7 +131,7 @@ export class ImageService {
       img.src = Buffer.from(image);
     }
 
-    // Add logo
+    // Load and draw logo
     const logo = new Image();
     const logoSrc = path.join(__dirname, '../../../_static/eplogo.png');
     logo.onload = () => {
@@ -127,24 +143,33 @@ export class ImageService {
     return buffer;
   }
 
+  /**
+   * Generates a grid image containing multiple ethscriptions
+   * @param items Array of ethscriptions to include in the grid
+   * @returns Promise resolving to image buffer
+   */
   async generateImages(
     items: Ethscription[],
   ): Promise<Buffer> {
     const canvasMax = 1200;
 
+    // Calculate grid dimensions
     let cols = Math.ceil(Math.sqrt(items.length));
     let rows = Math.ceil(items.length / cols);
 
     const canvasWidth = canvasMax;
     const canvasHeight = canvasMax * (rows / cols);
 
+    // Initialize canvas
     const canvas = createCanvas(canvasWidth, canvasHeight);
     const ctx = canvas.getContext('2d');
     ctx.imageSmoothingEnabled = false;
 
+    // Draw background
     ctx.fillStyle = '#C3FF00';
     ctx.fillRect(0, 0, canvasWidth, canvasHeight);
 
+    // Load and draw each ethscription image
     const baseImageUrl = `https://kcbuycbhynlmsrvoegzp.supabase.co/storage/v1/object/public/images`;
     for (let i = 0; i < items.length; i++) {
       const phunk = items[i];
@@ -171,7 +196,6 @@ export class ImageService {
     }
 
     const buffer = canvas.toBuffer('image/png');
-    // await writeFile('test.png', buffer);
     return buffer;
   }
 }

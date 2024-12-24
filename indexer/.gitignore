@@ -6,7 +6,7 @@ node_modules
 .env
 
 lastBlock-*.txt
-
+twitter-cookies.json
 ca-certificate.crt
 
 # Logs

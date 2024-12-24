@@ -1,4 +1,3 @@
-// telegram.service.ts
 import { Injectable } from '@nestjs/common';
 import { AxiosResponse } from 'axios';
 import { HttpService } from '@nestjs/axios';
@@ -9,16 +8,24 @@ import FormData from 'form-data';
 import dotenv from 'dotenv';
 dotenv.config();
 
+/**
+ * Service for sending messages and photos to Telegram using the Telegram Bot API
+ */
 @Injectable()
 export class TelegramService {
+
+  private readonly botToken = process.env.TELEGRAM_BOT_TOKEN;
+  private readonly chatId = '5445160677';
 
   constructor(private httpSvc: HttpService) {
     // this.sendMessage('PhunkBot started');
   }
 
-  private readonly botToken = process.env.TELEGRAM_BOT_TOKEN;
-  private readonly chatId = '5445160677';
-
+  /**
+   * Sends a text message to the configured Telegram chat
+   * @param message The text message to send
+   * @returns Promise resolving to the Telegram API response
+   */
   async sendMessage(message: string): Promise<AxiosResponse> {
     const apiUrl = `https://api.telegram.org/bot${this.botToken}/sendMessage`;
     const params = {
@@ -37,6 +44,12 @@ export class TelegramService {
     );
   }
 
+  /**
+   * Sends a photo with optional caption to the configured Telegram chat
+   * @param image Buffer containing the image data to send
+   * @param caption Optional text caption to include with the photo
+   * @returns Promise resolving to the Telegram API response
+   */
   async sendPhoto(image: Buffer, caption?: string): Promise<AxiosResponse> {
     const apiUrl = `https://api.telegram.org/bot${this.botToken}/sendPhoto`;
 
