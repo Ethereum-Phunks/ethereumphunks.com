@@ -25,20 +25,22 @@ import { NftModule } from '../nft/nft.module';
 @Module({
   imports: [
     HttpModule,
-    BullModule.forRoot({
-      redis: {
-        host: 'localhost',
-        port: 6379
-      }
-    }),
-    BullModule.registerQueue(
-      {
-        name: `${chain}__BlockProcessingQueue`
-      },
-      {
-        name: `${chain}__BridgeProcessingQueue`
-      }
-    ),
+    ...(Number(process.env.QUEUE) ? [
+      BullModule.forRoot({
+        redis: {
+          host: 'localhost',
+          port: 6379
+        }
+      }),
+      BullModule.registerQueue(
+        {
+          name: `${chain}__BlockProcessingQueue`
+        },
+        {
+          name: `${chain}__BridgeProcessingQueue`
+        }
+      )
+    ] : []),
     SharedModule,
     BridgeL1Module,
     NftModule,
@@ -46,12 +48,12 @@ import { NftModule } from '../nft/nft.module';
     forwardRef(() => EthscriptionsModule),
   ],
   providers: [
-    BlockQueueService,
-    BlockProcessingQueue,
-
-    BridgeQueueService,
-    BridgeProcessingQueue,
-
+    ...(Number(process.env.QUEUE) ? [
+      BlockQueueService,
+      BlockProcessingQueue,
+      BridgeQueueService,
+      BridgeProcessingQueue,
+    ] : []),
     ProcessingService,
     SupabaseService,
 
@@ -60,8 +62,10 @@ import { NftModule } from '../nft/nft.module';
     // ImageService,
   ],
   exports: [
-    BlockProcessingQueue,
-    BridgeProcessingQueue
+    ...(Number(process.env.QUEUE) ? [
+      BlockProcessingQueue,
+      BridgeProcessingQueue
+    ] : []),
   ],
 })
 export class QueueModule {}

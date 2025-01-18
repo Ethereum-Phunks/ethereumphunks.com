@@ -8,12 +8,12 @@ import { rarityData } from './constants/collections';
 import { ImageService } from './services/image.service';
 import { DiscordService } from './services/discord.service';
 import { Web3Service } from '../shared/services/web3.service';
+import { TwitterService } from './services/twitter.service';
 
 import { createClient } from '@supabase/supabase-js';
 import { formatUnits } from 'viem';
 
 import dotenv from 'dotenv';
-import { TwitterService } from './services/twitter.service';
 dotenv.config();
 
 const supabaseUrl = process.env.SUPABASE_URL;
@@ -131,6 +131,7 @@ export class NotifsService {
    * Retrieves full Ethscription data including collection and attributes
    * @param hashId The Ethscription hash ID
    * @returns Ethscription data with collection and attributes
+   * !FIXME: Update to use new attributes!
    */
   async getEthscriptionWithCollectionAndAttributes(hashId: string): Promise<EthscriptionWithCollectionAndAttributes> {
     const response = supabase

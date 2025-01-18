@@ -1,4 +1,4 @@
-import { Inject, Injectable, Logger } from '@nestjs/common';
+import { Inject, Injectable, Logger, Optional } from '@nestjs/common';
 
 import { SupabaseService } from '@/services/supabase.service';
 import { DataService } from '@/services/data.service';
@@ -29,7 +29,7 @@ export class EthscriptionsService {
     @Inject('WEB3_SERVICE_L2') private readonly web3SvcL2: Web3Service,
     private readonly sbSvc: SupabaseService,
     private readonly notifsSvc: NotifsService,
-    private readonly bridgeQueue: BridgeProcessingQueue,
+    @Optional() private readonly bridgeQueue: BridgeProcessingQueue,
     private readonly dataSvc: DataService
   ) {}
 

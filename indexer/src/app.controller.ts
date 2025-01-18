@@ -1,4 +1,4 @@
-import { Body, Controller, Post } from '@nestjs/common';
+import { Body, Controller, Post, Optional } from '@nestjs/common';
 
 import { ProcessingService } from '@/services/processing.service';
 import { BlockProcessingQueue } from '@/modules/queue/queues/block-processing.queue';
@@ -8,7 +8,7 @@ export class AppController {
 
   constructor(
     private readonly processingSvc: ProcessingService,
-    private readonly blockQueue: BlockProcessingQueue,
+    @Optional() private readonly blockQueue: BlockProcessingQueue,
   ) {}
 
   /**
@@ -20,6 +20,11 @@ export class AppController {
   @Post('reindex-block')
   async reindexBlock(@Body() body: { blockNumber: number }): Promise<void> {
     return await this.processingSvc.processBlock(body.blockNumber, false);
+  }
+
+  @Post('reindex-transaction')
+  async reindexTransaction(@Body() body: { hash: `0x${string}` }): Promise<void> {
+    return await this.processingSvc.processSingleTransaction(body.hash);
   }
 
   /**

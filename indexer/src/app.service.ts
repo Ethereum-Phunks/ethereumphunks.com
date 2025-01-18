@@ -1,4 +1,4 @@
-import { Inject, Injectable, Logger } from '@nestjs/common';
+import { Inject, Injectable, Logger, Optional } from '@nestjs/common';
 
 import { BlockProcessingQueue } from '@/modules/queue/queues/block-processing.queue';
 import { BridgeProcessingQueue } from '@/modules/queue/queues/bridge-processing.queue';
@@ -20,8 +20,8 @@ export class AppService {
 
   constructor(
     @Inject('WEB3_SERVICE_L1') private readonly web3SvcL1: Web3Service,
-    private readonly blockQueue: BlockProcessingQueue,
-    private readonly bridgeQueue: BridgeProcessingQueue,
+    @Optional() private readonly blockQueue: BlockProcessingQueue,
+    @Optional() private readonly bridgeQueue: BridgeProcessingQueue,
     private readonly sbSvc: SupabaseService,
     private readonly utilSvc: UtilityService
   ) {
