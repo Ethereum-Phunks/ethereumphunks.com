@@ -186,6 +186,11 @@ app-phunk-billboard {
           font-weight: 700;
           color: rgba(var(--highlight), 1);
           text-decoration: none;
+
+          .percent {
+            font-size: 1.4rem;
+            opacity: .5;
+          }
         }
 
         .trait-count {

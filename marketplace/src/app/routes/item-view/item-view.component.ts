@@ -11,16 +11,14 @@ import { LazyLoadImageModule } from 'ng-lazyload-image';
 
 import { PhunkBillboardComponent } from '@/components/phunk-billboard/phunk-billboard.component';
 import { TxHistoryComponent } from '@/components/tx-history/tx-history.component';
-import { PhunkImageComponent } from '@/components/shared/phunk-image/phunk-image.component';
 import { BreadcrumbsComponent } from '@/components/breadcrumbs/breadcrumbs.component';
-import { AuctionComponent } from '@/components/auction/auction.component';
 
 import { WalletAddressDirective } from '@/directives/wallet-address.directive';
 
-import { TokenIdParsePipe } from '@/pipes/token-id-parse.pipe';
 import { TraitCountPipe } from '@/pipes/trait-count.pipe';
 import { WeiToEthPipe } from '@/pipes/wei-to-eth.pipe';
 import { FormatCashPipe } from '@/pipes/format-cash.pipe';
+import { QueryParamsPipe } from '@/pipes/query-params.pipe';
 
 import { DataService } from '@/services/data.service';
 import { Web3Service } from '@/services/web3.service';
@@ -58,14 +56,12 @@ import { setChat } from '@/state/actions/chat.actions';
     PhunkBillboardComponent,
     TxHistoryComponent,
     WalletAddressDirective,
-    PhunkImageComponent,
     BreadcrumbsComponent,
-    AuctionComponent,
 
-    TokenIdParsePipe,
     TraitCountPipe,
     WeiToEthPipe,
-    FormatCashPipe
+    FormatCashPipe,
+    QueryParamsPipe,
   ],
   selector: 'app-phunk-item-view',
   templateUrl: './item-view.component.html',
@@ -679,11 +675,6 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
     }
   }
 
-  getItemQueryParams(item: any): any {
-    if (!item) return;
-    return { [item.k.replace(/ /g, '-').toLowerCase()]: item.v.replace(/ /g, '-').toLowerCase() };
-  }
-
   async checkConsenus(phunk: Phunk): Promise<void> {
     const res = await this.dataSvc.checkConsensus([phunk]);
     if (!res[0]?.consensus) throw new Error('Consensus not reached. Contact Support @etherphunks');
@@ -698,5 +689,9 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
       active: true,
       toAddress: '0xf1Aa941d56041d47a9a18e99609A047707Fe96c7'
     }));
+  }
+
+  isNumber(value: any): boolean {
+    return typeof value === 'number';
   }
 }
