@@ -371,7 +371,7 @@ export class Web3Service {
       });
       return call;
     } catch (error) {
-      console.log({functionName, args, error});
+      // console.log({functionName, args, error});
       return null;
     }
   }

@@ -56,7 +56,7 @@ export class DataStateEffects {
         map((slug) => {
           const coll = action.collections.find((c) => c.slug === slug);
           const activeCollection = { ...coll! };
-          console.log({ slug, coll, activeCollection });
+          // console.log({ slug, coll, activeCollection });
           return dataStateActions.setActiveCollection({ activeCollection });
         })
       );

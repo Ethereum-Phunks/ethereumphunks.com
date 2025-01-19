@@ -34,7 +34,7 @@
     "@ngrx/store": "^17.2.0",
     "@ngrx/store-devtools": "^17.0.1",
     "@openzeppelin/merkle-tree": "^1.0.5",
-    "@supabase/supabase-js": "^2.44.2",
+    "@supabase/supabase-js": "^2.47.16",
     "@wagmi/connectors": "^5.1.2",
     "@wagmi/core": "^2.13.1",
     "@web3modal/wagmi": "^5.0.11",
