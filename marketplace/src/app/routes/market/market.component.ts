@@ -10,16 +10,11 @@ import { NgSelectModule } from '@ng-select/ng-select';
 
 import { PhunkGridComponent } from '@/components/shared/phunk-grid/phunk-grid.component';
 import { MarketFiltersComponent } from '@/components/market-filters/market-filters.component';
-import { ModalComponent } from '@/components/shared/modal/modal.component';
-import { ChatComponent } from '@/components/chat/chat.component';
 import { SlideoutComponent } from '@/components/slideout/slideout.component';
-import { ConversationComponent } from '@/components/chat/conversation/conversation.component';
-import { UserActivityComponent } from '@/components/user-activity/user-activity.component';
 
 import { WalletAddressDirective } from '@/directives/wallet-address.directive';
 
 import { Sorts } from '@/models/pipes';
-import { TokenIdParsePipe } from '@/pipes/token-id-parse.pipe';
 
 import { GlobalState, Notification, TraitFilter } from '@/models/global-state';
 import { Phunk } from '@/models/db';
@@ -64,18 +59,12 @@ const defaultActionState = {
 
     PhunkGridComponent,
     MarketFiltersComponent,
-    ModalComponent,
     SlideoutComponent,
-    ChatComponent,
-    ConversationComponent,
-    UserActivityComponent,
 
     WalletAddressDirective,
     WeiToEthPipe,
     CalcPipe,
     FormatCashPipe,
-
-    TokenIdParsePipe,
   ],
   selector: 'app-phunk-grid-view',
   templateUrl: './market.component.html',

@@ -12,6 +12,10 @@
       @if ((activeCollection$ | async); as collection) {
         <div class="header-wrapper">
 
+          <a class="button" [routerLink]="['/', 'curated', collection.slug]">
+            <ng-template [ngTemplateOutlet]="prevIcon" />
+            {{ collection.name }}
+          </a>
           <h1 i18n>{{ marketTitles[marketType].replace('%collectionName%', collection.singleName) }}</h1>
 
           @if ((route.queryParams | async)?.address; as address) {
@@ -381,4 +385,8 @@
 
 <ng-template #chatIcon>
   <svg height="9" viewBox="0 0 11 9" width="11" xmlns="http://www.w3.org/2000/svg"><path d="m1 7h1v1h-1z"/><path d="m2 6h1v1h-1z"/><path d="m1 5h1v1h-1z"/><path d="m0 4h1v1h-1z"/><path d="m0 3h1v1h-1z"/><path d="m0 2h1v1h-1z"/><path d="m1 1h1v1h-1z"/><path d="m2 0h1v1h-1z"/><path d="m10 5h-1v1h1z"/><path d="m9 6h-1v1h1z"/><path d="m8 7h-1v1h1z"/><path d="m7 7h-1v1h1z"/><path d="m11 4h-1v1h1z"/><path d="m11 3h-1v1h1z"/><path d="m11 2h-1v1h1z"/><path d="m10 1h-1v1h1z"/><path d="m9 0h-1v1h1z"/><path d="m3 0h1v1h-1z"/><path d="m4 0h1v1h-1z"/><path d="m5 0h1v1h-1z"/><path d="m6 0h1v1h-1z"/><path d="m7 0h1v1h-1z"/><path d="m0 8h1v1h-1z"/><path d="m1 8h1v1h-1z"/><path d="m2 8h1v1h-1z"/><path d="m3 8h1v1h-1z"/><path d="m4 8h1v1h-1z"/><path d="m5 7h1v1h-1z"/></svg>
+</ng-template>
+
+<ng-template #backIcon>
+  <svg height="13" viewBox="0 0 13 13" width="13" xmlns="http://www.w3.org/2000/svg"><path d="m12.5 6.5h-11v-1h11zm-11-2h11v1h-11zm11 4h-11v1h11zm-11-2h11v1h-11z" fill="rgba(var(--text-color), 1)" /></svg>
 </ng-template>
