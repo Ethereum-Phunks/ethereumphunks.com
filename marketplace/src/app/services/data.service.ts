@@ -43,8 +43,6 @@ export class DataService {
   private currentFloor = new BehaviorSubject<number>(0);
   currentFloor$ = this.currentFloor.asObservable();
 
-  attributes!: any;
-
   walletAddress$ = this.store.select(state => state.appState.walletAddress);
 
   constructor(
@@ -473,6 +471,7 @@ export class DataService {
    * @param tokenId Token ID
    */
   fetchSinglePhunk(tokenId: string): Observable<Phunk> {
+    if (!tokenId) return of({} as Phunk);
 
     const fetch = () => {
       let query = supabase
@@ -522,12 +521,13 @@ export class DataService {
           this.checkConsensus([res]),
         ])),
         map(([[res], listing, [consensus]]) => {
+          // console.log(res.attributes);
           const phunk = {
             ...res,
             listing: listing?.listedBy.toLowerCase() === res.prevOwner?.toLowerCase() ? listing : null,
             consensus: consensus?.consensus,
             attributes: [ ...(res.attributes || []) ]
-              .filter((a: Attribute) => typeof a.v !== 'number')
+              // .filter((a: Attribute) => typeof a.v !== 'number')
               .sort((a: Attribute, b: Attribute) => {
                 if (a.k === "Sex" || a.k === "Type") return -1;
                 if (b.k === "Sex" || b.k === "Type") return 1;
@@ -722,6 +722,7 @@ export class DataService {
    * @param address Address to check
    */
   async checkIsBanned(address: string): Promise<boolean> {
+    if (environment.chainId === 1) return false;
     if (!address) return false;
 
     const { data, error } = await supabase
@@ -805,7 +806,7 @@ export class DataService {
         totalVolume: res.data[0],
         topSales: topSales.data,
       })),
-      tap((res) => console.log('fetchStats', res)),
+      // tap((res) => console.log('fetchStats', res)),
     );
   }
 
