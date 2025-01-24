@@ -5,9 +5,6 @@ import { Queue } from 'bull';
 
 import { chain, l2Chain } from '@/constants/ethereum';
 
-import dotenv from 'dotenv';
-dotenv.config();
-
 @Injectable()
 export class BridgeProcessingQueue {
 

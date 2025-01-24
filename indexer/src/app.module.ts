@@ -9,6 +9,8 @@ import { CardModule } from '@/modules/card/card.module';
 import { NftModule } from '@/modules/nft/nft.module';
 import { BridgeL2Module } from '@/modules/bridge-l2/bridge-l2.module';
 import { EthscriptionsModule } from '@/modules/ethscriptions/ethscriptions.module';
+import { TxpoolModule } from '@/modules/txpool/txpool.module';
+import { MintModule } from '@/modules/mint/mint.module';
 
 import { AppService } from '@/app.service';
 import { AppController } from '@/app.controller';
@@ -19,10 +21,13 @@ import { SupabaseService } from '@/services/supabase.service';
 import { ProcessingService } from '@/services/processing.service';
 
 import { ApiKeyMiddleware } from '@/middleware/api-key.middleware';
-import { MintModule } from './modules/mint/mint.module';
+import { ConfigModule } from '@nestjs/config';
 
 @Module({
   imports: [
+    ConfigModule.forRoot({
+      isGlobal: true,
+    }),
     HttpModule,
 
     NftModule,
@@ -35,7 +40,7 @@ import { MintModule } from './modules/mint/mint.module';
     NotifsModule,
     CardModule,
     SharedModule,
-
+    TxpoolModule,
     MintModule,
   ],
   controllers: [AppController],

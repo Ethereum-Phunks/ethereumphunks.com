@@ -1,8 +1,5 @@
-import { Injectable, Logger, NestMiddleware } from '@nestjs/common';
+import { Injectable, NestMiddleware } from '@nestjs/common';
 import { Request, Response, NextFunction } from 'express';
-
-import dotenv from 'dotenv';
-dotenv.config();
 
 @Injectable()
 export class ApiKeyMiddleware implements NestMiddleware {

@@ -5,9 +5,6 @@ import { AppModule } from '@/app.module';
 
 import { CustomLogger } from '@/modules/shared/services/logger.service';
 
-import dotenv from 'dotenv';
-dotenv.config();
-
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 

@@ -5,9 +5,6 @@ import { Job, Queue } from 'bull';
 import { MintService } from '@/modules/bridge-l1/services/mint.service';
 import { chain } from '@/constants/ethereum';
 
-import dotenv from 'dotenv';
-dotenv.config();
-
 @Injectable()
 @Processor(`${chain}__BridgeProcessingQueue`)
 export class BridgeQueueService {

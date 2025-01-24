@@ -3,9 +3,6 @@ import { HttpService } from '@nestjs/axios';
 
 import { catchError, firstValueFrom, map, of } from 'rxjs';
 
-import dotenv from 'dotenv';
-dotenv.config();
-
 @Injectable()
 export class DataService {
 

@@ -4,9 +4,6 @@ import { NotificationMessage } from '../models/message.model';
 
 import { AttachmentBuilder, Client, codeBlock, EmbedBuilder, Events, GatewayIntentBits, TextChannel } from 'discord.js';
 
-import dotenv from 'dotenv';
-dotenv.config();
-
 /**
  * Service for interacting with Discord to send notifications
  */

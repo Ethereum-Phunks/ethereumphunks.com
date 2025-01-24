@@ -11,9 +11,6 @@ import { UtilityService } from '@/modules/shared/services/utility.service';
 
 import { bridgeAbiL2, l2Client, l2WalletClient } from '@/constants/ethereum';
 
-import dotenv from 'dotenv';
-dotenv.config();
-
 @Injectable()
 export class MintService {
 

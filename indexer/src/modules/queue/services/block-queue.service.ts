@@ -8,9 +8,6 @@ import { chain } from '@/constants/ethereum';
 
 import { Job, Queue } from 'bull';
 
-import dotenv from 'dotenv';
-dotenv.config();
-
 @Injectable()
 @Processor(`${chain}__BlockProcessingQueue`)
 export class BlockQueueService {

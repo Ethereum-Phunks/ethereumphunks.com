@@ -10,9 +10,6 @@ import { Web3Service } from '@/modules/shared/services/web3.service';
 
 import { chain, l1Client } from '@/constants/ethereum';
 
-import dotenv from 'dotenv';
-dotenv.config();
-
 const chainId = Number(process.env.CHAIN_ID);
 
 @Injectable()

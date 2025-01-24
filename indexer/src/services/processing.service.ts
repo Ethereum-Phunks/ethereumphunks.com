@@ -14,9 +14,6 @@ import { Event } from '@/models/db';
 
 import { FormattedTransaction, GetBlockReturnType, Transaction, TransactionReceipt } from 'viem';
 
-import dotenv from 'dotenv';
-dotenv.config();
-
 const CONFIRMATIONS = 6;
 const BLOCK_HISTORY = 30;
 

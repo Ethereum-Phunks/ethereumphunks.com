@@ -12,10 +12,6 @@ import bridgeL2 from '@/abi/EtherPhunksBridgeL2.json';
 import marketL1 from '@/abi/EtherPhunksMarketL1.json';
 import marketL2 from '@/abi/EtherPhunksNftMarket.json';
 
-
-import dotenv from 'dotenv';
-dotenv.config();
-
 export const pointsAbiL1 = pointsL1;
 
 export const bridgeAbiL1 = bridgeL1;

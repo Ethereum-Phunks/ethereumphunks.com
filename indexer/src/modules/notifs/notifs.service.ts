@@ -13,9 +13,6 @@ import { TwitterService } from './services/twitter.service';
 import { createClient } from '@supabase/supabase-js';
 import { formatUnits } from 'viem';
 
-import dotenv from 'dotenv';
-dotenv.config();
-
 const supabaseUrl = process.env.SUPABASE_URL;
 const serviceRole = process.env.SUPABASE_SERVICE_ROLE;
 const supabase = createClient(supabaseUrl, serviceRole);

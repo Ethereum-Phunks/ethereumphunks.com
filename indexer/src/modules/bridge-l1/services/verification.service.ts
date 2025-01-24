@@ -11,9 +11,6 @@ import { MintService } from '@/modules/bridge-l1/services/mint.service';
 
 import { SignatureBody } from '@/modules/bridge-l1/models/bridge.model';
 
-import dotenv from 'dotenv';
-dotenv.config();
-
 const prefix = process.env.CHAIN_ID === '1' ? '' : 'sepolia-';
 
 @Injectable()

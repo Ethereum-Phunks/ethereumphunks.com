@@ -5,9 +5,6 @@ import { HttpService } from '@nestjs/axios';
 import { catchError, firstValueFrom, map } from 'rxjs';
 import FormData from 'form-data';
 
-import dotenv from 'dotenv';
-dotenv.config();
-
 /**
  * Service for sending messages and photos to Telegram using the Telegram Bot API
  */

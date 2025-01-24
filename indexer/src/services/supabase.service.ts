@@ -20,9 +20,6 @@ import {
   AttributesResponse,
 } from '@/models/db';
 
-import dotenv from 'dotenv';
-dotenv.config();
-
 const supabaseUrl = process.env.SUPABASE_URL;
 const serviceRole = process.env.SUPABASE_SERVICE_ROLE;
 const supabase = createClient(supabaseUrl, serviceRole);

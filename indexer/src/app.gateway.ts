@@ -7,9 +7,6 @@ import { CustomLogger } from '@/modules/shared/services/logger.service';
 
 import { chain } from '@/constants/ethereum';
 
-import dotenv from 'dotenv';
-dotenv.config();
-
 @WebSocketGateway({cors: {
   origin: '*',
   methods: ['GET'],

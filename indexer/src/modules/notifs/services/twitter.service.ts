@@ -2,9 +2,6 @@ import { Injectable, OnModuleInit } from '@nestjs/common';
 import { Scraper } from 'agent-twitter-client';
 import { NotificationMessage } from '../models/message.model';
 
-import dotenv from 'dotenv';
-dotenv.config();
-
 import * as fs from 'fs';
 import * as path from 'path';
 

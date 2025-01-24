@@ -1,10 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 
-import { BlockTag, Chain, Transaction, TransactionReceipt, WriteContractParameters, getAddress, toHex } from 'viem';
+import { Transaction, TransactionReceipt, WriteContractParameters, getAddress, toHex } from 'viem';
 import { bridgeAbiL1, bridgeAddressL1, l1Client, l2Client, pointsAbiL1, pointsAddressL1 } from '@/constants/ethereum';
-
-import dotenv from 'dotenv';
-dotenv.config();
 
 interface GetBlockOptions {
   blockNumber?: number;
