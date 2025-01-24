@@ -1,9 +1,8 @@
 // nestjs service
-import { BadRequestException, Inject, Injectable, OnModuleInit } from '@nestjs/common';
+import { Injectable, OnModuleInit } from '@nestjs/common';
 import { createHash } from 'crypto';
 
 import { SupabaseService } from '@/services/supabase.service';
-import { Web3Service } from '@/modules/shared/services/web3.service';
 
 @Injectable()
 export class MintService implements OnModuleInit {
@@ -11,12 +10,12 @@ export class MintService implements OnModuleInit {
   private metadata: any;
 
   constructor(
-    @Inject('WEB3_SERVICE_L1') private readonly web3SvcL1: Web3Service,
     private readonly sbSvc: SupabaseService,
   ) {}
 
   async onModuleInit() {
-    this.metadata = await this.getMetadata('ethereum-phunks');
+    this.metadata = await this.getMetadata('call-data-comrades');
+    // console.log(this.metadata);
   }
 
   async validateMint(
@@ -27,19 +26,28 @@ export class MintService implements OnModuleInit {
     address: string,
     id: number,
     exists: boolean,
-    metadata: any,
+    metadata: {
+      attributes: {
+        [key: string]: string;
+      },
+      sha: string,
+    },
   }> {
-    const validatedAddress = this.web3SvcL1.validateAddress(address);
-    if (!validatedAddress) {
-      throw new BadRequestException('Invalid address');
-    }
-
-    const id = await this.getRandomId(slug, validatedAddress);
+    const id = await this.getRandomId(slug, address);
     const exists = await this.checkAlreadyExists(slug, id);
 
     const sha = Object.keys(this.metadata)[id];
     const metadata = { sha, metadata: this.metadata[sha] };
-    return { slug, address, id, exists, metadata };
+    return {
+      slug,
+      address,
+      id,
+      exists,
+      metadata: {
+        attributes: metadata.metadata,
+        sha: metadata.sha,
+      },
+    };
   }
 
   async getRandomId(slug: string, address: string): Promise<number> {
