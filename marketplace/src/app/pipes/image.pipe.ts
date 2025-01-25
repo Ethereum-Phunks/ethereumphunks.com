@@ -11,6 +11,6 @@ export class ImagePipe implements PipeTransform {
 
   transform(phunk: Phunk): string {
     if (!phunk) return '';
-    return environment.staticUrl + '/images/' + phunk.sha + '.png'
+    return environment.staticUrl + '/static/images/' + phunk.sha;
   }
 }

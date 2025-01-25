@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterModule } from '@angular/router';
 import { IntersectionObserverModule } from '@ng-web-apis/intersection-observer';
@@ -62,6 +62,8 @@ export class IndexComponent {
   usd$ = this.store.select(dataStateSelectors.selectUsd);
 
   config$ = this.store.select(appStateSelectors.selectConfig);
+
+  mintImage = signal<string | null>(null);
 
   constructor(
     private store: Store<GlobalState>,

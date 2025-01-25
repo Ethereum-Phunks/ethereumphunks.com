@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Socket, SocketIoConfig } from 'ngx-socket-io';
+import { tap } from 'rxjs';
 
 import { environment } from 'src/environments/environment';
 
@@ -44,6 +45,9 @@ export class SocketService extends Socket {
 
   /** Observable stream of log message arrays for current chain */
   logs$ = this.fromEvent<LogItem[]>(`logs_${chain}`);
+
+  /** Observable stream of pending inscription SHAs */
+  pendingInscriptionShas$ = this.fromEvent<Map<string, string>>('pendingInscriptionShas');
 
   constructor() {
     super(socketConfig);

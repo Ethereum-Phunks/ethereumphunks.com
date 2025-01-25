@@ -2,6 +2,9 @@ import { createPublicClient, createWalletClient, fallback, http } from 'viem';
 import { mainnet, sepolia } from 'viem/chains';
 import { privateKeyToAccount } from 'viem/accounts';
 
+import dotenv from 'dotenv';
+dotenv.config();
+
 import { magma } from './magma.chain';
 
 import pointsL1 from '@/abi/PointsL1.json';

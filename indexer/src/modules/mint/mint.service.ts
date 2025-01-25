@@ -33,15 +33,16 @@ export class MintService implements OnModuleInit {
       sha: string,
     },
   }> {
-    const id = await this.getRandomId(slug, address);
-    const exists = await this.checkAlreadyExists(slug, id);
+    const randomId = await this.getRandomId(slug, address);
+    const exists = await this.checkAlreadyExists(slug, randomId);
 
-    const sha = Object.keys(this.metadata)[id];
+    const sha = Object.keys(this.metadata)[randomId - 1];
     const metadata = { sha, metadata: this.metadata[sha] };
+
     return {
       slug,
       address,
-      id,
+      id: randomId,
       exists,
       metadata: {
         attributes: metadata.metadata,
@@ -50,8 +51,15 @@ export class MintService implements OnModuleInit {
     };
   }
 
-  async getRandomId(slug: string, address: string): Promise<number> {
-    const LIMIT = 10000;
+  async getRandomId(
+    slug: string,
+    address: string,
+    range: { min: number; max: number } = { min: 1, max: 9838 },
+  ): Promise<number> {
+
+    const min = range.min ?? 0;
+    const max = range.max ?? 10000;
+    const minMaxRange = max - min + 1;
 
     // Add multiple sources of entropy
     const timestamp = process.hrtime.bigint().toString();
@@ -69,8 +77,9 @@ export class MintService implements OnModuleInit {
 
     // Use BigInt division for more precise distribution
     const maxUint64 = BigInt('18446744073709551615'); // 2^64 - 1
-    const random = Number((value * BigInt(LIMIT)) / maxUint64);
-    return random;
+    const random = Number((value * BigInt(minMaxRange)) / maxUint64);
+
+    return min + random;
   }
 
   async checkAlreadyExists(slug: string, id: number): Promise<boolean> {

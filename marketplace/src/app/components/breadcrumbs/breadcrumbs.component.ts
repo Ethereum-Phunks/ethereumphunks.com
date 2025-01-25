@@ -141,7 +141,7 @@ export class BreadcrumbsComponent {
 
   async getPunkImage(): Promise<string | undefined> {
     if (!this.phunk()) return;
-    const imgUrl = this.dataSvc.staticUrl + '/images/' + this.phunk()!.sha + '.png';
+    const imgUrl = this.dataSvc.staticUrl + '/static/images/' + this.phunk()!.sha;
     const response = await firstValueFrom(this.http.get(imgUrl, { responseType: 'blob' }));
     const blob = new Blob([response], { type: 'image/png' });
     return URL.createObjectURL(blob);

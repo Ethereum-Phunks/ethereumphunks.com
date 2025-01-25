@@ -14,6 +14,10 @@
             <app-phunk-image [color]="txn.type === 'event'" [hashId]="hashId" />
           }
         </div>
+      } @else if (txn.sha) {
+        <div class="single-image">
+          <img [src]="env.staticUrl + '/static/images/' + txn.sha" alt="">
+        </div>
       } @else if (txn.hashId) {
         <a class="single-image" [routerLink]="['/', 'details', txn.hashId]">
           <app-phunk-image [color]="txn.type === 'event'" [hashId]="txn.hashId" />

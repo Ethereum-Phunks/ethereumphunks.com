@@ -851,7 +851,45 @@ export class DataService {
         return of({ data: [], total: 0 });
       })
     );
+  }
 
+  fetchMintProgress(slug: string): Observable<any> {
+    const subject = new BehaviorSubject<number>(0);
+
+    // Initial fetch
+    supabase
+      .from('ethscriptions' + this.prefix)
+      .select('*')
+      .eq('slug', slug)
+      .then((res: any) => {
+        subject.next(res.data.length);
+      });
+
+    // Subscribe to realtime changes
+    supabase
+      .channel('ethscriptions_changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'ethscriptions' + this.prefix,
+          filter: `slug=eq.${slug}`
+        },
+        () => {
+          // When change occurs, refetch count
+          supabase
+            .from('ethscriptions' + this.prefix)
+            .select('*')
+            .eq('slug', slug)
+            .then((res: any) => {
+              subject.next(res.data.length);
+            });
+        }
+      )
+      .subscribe();
+
+    return subject.asObservable();
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

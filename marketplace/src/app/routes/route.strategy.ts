@@ -7,12 +7,14 @@ export class CustomReuseStrategy implements RouteReuseStrategy {
   private storedRoutes = new Map<string, DetachedRouteHandle>();
 
   shouldDetach(route: ActivatedRouteSnapshot): boolean {
+    return false;
     const path = route.routeConfig?.path;
     return path === '' || path === 'curated/:slug';
   }
 
   store(route: ActivatedRouteSnapshot, handle: DetachedRouteHandle): void {
-    this.storedRoutes.set(route.routeConfig?.path || '', handle);
+    // this.storedRoutes.set(route.routeConfig?.path || '', handle);
+    this.storedRoutes.clear();
   }
 
   shouldAttach(route: ActivatedRouteSnapshot): boolean {

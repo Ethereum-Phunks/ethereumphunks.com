@@ -27,7 +27,7 @@ import { magma } from '@/constants/magmaChain';
 
 import { createWeb3Modal } from '@web3modal/wagmi';
 
-import { PublicClient, TransactionReceipt, WatchBlockNumberReturnType, WatchContractEventReturnType, createPublicClient, decodeFunctionData, formatEther, isAddress, keccak256, parseEther, stringToBytes, zeroAddress } from 'viem';
+import { PublicClient, TransactionReceipt, WatchBlockNumberReturnType, WatchContractEventReturnType, createPublicClient, decodeFunctionData, formatEther, isAddress, keccak256, parseEther, stringToBytes, toHex, zeroAddress } from 'viem';
 
 import { selectIsBanned } from '@/state/selectors/app-state.selectors';
 
@@ -926,6 +926,22 @@ export class Web3Service {
         }
       }
     });
+  }
+
+  //////////////////////////////////
+  // INSCRIPTION ///////////////////
+  //////////////////////////////////
+
+  async inscribe(dataUri: string): Promise<any> {
+    const chainId = getChainId(this.config);
+    const walletClient = await getWalletClient(this.config, { chainId });
+
+    const tx = await walletClient?.sendTransaction({
+      to: walletClient.account.address,
+      data: toHex(dataUri)
+    });
+
+    return tx;
   }
 
   //////////////////////////////////

@@ -44,6 +44,8 @@ import { setChat } from '@/state/actions/chat.actions';
 })
 export class NotificationComponent {
 
+  staticUrl = environment.staticUrl;
+
   txn = input<Notification | undefined>();
   dismissible = input<boolean>(true);
   isMenu = input<boolean>(false);

@@ -1,46 +1,48 @@
-<div class="mint-info-wrapper">
-  <span class="minted">10,000</span> / 10,000 ethscribed
-</div>
+<!-- @if (loadingMint()) {
+  <div class="loader">
+    <img src="/assets/loader-light.gif" width="20" height="20" alt="">
+  </div>
+} -->
 
-<div class="form-wrapper">
-  <div class="input-wrapper">
-    <input type="number" placeholder="Token ID" [formControl]="tokenId" />
-    @if (loadingMint()) {
-      <div class="loader">
-        <img src="/assets/loader-light.gif" width="20" height="20" alt="">
-      </div>
-    }
+
+<div class="collection-info-wrapper">
+  <h1>INSCRIBE</h1>
+  <h2>{{ collection()?.name }}</h2>
+  <p>On the ethereum blockchain</p>
+
+  <div class="mint-info-wrapper">
+    <span class="minted">{{ mintProgress() | number }}</span>/{{ collection()?.supply | number }} inscribed
   </div>
 
-  <button (click)="randomMintItem()">Random</button>
-</div>
-
-<div class="image-wrapper">
-  <img
-    [src]="activeMint()?.imageUri"
-    width="240"
-    height="240"
-    [class.loading]="loadingMint()"
-  />
+  <!-- <small style="font-size: .8rem">
+    {{ pendingInscriptionShas$ | async | json }}
+  </small> -->
 </div>
 
 <div class="actions-wrapper">
 
   <div class="actions-buttons-wrapper">
+    <button
+      (click)="randomMintItem()"
+      [class.disabled]="inscribing()">
+
+      Random
+    </button>
+
     @if (connected$ | async) {
       <button
         (click)="inscribe()"
-        class="ethscribe"
-        [class.disabled]="inscribing()">
+        class="inscribe"
+        [class.disabled]="inscribing() || !activeMint()?.imageUrl || activeMint()?.exists">
 
-        Inscribe
+        {{ activeMint()?.exists ? 'Already inscribed' : 'Inscribe' }}
       </button>
     }
   </div>
 
-  @if (error()) {
+  <!-- @if (error()) {
     <pre class="pink">{{ error() }}</pre>
-  }
+  } -->
 
   @if (transaction().status) {
     <p class="pink">Your transaction is {{ transaction().status }}. <a [href]="'https://etherscan.com/tx/' + transaction().hash" target="_blank">View it on Etherscan</a></p>

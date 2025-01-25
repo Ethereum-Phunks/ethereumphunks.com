@@ -89,9 +89,9 @@ export class PhunkImageComponent {
   }
 
   async getPhunkBySha(sha: string): Promise<any> {
-    const baseImageUrl = `${environment.staticUrl}/images`;
+    const baseImageUrl = `${environment.staticUrl}/static/images`;
     const image = await firstValueFrom(
-      this.http.get(`${baseImageUrl}/${sha}.png`, { responseType: 'arraybuffer' }).pipe(
+      this.http.get(`${baseImageUrl}/${sha}`, { responseType: 'arraybuffer' }).pipe(
         catchError(err => {
           console.error(err);
           return of(null);

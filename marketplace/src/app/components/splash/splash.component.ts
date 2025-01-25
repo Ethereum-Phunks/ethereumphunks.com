@@ -1,4 +1,4 @@
-import { Component, DestroyRef, effect, input, Input, OnChanges, OnDestroy, signal, SimpleChanges } from '@angular/core';
+import { Component, computed, effect, input, signal, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 
@@ -7,8 +7,6 @@ import { computedPrevious } from 'ngxtension/computed-previous';
 import { LazyLoadImageModule } from 'ng-lazyload-image';
 
 import { Collection } from '@/models/data.state';
-
-import { PhunkImageComponent } from '../shared/phunk-image/phunk-image.component';
 
 import { INode, parse, stringify } from 'svgson';
 import tinycolor from 'tinycolor2';
@@ -22,14 +20,12 @@ import { environment } from 'src/environments/environment';
   standalone: true,
   imports: [
     CommonModule,
-    LazyLoadImageModule,
-
-    PhunkImageComponent
+    LazyLoadImageModule
   ],
   templateUrl: './splash.component.html',
   styleUrls: ['./splash.component.scss'],
 })
-export class SplashComponent implements OnChanges {
+export class SplashComponent {
 
   collection = input<Collection | null>();
   collectionPrev = computedPrevious(this.collection);
@@ -37,44 +33,28 @@ export class SplashComponent implements OnChanges {
   random = signal<string[]>([]);
   images = signal<string[]>([]);
 
+  mintImage = input<string | null>(null);
+  mintImagePrev = computedPrevious(this.mintImage);
+
   constructor(
     private http: HttpClient
   ) {
     effect(async () => {
-      // console.log('effect', this.collection(), this.collectionPrev())
+      console.log('EFFECT');
+
       if (!this.collection()) return;
       this.images.set(await this.getPixelsFromPng());
     })
   }
 
-  async ngOnChanges(changes: SimpleChanges): Promise<void> {
-  //   if (
-  //     changes.collection &&
-  //     changes.collection.currentValue &&
-  //     changes.collection.currentValue.slug === 'ethereum-phunks' &&
-  //     changes.collection.currentValue.slug !== changes.collection.previousValue?.slug
-  //   ) {
-  //     console.log('SLUG CHANGED');
-  //     const random = this.getRandomNumbers();
-  //     const images = await Promise.all(random.map(num => this.getPhunkByTokenId(num)));
-  //     this.random.set(random);
-  //     this.images.set(images);
-  //   } else {
-  //     this.random.set([]);
-  //     this.images.set([]);
-  //   }
-  }
-
   async getPixelsFromPng(): Promise<any> {
     if (!this.collection()?.previews?.length) return [];
 
-    const baseImageUrl = `${environment.staticUrl}/images`;
+    const baseImageUrl = `${environment.staticUrl}/static/images`;
 
     const imageArray = await Promise.all(
       this.collection()!.previews.map(({ sha }) => {
-        // console.log(sha);
-
-        const url = `${baseImageUrl}/${sha}.png`;
+        const url = `${baseImageUrl}/${sha}`;
 
         return firstValueFrom(
           this.http.get(url, { responseType: 'arraybuffer' }).pipe(
@@ -292,3 +272,22 @@ export class SplashComponent implements OnChanges {
     return node;
   }
 }
+
+
+// async ngOnChanges(changes: SimpleChanges): Promise<void> {
+//   //   if (
+//   //     changes.collection &&
+//   //     changes.collection.currentValue &&
+//   //     changes.collection.currentValue.slug === 'ethereum-phunks' &&
+//   //     changes.collection.currentValue.slug !== changes.collection.previousValue?.slug
+//   //   ) {
+//   //     console.log('SLUG CHANGED');
+//   //     const random = this.getRandomNumbers();
+//   //     const images = await Promise.all(random.map(num => this.getPhunkByTokenId(num)));
+//   //     this.random.set(random);
+//   //     this.images.set(images);
+//   //   } else {
+//   //     this.random.set([]);
+//   //     this.images.set([]);
+//   //   }
+//   }

@@ -3,21 +3,62 @@
 
 :host {
   width: 100%;
-  height: var(--billboard-height);
 
-  // background-color: rgba(red, 1);
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
 
-  border: 1px solid red;
+  padding: 2rem;
+
+  font-family: $secondary-font-stack;
+  font-weight: normal;
+  color: rgba(var(--black), 1);
+
+  background-color: rgba(var(--transferred-color), 1);
+  box-shadow: .8rem .8rem 0 0 rgba(var(--pink), 1);
+}
+
+.collection-info-wrapper {
+  flex: 1;
 
   display: flex;
   flex-direction: column;
-  justify-content: flex-end;
-  align-items: center;
+}
 
-  padding: 2rem;
+h1, h2, p {
+  padding: 0;
+  margin: 0;
+  margin-bottom: .2rem;
+  font-weight: normal;
+}
+
+h1 {
+  font-size: 3rem;
+}
+
+h2 {
+  font-size: 2rem;
+  color: rgba(var(--pink), 1);
 }
 
 p {
-  border: 1px solid blue;
-  color: white;
+  font-size: 1.2rem;
+}
+
+button {
+  font-family: $secondary-font-stack;
+  font-weight: normal;
+}
+
+.actions-wrapper {
+
+  .actions-buttons-wrapper {
+    .inscribe {
+      &.disabled {
+
+        opacity: 0.5;
+        pointer-events: none;
+      }
+    }
+  }
 }

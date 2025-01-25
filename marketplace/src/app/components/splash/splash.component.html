@@ -1,5 +1,18 @@
+@if (mintImage()) {
+  <div class="image-wrapper mint-image-wrapper">
+    <img
+      [lazyLoad]="mintImage()!"
+      [defaultImage]="'/assets/loadingphunk.png'"
+      width="300"
+      height="300"
+    />
+  </div>
+}
 
-<div class="images-wrapper">
+<div
+  class="images-wrapper"
+  [class.is-minting]="!!mintImage()">
+
   @for (image of images(); track idx; let idx = $index) {
     @if (idx < 7) {
       <div class="image-wrapper">

@@ -1,8 +1,6 @@
 @import 'abstracts/variables';
 @import 'abstracts/mixins';
 
-$size: 30rem;
-
 :host {
   position: relative;
   display: flex;
@@ -35,21 +33,36 @@ $size: 30rem;
   justify-content: center;
 
   width: 100%;
-  height: $size;
+  height: var(--inscription-size);
 
   overflow: hidden;
 
-  .image-wrapper {
-    width: $size;
-    min-width: $size;
-    height: $size;
+  opacity: 1;
+  @include trans();
 
-    img {
-      display: block;
-      width: $size;
-      height: $size;
-      image-rendering: pixelated;
-    }
+  &.is-minting {
+    opacity: 0.2;
+  }
+}
+
+.image-wrapper {
+  width: var(--inscription-size);
+  min-width: var(--inscription-size);
+  height: var(--inscription-size);
+
+  img {
+    display: block;
+    width: var(--inscription-size);
+    height: var(--inscription-size);
+    image-rendering: pixelated;
+  }
+
+  &.mint-image-wrapper {
+    position: absolute;
+    z-index: 10;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
   }
 }
 

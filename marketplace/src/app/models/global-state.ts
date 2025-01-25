@@ -77,6 +77,7 @@ export interface Notification {
   type: 'wallet' | 'pending' | 'complete' | 'error' | 'event' | 'chat';
   function: TxFunction;
 
+  sha?: string;
   hashId?: string;
   chatAddress?: string;
   slug?: string;
@@ -106,7 +107,8 @@ export type TxFunction =
   | 'purchased'
   | 'chatMessage'
   | 'bridgeOut'
-  | 'bridgeIn';
+  | 'bridgeIn'
+  | 'mint';
 
 export interface TraitFilter {
   [key: string]: string;

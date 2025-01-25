@@ -198,7 +198,7 @@
               <div class="selected">
                 <img
                   [class.listed]="item.value.listing"
-                  [lazyLoad]="dataSvc.staticUrl + '/images/' + item.value.sha + '.png'"
+                  [lazyLoad]="dataSvc.staticUrl + '/static/images/' + item.value.sha"
                   [defaultImage]="'assets/loadingphunk.png'"
                   width="50"
                   height="50"
@@ -240,7 +240,7 @@
         @for (item of selectedPhunksFormArray.controls; track item.value.sha; let i = $index) {
           <div class="image">
             <img
-              [lazyLoad]="dataSvc.staticUrl + '/images/' + item.value.sha + '.png'"
+              [lazyLoad]="dataSvc.staticUrl + '/static/images/' + item.value.sha"
               [defaultImage]="'assets/loadingphunk.png'"
             />
           </div>
@@ -273,7 +273,7 @@
         @for (item of selectedPhunksFormArray.controls; track item.value.hashId; let i = $index) {
           <div class="image">
             <img
-              [lazyLoad]="dataSvc.staticUrl + '/images/' + item.value.sha + '.png'"
+              [lazyLoad]="dataSvc.staticUrl + '/static/images/' + item.value.sha"
               [defaultImage]="'assets/loadingphunk.png'"
             />
           </div>
@@ -300,7 +300,7 @@
         @for (item of selectedPhunksFormArray.controls; track item.value.hashId; let i = $index) {
           <div class="image">
             <img
-              [lazyLoad]="dataSvc.staticUrl + '/images/' + item.value.sha + '.png'"
+              [lazyLoad]="dataSvc.staticUrl + '/static/images/' + item.value.sha"
               [defaultImage]="'assets/loadingphunk.png'"
             />
           </div>
@@ -327,7 +327,7 @@
         @for (item of selectedPhunksFormArray.controls; track item.value.hashId; let i = $index) {
           <div class="image-wrapper">
             <img
-              [lazyLoad]="dataSvc.staticUrl + '/images/' + item.value.sha + '.png'"
+              [lazyLoad]="dataSvc.staticUrl + '/static/images/' + item.value.sha"
               [defaultImage]="'assets/loadingphunk.png'"
             />
           </div>

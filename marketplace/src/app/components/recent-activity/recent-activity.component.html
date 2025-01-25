@@ -23,7 +23,7 @@
         [class]="event.type | lowercase">
         <div class="image-wrapper">
           <img
-            [lazyLoad]="dataSvc.staticUrl + '/images/' + event.sha + '.png'"
+            [lazyLoad]="dataSvc.staticUrl + '/static/images/' + event.sha"
             [defaultImage]="'assets/loadingphunk.png'"
             width="160"
             height="160"

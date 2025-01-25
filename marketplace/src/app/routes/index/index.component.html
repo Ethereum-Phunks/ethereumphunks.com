@@ -1,12 +1,18 @@
 @if ((activeCollection$ | async); as activeCollection) {
-  @if (!activeCollection.isMinting) {
-    <app-splash [collection]="activeCollection" />
-  } @else {
-    <app-mint [collection]="activeCollection" />
-  }
+  <app-splash
+    [collection]="activeCollection"
+    [mintImage]="mintImage()"
+  />
 
   @if ((config$ | async)?.maintenance) {
     <app-brb />
+  }
+
+  @if (activeCollection.isMinting) {
+    <app-mint
+      [collection]="activeCollection"
+      (mintImage)="mintImage.set($event)"
+    />
   }
 
   <div class="sections-wrapper">
