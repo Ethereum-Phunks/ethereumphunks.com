@@ -64,6 +64,7 @@ export interface Collection {
   name: string;
   singleName: string;
   id: number;
+  notifications: boolean;
 }
 
 export interface Event {

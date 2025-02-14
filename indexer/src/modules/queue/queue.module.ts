@@ -17,6 +17,7 @@ import { chain } from '@/constants/ethereum';
 import { SupabaseService } from '@/services/supabase.service';
 import { EthscriptionsModule } from '../ethscriptions/ethscriptions.module';
 import { NftModule } from '../nft/nft.module';
+import { ConfigModule } from '@nestjs/config';
 
 // import { EthscriptionsService } from '../ethscriptions/services/ethscriptions.service';
 // import { DiscordService } from '../notifs/services/discord.service';
@@ -24,6 +25,7 @@ import { NftModule } from '../nft/nft.module';
 
 @Module({
   imports: [
+    ConfigModule.forRoot(),
     HttpModule,
     ...(Number(process.env.QUEUE) ? [
       BullModule.forRoot({

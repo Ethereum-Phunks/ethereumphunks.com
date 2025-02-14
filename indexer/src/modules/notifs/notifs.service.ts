@@ -84,6 +84,8 @@ export class NotifsService {
    */
   async handleNotification(phunkBoughtEvent: Event): Promise<void> {
     const message = await this.createMessage(phunkBoughtEvent);
+    if (!message) return;
+
     await this.twitterSvc.sendTweet(message);
     await this.discordSvc.postMessage(message);
   }
@@ -98,6 +100,8 @@ export class NotifsService {
     const baseUrl = chainId === 1 ? 'https://etherphunks.eth.limo' : 'https://sepolia.etherphunks.eth.limo';
 
     const data = await this.getEthscriptionWithCollectionAndAttributes(event.hashId);
+    if (!data.collection.notifications) return;
+
     const imageBuffer = await this.imgSvc.generateImage(data);
 
     const weiValue = BigInt(event.value);
@@ -137,7 +141,8 @@ export class NotifsService {
         *,
         collections${suffix}!inner(
           name,
-          singleName
+          singleName,
+          notifications
         ),
         attributes!inner(
           values
