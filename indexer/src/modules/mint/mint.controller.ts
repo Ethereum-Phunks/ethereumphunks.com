@@ -4,6 +4,9 @@ import { BadRequestException, Controller, Get, Inject, Query } from '@nestjs/com
 import { MintService } from './mint.service';
 import { Web3Service } from '../shared/services/web3.service';
 
+import dotenv from 'dotenv';
+dotenv.config();
+
 @Controller('mint')
 export class MintController {
   constructor(
@@ -16,6 +19,10 @@ export class MintController {
     @Query('slug') slug: string,
     @Query('address') address: string,
   ) {
+    if (!Number(process.env.MINT)) {
+      throw new BadRequestException('Minting is disabled');
+    }
+
     const validatedAddress = this.web3SvcL1.validateAddress(address);
     if (!validatedAddress) {
       throw new BadRequestException('Invalid address');
