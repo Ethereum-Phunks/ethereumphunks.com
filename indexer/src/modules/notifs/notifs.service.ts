@@ -89,8 +89,8 @@ export class NotifsService {
     const message = await this.createMessage(phunkBoughtEvent, ethscriptionData);
     if (!message) return;
 
-    // await this.twitterSvc.sendTweet(message);
-    // await this.discordSvc.postMessage(message);
+    await this.twitterSvc.sendTweet(message);
+    await this.discordSvc.postMessage(message);
   }
 
   /**
