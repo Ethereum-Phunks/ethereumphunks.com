@@ -83,11 +83,14 @@ export class NotifsService {
    * @param phunkBoughtEvent The sale event data
    */
   async handleNotification(phunkBoughtEvent: Event): Promise<void> {
-    const message = await this.createMessage(phunkBoughtEvent);
+    const ethscriptionData = await this.getEthscriptionWithCollectionAndAttributes(phunkBoughtEvent.hashId);
+    if (!ethscriptionData.collection.notifications) return;
+
+    const message = await this.createMessage(phunkBoughtEvent, ethscriptionData);
     if (!message) return;
 
-    await this.twitterSvc.sendTweet(message);
-    await this.discordSvc.postMessage(message);
+    // await this.twitterSvc.sendTweet(message);
+    // await this.discordSvc.postMessage(message);
   }
 
   /**
@@ -95,14 +98,16 @@ export class NotifsService {
    * @param event The sale event data
    * @returns Formatted notification message object
    */
-  async createMessage(event: Event): Promise<NotificationMessage> {
+  async createMessage(
+    event: Event,
+    ethscriptionData: EthscriptionWithCollectionAndAttributes
+  ): Promise<NotificationMessage> {
+    const { ethscription, collection } = ethscriptionData;
+
     const chainId = Number(process.env.CHAIN_ID);
     const baseUrl = chainId === 1 ? 'https://etherphunks.eth.limo' : 'https://sepolia.etherphunks.eth.limo';
 
-    const data = await this.getEthscriptionWithCollectionAndAttributes(event.hashId);
-    if (!data.collection.notifications) return;
-
-    const imageBuffer = await this.imgSvc.generateImage(data);
+    const imageBuffer = await this.imgSvc.generateImage(ethscriptionData);
 
     const weiValue = BigInt(event.value);
     if (!weiValue) return;
@@ -115,9 +120,9 @@ export class NotifsService {
       this.formatAddress(event.to)
     ]);
 
-    const title = `${data.collection.singleName} #${data.ethscription.tokenId} was flipped`;
+    const title = `${collection.singleName} #${ethscription.tokenId} was flipped`;
     const message = `From: ${fromAddress}\nTo: ${toAddress}\n\nFor: ${value} ETH ($${this.formatCash(Number(value) * this.usdPrice)})`;
-    const link = `${baseUrl}/details/${data.ethscription.hashId}`;
+    const link = `${baseUrl}/details/${ethscription.hashId}`;
 
     return {
       title,
