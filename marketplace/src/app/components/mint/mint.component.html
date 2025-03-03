@@ -1,17 +1,10 @@
-<!-- @if (loadingMint()) {
-  <div class="loader">
-    <img src="/assets/loader-light.gif" width="20" height="20" alt="">
-  </div>
-} -->
-
-
 <div class="collection-info-wrapper">
   <h1>INSCRIBE</h1>
   <h2>{{ collection()?.name }}</h2>
   <p>On the ethereum blockchain</p>
 
   <div class="mint-info-wrapper">
-    <span class="minted">{{ mintProgress() | number }}</span>/{{ collection()?.supply | number }} inscribed
+    <span class="minted">{{ state().mintProgress | number }}</span>/{{ collection()?.supply | number }} inscribed
   </div>
 
   <!-- <small style="font-size: .8rem">
@@ -24,18 +17,23 @@
   <div class="actions-buttons-wrapper">
     <button
       (click)="randomMintItem()"
-      [class.disabled]="inscribing()">
+      [class.disabled]="state().inscribing">
 
       Random
+      @if (state().loadingMint) {
+        <div class="loader">
+          <img src="/assets/loader-light.gif" width="14" height="14" alt="">
+        </div>
+      }
     </button>
 
     @if (connected$ | async) {
       <button
         (click)="inscribe()"
         class="inscribe"
-        [class.disabled]="inscribing() || !activeMint()?.imageUrl || activeMint()?.exists">
+        [class.disabled]="state().inscribing || !state().activeMint?.imageUrl || state().activeMint?.exists">
 
-        {{ activeMint()?.exists ? 'Already inscribed' : 'Inscribe' }}
+        {{ state().activeMint?.exists ? 'Already inscribed' : 'Inscribe' }}
       </button>
     }
   </div>
@@ -44,8 +42,8 @@
     <pre class="pink">{{ error() }}</pre>
   } -->
 
-  @if (transaction().status) {
-    <p class="pink">Your transaction is {{ transaction().status }}. <a [href]="'https://etherscan.com/tx/' + transaction().hash" target="_blank">View it on Etherscan</a></p>
+  @if (state().transaction.status) {
+    <p class="pink">Your transaction is {{ state().transaction.status }}. <a [href]="'https://etherscan.com/tx/' + state().transaction.hash" target="_blank">View it on Etherscan</a></p>
   }
 </div>
 

@@ -18,6 +18,7 @@ export class CustomReuseStrategy implements RouteReuseStrategy {
   }
 
   shouldAttach(route: ActivatedRouteSnapshot): boolean {
+    return false;
     return this.storedRoutes.has(route.routeConfig?.path || '');
   }
 

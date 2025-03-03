@@ -7,7 +7,7 @@ import { GlobalState } from '@/models/global-state';
 
 import { DataService } from '@/services/data.service';
 
-import { PhunkGridComponent } from '../shared/phunk-grid/phunk-grid.component';
+import { PhunkGridComponent } from '../phunk-grid/phunk-grid.component';
 import { selectCollections } from '@/state/selectors/data-state.selectors';
 import { filter, map } from 'rxjs';
 

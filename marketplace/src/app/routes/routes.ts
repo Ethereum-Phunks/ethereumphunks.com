@@ -3,29 +3,34 @@ import { Routes } from '@angular/router';
 export const routes: Routes = [
   {
     path: '',
-    loadComponent: () => import('@/routes/index/index.component').then(mod => mod.IndexComponent),
-  },
-  {
-    path: 'curated/:slug',
-    redirectTo: ({ params, queryParams, url, fragment }) => {
-      if (url.length === 2 && params['slug'] === 'ethereum-phunks') return '/';
-      return url.join('/');
-    },
+    redirectTo: 'ethereum-phunks',
+    pathMatch: 'full',
   },
   {
     path: 'market/:marketType',
-    loadComponent: () => import('@/routes/market/market.component').then(mod => mod.MarketComponent)
+    redirectTo: 'ethereum-phunks/market/:marketType',
+    pathMatch: 'full'
+  },
+  {
+    path: 'curated/:slug',
+    redirectTo: ':slug',
+    pathMatch: 'full'
+  },
+  {
+    path: 'curated/:slug/market/:marketType',
+    redirectTo: ':slug/market/:marketType',
+    pathMatch: 'full'
   },
   {
     path: 'details/:tokenId',
     loadComponent: () => import('@/routes/item-view/item-view.component').then(mod => mod.ItemViewComponent)
   },
   {
-    path: 'curated/:slug',
+    path: ':slug',
     loadComponent: () => import('@/routes/index/index.component').then(mod => mod.IndexComponent)
   },
   {
-    path: 'curated/:slug/market/:marketType',
+    path: ':slug/market/:marketType',
     loadComponent: () => import('@/routes/market/market.component').then(mod => mod.MarketComponent)
   },
   {

@@ -1,4 +1,4 @@
-import { Component, Inject } from '@angular/core';
+import { Component, Inject, OnInit } from '@angular/core';
 import { CommonModule, DOCUMENT } from '@angular/common';
 import { NavigationEnd, NavigationStart, Router, RouterModule } from '@angular/router';
 
@@ -13,7 +13,7 @@ import { FooterComponent } from '@/components/footer/footer.component';
 import { MenuComponent } from '@/components/menu/menu.component';
 import { NotificationsComponent } from '@/components/notifications/notifications.component';
 import { StatusBarComponent } from '@/components/status-bar/status-bar.component';
-import { ModalComponent } from '@/components/shared/modal/modal.component';
+import { ModalComponent } from '@/components/modal/modal.component';
 import { ChatComponent } from '@/components/chat/chat.component';
 import { OrdexWithdrawalComponent } from '@/components/ordex-withdrawal/ordex-withdrawal.component';
 
@@ -22,6 +22,7 @@ import { DataService } from '@/services/data.service';
 import { ThemeService } from '@/services/theme.service';
 import { SocketService } from '@/services/socket.service';
 import { GasService } from '@/services/gas.service';
+import { PwaUpdateService } from '@/services/pwa-update.service';
 
 import { selectChatActive } from '@/state/selectors/chat.selectors';
 import { selectWalletAddress } from '@/state/selectors/app-state.selectors';
@@ -34,7 +35,6 @@ import { debounceTime, filter, map, observeOn, scan, tap } from 'rxjs/operators'
 import { asyncScheduler, fromEvent } from 'rxjs';
 
 import { environment } from 'src/environments/environment';
-
 @Component({
   standalone: true,
   imports: [
@@ -57,7 +57,7 @@ import { environment } from 'src/environments/environment';
   styleUrls: ['./app.component.scss']
 })
 
-export class AppComponent {
+export class AppComponent implements OnInit {
 
   env = environment;
 
@@ -72,6 +72,7 @@ export class AppComponent {
     private router: Router,
     private socketSvc: SocketService,
     private gasSvc: GasService,
+    private pwaUpdateSvc: PwaUpdateService,
   ) {
     this.store.dispatch(appStateActions.setTheme({ theme: 'initial' }));
     this.store.dispatch(dataStateActions.fetchCollections());
@@ -124,6 +125,10 @@ export class AppComponent {
     ).subscribe();
 
     this.setIsMobile();
+  }
+
+  ngOnInit(): void {
+    this.pwaUpdateSvc.checkForUpdate();
   }
 
   setIsMobile(): void {

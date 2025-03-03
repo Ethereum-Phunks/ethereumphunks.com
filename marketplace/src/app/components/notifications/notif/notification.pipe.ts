@@ -41,7 +41,7 @@ export class NotificationPipe implements PipeTransform {
       chatMessage: 'New message',
       bridgeOut: 'Bridge %singleName% to Magma',
       bridgeIn: 'Bridge %singleName% to Ethereum',
-      mint: 'Minting %singleName%',
+      mint: 'Inscribing %singleName%',
       batch: {
         sendToEscrow: 'Send <span class="highlight">%length%</span> items to Escrow',
         phunkNoLongerForSale: 'Delist <span class="highlight">%length%</span> items',

@@ -8,7 +8,7 @@ import { NgxPaginationModule } from 'ngx-pagination';
 import { LazyLoadImageModule } from 'ng-lazyload-image';
 import { NgSelectModule } from '@ng-select/ng-select';
 
-import { PhunkGridComponent } from '@/components/shared/phunk-grid/phunk-grid.component';
+import { PhunkGridComponent } from '@/components/phunk-grid/phunk-grid.component';
 import { MarketFiltersComponent } from '@/components/market-filters/market-filters.component';
 import { SlideoutComponent } from '@/components/slideout/slideout.component';
 

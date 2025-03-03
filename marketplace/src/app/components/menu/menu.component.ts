@@ -10,7 +10,7 @@ import { GlobalState, Notification } from '@/models/global-state';
 
 import { Web3Service } from '@/services/web3.service';
 
-import { PhunkGridComponent } from '@/components/shared/phunk-grid/phunk-grid.component';
+import { PhunkGridComponent } from '@/components/phunk-grid/phunk-grid.component';
 import { NotificationsComponent } from '@/components/notifications/notifications.component';
 import { NotificationComponent } from '@/components/notifications/notif/notification.component';
 import { LeaderboardComponent } from '@/components/leaderboard/leaderboard.component';

@@ -7,7 +7,7 @@ import { Store } from '@ngrx/store';
 import { TimeagoModule } from 'ngx-timeago';
 import { LazyLoadImageModule } from 'ng-lazyload-image';
 
-import { PhunkGridComponent } from '@/components/shared/phunk-grid/phunk-grid.component';
+import { PhunkGridComponent } from '@/components/phunk-grid/phunk-grid.component';
 import { RecentActivityComponent } from '@/components/recent-activity/recent-activity.component';
 import { SplashComponent } from '@/components/splash/splash.component';
 import { BrbComponent } from '@/components/brb/brb.component';
@@ -48,9 +48,7 @@ import { tap } from 'rxjs';
 export class IndexComponent {
 
   walletAddress$ = this.store.select(appStateSelectors.selectWalletAddress);
-  activeCollection$ = this.store.select(dataStateSelectors.selectActiveCollection).pipe(
-    tap((activeCollection) => console.log({activeCollection}))
-  );
+  activeCollection$ = this.store.select(dataStateSelectors.selectActiveCollection);
 
   owned$ = this.store.select(marketStateSelectors.selectOwned);
   listings$ = this.store.select(marketStateSelectors.selectListings);

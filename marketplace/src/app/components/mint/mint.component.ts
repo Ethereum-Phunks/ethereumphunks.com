@@ -4,7 +4,7 @@ import { FormControl, FormsModule } from '@angular/forms';
 import { ReactiveFormsModule } from '@angular/forms';
 
 import { Store } from '@ngrx/store';
-import { firstValueFrom, tap } from 'rxjs';
+import { firstValueFrom, switchMap, tap } from 'rxjs';
 
 import { Collection } from '@/models/data.state';
 import { GlobalState } from '@/models/global-state';
@@ -20,6 +20,7 @@ import { environment } from 'src/environments/environment';
 import { upsertNotification } from '@/state/actions/notification.actions';
 import { Notification } from '@/models/global-state';
 import { UtilService } from '@/services/util.service';
+import { toObservable } from '@angular/core/rxjs-interop';
 
 type MintItem = {
   slug: string;
@@ -32,6 +33,15 @@ type MintItem = {
       [key: string]: string;
     }
   }
+}
+
+type MintState = {
+  activeMint: MintItem | null;
+  mintProgress: number;
+  loadingMint: boolean;
+  inscribing: boolean;
+  error: string | null;
+  transaction: any;
 }
 
 @Component({
@@ -52,13 +62,16 @@ export class MintComponent {
   collection = input<Collection>();
   mintImage = output<string | null>();
 
-  activeMint = signal<MintItem | null>(null);
-  mintProgress = signal<number>(0);
+  defaultState = {
+    activeMint: null,
+    mintProgress: 0,
+    loadingMint: false,
+    inscribing: false,
+    error: null,
+    transaction: { hash: null, status: null },
+  }
 
-  loadingMint = signal(false);
-  inscribing = signal(false)
-  error = signal<string | null>(null);
-  transaction = signal<any>({ hash: null, status: null });
+  state = signal<MintState>(this.defaultState);
 
   connected$ = this.store.select(selectConnected);
   connectedAddress$ = this.store.select(selectWalletAddress);
@@ -72,62 +85,76 @@ export class MintComponent {
     private socketSvc: SocketService,
     private utilSvc: UtilService,
   ) {
-    effect(() => {
-      if (!this.collection()) return;
-      this.dataSvc.fetchMintProgress(this.collection()!.slug).subscribe((progress) => {
-        this.mintProgress.set(progress);
-      });
-    }, { allowSignalWrites: true });
+    toObservable(this.collection).pipe(
+      switchMap((collection) => this.dataSvc.fetchMintProgress(collection!.slug)),
+      tap((progress) => this.updateState({ mintProgress: progress })),
+    ).subscribe();
+  }
+
+  updateState(updates: Partial<MintState>): void {
+    const activeState = this.state();
+    this.state.set({ ...activeState, ...updates });
   }
 
   resetState(): void {
-    this.activeMint.set(null);
-    this.loadingMint.set(false);
-    this.inscribing.set(false);
-    this.error.set(null);
-    this.transaction.set({ hash: null, status: null });
+    this.state.set({
+      activeMint: null,
+      mintProgress: 0,
+      loadingMint: false,
+      inscribing: false,
+      error: null,
+      transaction: { hash: null, status: null },
+    });
   }
 
   async randomMintItem(): Promise<any> {
-    this.loadingMint.set(true);
+    try {
+      this.updateState({ loadingMint: true });
 
-    const address = await firstValueFrom(this.connectedAddress$);
-    const url = `${environment.relayUrl}/mint/random`;
-    const params = new URLSearchParams();
-    params.set('slug', this.collection()?.slug ?? '');
-    params.set('address', address ?? '');
+      const address = await firstValueFrom(this.connectedAddress$);
+      const url = `${environment.relayUrl}/mint/random`;
+      const params = new URLSearchParams();
+      params.set('slug', this.collection()?.slug ?? '');
+      params.set('address', address ?? '');
 
-    const response = await fetch(url + '?' + params.toString());
-    const data = await response.json();
+      const response = await fetch(url + '?' + params.toString());
+      const data = await response.json();
 
-    // fetch the image
-    const imageResponse = await fetch(this.baseUrl + '/static/images/' + data.metadata.sha);
+      if (data.error) throw data;
+
+      data.imageUrl = await this.getImageUrl(data.metadata.sha);
+      this.mintImage.emit(data.imageUrl);
+
+      this.updateState({ activeMint: data });
+      this.updateState({ loadingMint: false });
+
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
+  async getImageUrl(sha: string): Promise<string> {
+    const imageResponse = await fetch(this.baseUrl + '/static/images/' + sha);
     const imageBlob = await imageResponse.blob();
     const imageUrl = URL.createObjectURL(imageBlob);
-
-    data.imageUrl = imageUrl;
-
-    this.activeMint.set(data);
-    this.loadingMint.set(false);
-
-    this.mintImage.emit(data.imageUrl);
-    console.log(data);
+    return imageUrl;
   }
 
   async inscribe(): Promise<void> {
-    this.inscribing.set(true);
+    this.updateState({ inscribing: true });
 
-    const image = this.activeMint()?.imageUrl;
+    const activeMint = this.state().activeMint;
+    const image = activeMint?.imageUrl;
     if (!image) return;
 
     let notification: Notification = {
-      id: this.utilSvc.createIdFromString('mint' + this.activeMint()?.metadata.sha),
+      id: this.utilSvc.createIdFromString('mint' + activeMint?.metadata.sha),
       timestamp: Date.now(),
       type: 'wallet',
       function: 'mint',
-      slug: this.activeMint()?.slug,
-      tokenId: this.activeMint()?.tokenId,
-      sha: this.activeMint()?.metadata.sha,
+      slug: activeMint?.slug,
+      tokenId: activeMint?.tokenId,
+      sha: activeMint?.metadata.sha,
     };
 
     this.store.dispatch(upsertNotification({ notification }));
@@ -157,7 +184,7 @@ export class MintComponent {
 
     } catch (error) {
       console.log(error);
-      this.error.set(error as string);
+      this.updateState({ error: error as string });
 
       notification = {
         ...notification,
@@ -166,81 +193,9 @@ export class MintComponent {
       };
     } finally {
       this.store.dispatch(upsertNotification({ notification }));
-      this.inscribing.set(false);
+      this.updateState({ inscribing: false });
     }
   }
-
-
-
-  // async submitListing(phunk: Phunk): Promise<void> {
-
-  //   const hashId = phunk.hashId;
-
-  //   if (!hashId) throw new Error('Invalid hashId');
-  //   if (!this.listPrice.value) return;
-
-  //   const value = this.listPrice.value;
-  //   // const revShare = (this.revShare.value || 0) * 1000;
-  //   let address = this.listToAddress.value || undefined;
-
-  //   // console.log({hashId, value, address});
-
-  //   this.store.dispatch(upsertNotification({ notification }));
-
-  //   try {
-  //     await this.checkConsenus(phunk);
-
-  //     if (address) {
-  //       if (address?.endsWith('.eth')) {
-  //         const ensOwner = await this.web3Svc.getEnsOwner(address);
-  //         if (!ensOwner) throw new Error('ENS name not registered');
-  //         address = ensOwner;
-  //       }
-  //       const validAddress = this.web3Svc.verifyAddress(address);
-  //       if (!validAddress) throw new Error('Invalid address');
-  //     }
-
-  //     let hash;
-  //     if (phunk.isEscrowed) {
-  //       hash = await this.web3Svc.offerPhunkForSale(hashId, value, address);
-  //     } else if (phunk.nft) {
-  //       hash = await this.web3Svc.offerPhunkForSaleL2(hashId, value, address);
-  //     } else {
-  //       hash = await this.web3Svc.escrowAndOfferPhunkForSale(hashId, value, address);
-  //     }
-
-  //     // this.initNotificationMessage();
-  //     this.store.dispatch(upsertNotification({ notification }));
-
-  //     notification = {
-  //       ...notification,
-  //       type: 'pending',
-  //       hash,
-  //     };
-
-  //     this.store.dispatch(upsertNotification({ notification }));
-
-  //     const receipt = await this.web3Svc.pollReceipt(hash!);
-
-  //     notification = {
-  //       ...notification,
-  //       type: 'complete',
-  //       hash: receipt.transactionHash,
-  //     };
-  //     this.store.dispatch(appStateActions.addCooldown({ cooldown: { [hashId]: Number(receipt.blockNumber) }}));
-  //   } catch (err) {
-  //     console.log(err);
-
-  //     notification = {
-  //       ...notification,
-  //       type: 'error',
-  //       detail: err,
-  //     };
-  //   } finally {
-  //     this.store.dispatch(upsertNotification({ notification }));
-  //     this.clearAll();
-  //   }
-  // }
 
   async blobUrlToBase64(blobUrl: string): Promise<string> {
     const response = await fetch(blobUrl);

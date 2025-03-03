@@ -742,18 +742,20 @@ export class DataService {
    * Fetches collections with preview data
    * @param previewLimit Number of preview items per collection
    */
-  fetchCollections(previewLimit = 10): Observable<any[]> {
-    const devMode = environment.production === false;
+  fetchCollections(onlyDisabled = false): Observable<any[]> {
+    // const devMode = environment.production === false;
 
     let query = supabase
       .from('collections' + this.prefix)
       .select('*')
       .order('id', { ascending: false });
 
-    if (!devMode) query = query.eq('active', true);
+    query = query.eq('active', onlyDisabled ? false : true);
 
-    let params: any = { preview_limit: previewLimit };
-    if (devMode) params.show_inactive = true;
+    let params: any = {
+      preview_limit: 10,
+      show_inactive: onlyDisabled,
+    };
 
     const queryWithPrevs = supabase
       .rpc(
@@ -762,8 +764,10 @@ export class DataService {
       );
 
     return from(query).pipe(
+      // tap((res) => console.log('fetchCollections', res)),
       switchMap((res) => {
         return from(queryWithPrevs).pipe(
+          // tap((withPrevs) => console.log('fetchCollections withPrevs', withPrevs)),
           map((withPrevs) => {
             const collections = res.data as any[];
             const withPreviews = withPrevs.data.map((item: any) => item.ethscription);
@@ -772,10 +776,19 @@ export class DataService {
               collections[i].previews = withPreviews.find((p: any) => p.slug === collections[i].slug)?.previews;
             }
 
-            return collections;
+            return collections.sort((a, b) => a.id - b.id);
           })
         )
       }),
+    );
+  }
+
+  /**
+   * Fetches disabled collections
+   */
+  fetchDisabledCollections(): Observable<any[]> {
+    return this.fetchCollections(true).pipe(
+      // tap((collections) => console.log('fetchDisabledCollections', collections)),
     );
   }
 

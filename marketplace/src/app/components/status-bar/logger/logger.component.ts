@@ -1,5 +1,5 @@
 import { AfterViewInit, ChangeDetectorRef, Component, ElementRef, effect, input, viewChild } from '@angular/core';
-import { AsyncPipe, DatePipe, LowerCasePipe } from '@angular/common';
+import { DatePipe, LowerCasePipe } from '@angular/common';
 
 import { LogItem } from '@/services/socket.service';
 
@@ -8,7 +8,6 @@ import { TimeagoModule } from 'ngx-timeago';
 @Component({
   standalone: true,
   imports: [
-    AsyncPipe,
     LowerCasePipe,
     DatePipe,
     TimeagoModule

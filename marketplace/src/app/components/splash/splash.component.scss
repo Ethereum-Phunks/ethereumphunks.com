@@ -31,18 +31,6 @@
   display: flex;
   align-items: flex-end;
   justify-content: center;
-
-  width: 100%;
-  height: var(--inscription-size);
-
-  overflow: hidden;
-
-  opacity: 1;
-  @include trans();
-
-  &.is-minting {
-    opacity: 0.2;
-  }
 }
 
 .image-wrapper {
@@ -57,13 +45,19 @@
     image-rendering: pixelated;
   }
 
-  &.mint-image-wrapper {
-    position: absolute;
-    z-index: 10;
-    bottom: 0;
-    left: 50%;
-    transform: translateX(-50%);
-  }
+  // @for $i from -3 through 3 {
+  //   &:nth-child(#{$i + 4}) {
+  //     transform: translateX(calc(-50% + calc(#{$i} * var(--inscription-size))));
+  //   }
+  // }
+
+  // &.mint-image-wrapper {
+  //   position: absolute;
+  //   z-index: 10;
+  //   bottom: 0;
+  //   left: 50%;
+  //   transform: translateX(-50%);
+  // }
 }
 
 .info {

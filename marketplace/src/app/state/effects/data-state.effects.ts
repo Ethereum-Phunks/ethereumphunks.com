@@ -17,7 +17,7 @@ import * as dataStateSelectors from '@/state/selectors/data-state.selectors';
 import * as marketStateActions from '@/state/actions/market-state.actions';
 import * as marketStateSelectors from '@/state/selectors/market-state.selectors';
 
-import { asyncScheduler, distinctUntilChanged, filter, forkJoin, from, map, mergeMap, of, switchMap, tap, throttleTime, withLatestFrom } from 'rxjs';
+import { asyncScheduler, distinctUntilChanged, filter, forkJoin, from, map, mergeMap, of, switchMap, take, tap, throttleTime, withLatestFrom } from 'rxjs';
 
 @Injectable()
 export class DataStateEffects {
@@ -43,9 +43,36 @@ export class DataStateEffects {
   fetchCollections$ = createEffect(() => this.actions$.pipe(
     ofType(dataStateActions.fetchCollections),
     switchMap(() => this.dataSvc.fetchCollections().pipe(
-      map((collections) => collections.sort((a, b) => a.id - b.id)),
-      // tap((collections) => console.log({ collections })),
       map((collections) => dataStateActions.setCollections({ collections })),
+      // tap((collections) => console.log('fetchCollections$', { collections })),
+    )),
+  ));
+
+  whitelist: string[] = ['0xf1Aa941d56041d47a9a18e99609A047707Fe96c7'];
+  fetchDisabledCollections$ = createEffect(() => this.actions$.pipe(
+    ofType(appStateActions.setWalletAddress),
+    filter((action) => {
+      // console.log('fetchDisabledCollections$', { action });
+      if (!action.walletAddress) return false;
+      return this.whitelist
+        .map((w) => w.toLowerCase())
+        .includes(action.walletAddress.toLowerCase());
+    }),
+    switchMap(() => this.store.select(dataStateSelectors.selectCollections).pipe(
+      filter((collections) => collections.length > 0),
+      take(1),
+      switchMap((collections) => this.dataSvc.fetchDisabledCollections().pipe(
+        filter(disabledCollections => disabledCollections.length > 0),
+        map((disabledCollections) => {
+          // Filter out disabled collections that already exist in collections
+          const newDisabledCollections = disabledCollections.filter(
+            disabled => !collections.some(existing => existing.slug === disabled.slug)
+          );
+          return dataStateActions.setCollections({
+            collections: [...collections, ...newDisabledCollections]
+          });
+        }),
+      )),
     )),
   ));
 
@@ -53,6 +80,7 @@ export class DataStateEffects {
     ofType(dataStateActions.setCollections),
     switchMap((action) => {
       return this.store.select(marketStateSelectors.selectMarketSlug).pipe(
+        filter((slug) => !!action.collections),
         map((slug) => {
           const coll = action.collections.find((c) => c.slug === slug);
           const activeCollection = { ...coll! };

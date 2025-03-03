@@ -5,7 +5,7 @@ import { Store } from '@ngrx/store';
 
 import { GlobalState, Notification } from '@/models/global-state';
 
-import { PhunkImageComponent } from '@/components/shared/phunk-image/phunk-image.component';
+import { PhunkImageComponent } from '@/components/phunk-image/phunk-image.component';
 import { NotificationComponent } from './notif/notification.component';
 
 import { WalletAddressDirective } from '@/directives/wallet-address.directive';

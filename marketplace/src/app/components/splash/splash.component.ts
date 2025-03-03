@@ -1,19 +1,23 @@
-import { Component, computed, effect, input, signal, SimpleChanges } from '@angular/core';
+import { Component, effect, ElementRef, input, viewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { HttpClient } from '@angular/common/http';
-
-import { computedPrevious } from 'ngxtension/computed-previous';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 
 import { LazyLoadImageModule } from 'ng-lazyload-image';
 
 import { Collection } from '@/models/data.state';
 
-import { INode, parse, stringify } from 'svgson';
-import tinycolor from 'tinycolor2';
+import anime from 'animejs';
 
-import { catchError, filter, firstValueFrom, from, map, of, switchMap, tap } from 'rxjs';
+import { catchError, filter, firstValueFrom, from, map, of, switchMap, Observable, throwError, retry } from 'rxjs';
 
 import { environment } from 'src/environments/environment';
+import { PixelArtService } from '@/services/pixel-art.service';
+
+const IMAGE_LIMIT = 9;
+// Define a size threshold (in bytes) for what's considered a "large" image
+const MAX_IMAGE_SIZE = 500000; // 500KB
+// Maximum number of retry attempts
+const MAX_RETRY_ATTEMPTS = 3;
 
 @Component({
   selector: 'app-splash',
@@ -27,267 +31,117 @@ import { environment } from 'src/environments/environment';
 })
 export class SplashComponent {
 
+  imagesWrapper = viewChild<ElementRef>('imagesWrapper');
+
   collection = input<Collection | null>();
-  collectionPrev = computedPrevious(this.collection);
 
-  random = signal<string[]>([]);
-  images = signal<string[]>([]);
+  mintImage = input<string | null>();
 
-  mintImage = input<string | null>(null);
-  mintImagePrev = computedPrevious(this.mintImage);
+  images: string[] = [];
 
   constructor(
-    private http: HttpClient
+    private http: HttpClient,
+    private pixelArtSvc: PixelArtService
   ) {
     effect(async () => {
-      console.log('EFFECT');
+      const collection = this.collection();
+      if (!collection) return;
 
-      if (!this.collection()) return;
-      this.images.set(await this.getPixelsFromPng());
-    })
+      const images = await this.createImageArray(collection.previews?.map(({ sha }) => sha) || []);
+      this.images = images.slice(0, IMAGE_LIMIT);
+    });
+
+    effect(async () => {
+      const mintImage = this.mintImage();
+      console.log(mintImage);
+      if (!mintImage) return;
+
+      const imagesWrapper = this.imagesWrapper()?.nativeElement;
+      if (!imagesWrapper) return;
+
+      const centerImageIndex = Math.floor(IMAGE_LIMIT / 2);
+      console.log(centerImageIndex);
+
+      // Create a new array with the last image moved to the front
+      // and the mint image in the center position
+      const newImages = [
+        this.images[this.images.length - 1],  // Move last image to front
+        ...this.images.slice(0, centerImageIndex - 1),  // Add images up to before center
+        mintImage,  // Add mint image in center
+        ...this.images.slice(centerImageIndex, IMAGE_LIMIT - 1)  // Add remaining images
+      ];
+
+      console.log(newImages);
+
+      // Process the mint image if it's a blob URL
+      if (newImages[centerImageIndex].startsWith('blob:')) {
+        const buffer = await fetch(newImages[centerImageIndex]).then((res) => res.arrayBuffer());
+        const pixelArtImage = await this.pixelArtSvc.processPixelArtImage(buffer);
+        const svg = this.pixelArtSvc.convertToSvg(pixelArtImage);
+        const newImage = this.pixelArtSvc.stripColors(svg);
+        newImages[centerImageIndex] = this.pixelArtSvc.convertToBase64(newImage);
+      }
+
+      this.images = newImages;
+      console.log(this.images);
+
+      const animation = anime
+        .timeline()
+        .add({
+          targets: imagesWrapper,
+          translateX: [0, 320],
+          duration: 250,
+          easing: 'easeInOutSine',
+        })
+        .add({
+          targets: Array.from(imagesWrapper.children).filter((_, i) => i !== (centerImageIndex - 1)),
+          opacity: 0.35,
+          duration: 250,
+          easing: 'easeInOutSine',
+        });
+
+      await animation.finished;
+    });
   }
 
-  async getPixelsFromPng(): Promise<any> {
-    if (!this.collection()?.previews?.length) return [];
+  async createImageArray(shas: string[]): Promise<string[]> {
+    if (!shas?.length) return [];
+
+    console.log(shas);
 
     const baseImageUrl = `${environment.staticUrl}/static/images`;
-
     const imageArray = await Promise.all(
-      this.collection()!.previews.map(({ sha }) => {
+      shas.map((sha) => {
         const url = `${baseImageUrl}/${sha}`;
 
         return firstValueFrom(
           this.http.get(url, { responseType: 'arraybuffer' }).pipe(
-            switchMap((data) => from(this.processPixelArtImage(data))),
-            map((data) => this.convertToSvg(data)),
-            map((data) => this.stripColors(data)),
-            map((data) => this.convertToBase64(data)),
+            switchMap((data: ArrayBuffer) => {
+              // Check if the image is too large
+              if (data.byteLength > MAX_IMAGE_SIZE) {
+                console.warn(`Image ${sha} is too large (${data.byteLength} bytes), retrying...`);
+                return throwError(() => new Error('IMAGE_TOO_LARGE'));
+              }
+              return from(this.pixelArtSvc.processPixelArtImage(data));
+            }),
+            // Simple retry mechanism - will retry the entire pipeline up to MAX_RETRY_ATTEMPTS times
+            retry(MAX_RETRY_ATTEMPTS),
+            map((data) => this.pixelArtSvc.convertToSvg(data)),
+            map((data) => this.pixelArtSvc.stripColors(data)),
+            map((data) => this.pixelArtSvc.convertToBase64(data)),
             catchError((err) => {
-              console.error(err);
+              console.error(`Error processing image ${sha}:`, err);
               return of(null);
             })
           )
         );
       })
     );
-    return imageArray;
-  }
-
-  private async processPixelArtImage(buffer: ArrayBuffer): Promise<string[][]> {
-    return new Promise((resolve, reject) => {
-      const blob = new Blob([buffer], { type: 'image/png' });
-      const img = new Image();
-      img.onload = () => {
-        const canvas = document.createElement('canvas');
-        canvas.width = img.width;
-        canvas.height = img.height;
-        const ctx = canvas.getContext('2d');
-        if (!ctx) {
-          reject(new Error('Unable to get 2D context'));
-          return;
-        }
-        ctx.drawImage(img, 0, 0);
-        const imageData = ctx.getImageData(0, 0, img.width, img.height);
-        const pixelArtData = this.convertToPixelArtFormat(imageData);
-        resolve(pixelArtData);
-      };
-      img.onerror = () => {
-        reject(new Error('Failed to load image'));
-      };
-      img.src = URL.createObjectURL(blob);
-    });
-  }
-
-  private convertToPixelArtFormat(imageData: ImageData): string[][] {
-    const { width, height, data } = imageData;
-    const pixelArtData: string[][] = [];
-
-    for (let y = 0; y < height; y++) {
-      const row: string[] = [];
-      for (let x = 0; x < width; x++) {
-        const index = (y * width + x) * 4;
-        const r = data[index];
-        const g = data[index + 1];
-        const b = data[index + 2];
-        const a = data[index + 3];
-        const colorCode = this.rgbaToHex(r, g, b, a);
-        row.push(colorCode);
-      }
-      pixelArtData.push(row);
-    }
-
-    return pixelArtData;
-  }
-
-  private rgbaToHex(r: number, g: number, b: number, a: number): string {
-    const toHex = (value: number) => {
-      const hex = value.toString(16);
-      return hex.length === 1 ? '0' + hex : hex;
-    };
-    return `${toHex(r)}${toHex(g)}${toHex(b)}${toHex(a)}`;
-  }
-
-  private convertToSvg(arr: string[][]): INode {
-    const width = arr[0].length;
-    const height = arr.length;
-
-    const svg: INode = {
-      name: 'svg',
-      type: 'element',
-      attributes: {
-        xmlns: 'http://www.w3.org/2000/svg',
-        viewBox: `0 0 ${width} ${height}`,
-        width: `${width}`,
-        height: `${height}`,
-      },
-      children: [],
-      value: ''
-    };
-
-    for (let y = 0; y < height; y++) {
-      for (let x = 0; x < width; x++) {
-        const color = arr[y][x];
-        if (color === '00000000') continue;
-
-        // console.log({x, y, width, height, color});
-        const rect: INode = {
-          name: 'rect',
-          type: 'element',
-          attributes: {
-            x: `${x}`,
-            y: `${y}`,
-            width: '1',
-            height: '1',
-            fill: `#${color}`,
-            'shape-rendering': 'crispEdges',
-          },
-          children: [],
-          value: ''
-        };
-        svg.children.push(rect);
-      }
-    }
-
-    return svg;
-  }
-
-  convertToBase64(node: INode): string {
-    const string = stringify(node);
-    const base64 = btoa(string);
-    return `data:image/svg+xml;base64,${base64}`;
-  }
-
-  getRandomNumbers(): string[] {
-    const numbers: Set<string> = new Set();
-    while (numbers.size < 7) {
-      const random = Math.floor(Math.random() * 10000);
-      const formatted = String(random).padStart(4, '0');
-      numbers.add(formatted);
-    }
-    return [...numbers];
+    return imageArray.filter((image): image is string => !!image);
   }
 
   formatNumber(num: string): string | null {
     if (!num) return null;
     return String(num).padStart(4, '0');
   }
-
-  async getPhunkByTokenId(tokenId: string): Promise<any> {
-    const url = `https://punkcdn.com/data/images/phunk${('000' + tokenId).slice(-4)}.svg`;
-
-    return await firstValueFrom(
-      this.http.get(url, { responseType: 'text' }).pipe(
-        filter((data): data is string => !!data),
-        switchMap(data => from(parse(data))),
-        map(data => this.stripColors(data)),
-        map(data => this.convertToBase64(data)),
-        catchError((err) => {
-          console.error(err);
-          return of(null);
-        })
-      )
-    );
-  }
-
-  stripColors(node: INode): INode {
-    const colorMap: Record<string, number> = {};
-
-    // Get image dimensions from viewBox attribute
-    const viewBox = node.attributes?.viewBox?.split(' ') || [];
-    const width = parseInt(viewBox[2]) || 0;
-    const height = parseInt(viewBox[3]) || 0;
-
-    const backgroundColors = node.children.filter((child) => child.attributes.x === '0');
-    const filters = [
-      ...new Set(backgroundColors.map((child) => child.attributes.fill)),
-      ...[
-        // Phunks
-        '#ffffffff', // White
-        '#ead9d9ff', // Albino Skin Tone
-        '#dbb180ff', // Light Skin Tone
-        '#ae8b61ff', // Mid Skin Tone
-        '#713f1dff', // Dark Skin Tone
-        '#7da269ff', // Zombie Skin Tone
-        '#352410ff', // Ape Skin Tone
-        '#c8fbfbff', // Alien Skin Tone
-
-        // Dystophunks
-        '#dbb180ff', // Light Skin Tone
-        '#ead9d9ff', // Pink
-        '#73aa57ff', // Zombie Skin Tone
-        '#cba68cff', // Skin Tone
-        '#c3ff01ff', // Yellow/Green
-
-        // Mingos
-        '#79a4f9ff', // Mingos background
-        '#78a4f9ff', // Mingos background
-        '#78a4f8ff', // Mingos background
-        '#79a5f8ff', // Mingos background
-        '#78a5f9ff', // Mingos background
-        '#78a5f8ff', // Mingos background
-        '#79a4f8ff', // Mingos background
-        '#79a5f9ff', // Mingos background
-        '#648596ff', // Mingos background
-      ]
-    ];
-    // console.log({width, height, backgroundColors, filters});
-
-    for (const child of node.children) {
-      if (child.name === 'rect' && child.attributes?.fill) {
-        const color = tinycolor(child.attributes.fill);
-        const alpha = (tinycolor(color).getBrightness() / 255);
-        const opaque = tinycolor({ r: 0, g: 0, b: 0, a: (1 - alpha) });
-
-        colorMap[child.attributes.fill] = (colorMap[child.attributes.fill] || 0) + 1;
-
-        // Remove Skin Tone
-        if (filters.indexOf(child.attributes.fill) > -1) child.attributes.fill = '#00000000';
-        // Remove Transparent
-        else if (child.attributes.fill === '#000000ff') continue;
-        else child.attributes.fill = opaque.toString('hex8');
-      }
-    }
-
-    // console.log(colorMap);
-    return node;
-  }
 }
-
-
-// async ngOnChanges(changes: SimpleChanges): Promise<void> {
-//   //   if (
-//   //     changes.collection &&
-//   //     changes.collection.currentValue &&
-//   //     changes.collection.currentValue.slug === 'ethereum-phunks' &&
-//   //     changes.collection.currentValue.slug !== changes.collection.previousValue?.slug
-//   //   ) {
-//   //     console.log('SLUG CHANGED');
-//   //     const random = this.getRandomNumbers();
-//   //     const images = await Promise.all(random.map(num => this.getPhunkByTokenId(num)));
-//   //     this.random.set(random);
-//   //     this.images.set(images);
-//   //   } else {
-//   //     this.random.set([]);
-//   //     this.images.set([]);
-//   //   }
-//   }

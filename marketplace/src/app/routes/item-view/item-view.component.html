@@ -243,9 +243,11 @@
                               [queryParams]="item | queryParams">
 
                               <span>{{ item.v }}</span>
-                              <span class="percent">
-                                ({{ (+(item.v | traitCount : phunk.slug) / (phunk.supply || 10000)) | percent : '1.1-1' }})
-                              </span>
+                              @if (item.v | traitCount : phunk.slug) {
+                                <span class="percent">
+                                  ({{ (+(item.v | traitCount : phunk.slug) / (phunk.supply || 10000)) | percent : '1.1-1' }})
+                                </span>
+                              }
                             </a>
 
                             <span class="trait-count">

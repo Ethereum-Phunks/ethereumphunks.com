@@ -1,0 +1,11 @@
+@if (phunkImgSrc) {
+  <img [src]="phunkImgSrc" />
+} @else {
+  @if (phunkText) {
+    <div class="text-wrapper" [class]="decodedData?.type" [class.long]="phunkText.length > 300">
+      <p>{{ phunkText }}</p>
+    </div>
+  } @else {
+    <img [src]="'assets/loadingphunk.png'" />
+  }
+}

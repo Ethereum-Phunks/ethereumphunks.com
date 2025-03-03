@@ -5,7 +5,7 @@ import { RouterModule } from '@angular/router';
 import { Store } from '@ngrx/store';
 import { TimeagoModule } from 'ngx-timeago';
 
-import { PhunkImageComponent } from '@/components/shared/phunk-image/phunk-image.component';
+import { PhunkImageComponent } from '@/components/phunk-image/phunk-image.component';
 import { WalletAddressDirective } from '@/directives/wallet-address.directive';
 
 import { NotificationPipe } from './notification.pipe';

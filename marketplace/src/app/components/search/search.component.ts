@@ -75,26 +75,20 @@ export class SearchComponent {
       const is0x = addressInput?.startsWith('0x');
       const isEns = addressInput?.includes('.eth');
       const isAddress = is0x && this.web3Svc.verifyAddress(addressInput);
-      const isTokenId = !is0x && Number(addressInput) > -1;
       const possibleHashId = is0x && addressInput.length === 66;
 
-      if (!isEns && !isAddress && !isTokenId && !possibleHashId) throw new Error('Invalid Search Parameters');
+      if (!isEns && !isAddress && !possibleHashId) throw new Error('Invalid Search Parameters');
 
-      if (isTokenId) {
-        await this.router.navigate(['/', 'details', addressInput]);
-        this.phunkBoxLoading = false;
-      } else {
-        let address = addressInput;
-        if (isEns) address = await this.web3Svc.getEnsOwner(addressInput);
-        else address = this.web3Svc.verifyAddress(addressInput);
+      let address = addressInput;
+      if (isEns) address = await this.web3Svc.getEnsOwner(addressInput);
+      else address = this.web3Svc.verifyAddress(addressInput);
 
-        if (address) await this.router.navigate(['/', 'market', 'owned'], { queryParams: { address }});
-        else if (possibleHashId) await this.router.navigate(['/', 'details', addressInput]);
-        else throw new Error('Invalid Search Parameters');
-      }
+      if (address) await this.router.navigate(['/', 'market', 'owned'], { queryParams: { address }});
+      else if (possibleHashId) await this.router.navigate(['/', 'details', addressInput]);
+      else throw new Error('Invalid Search Parameters');
 
       // console.log({ isEns, isAddress, isTokenId, possibleHashId });
-      let type = isEns ? 'ens' : isAddress ? 'address' : isTokenId ? 'tokenId' : possibleHashId ? 'hashId' : 'unknown';
+      let type = isEns ? 'ens' : isAddress ? 'address' : possibleHashId ? 'hashId' : 'unknown';
 
       this.store.dispatch(appStateActions.addSearchHistory({ item: { type, value: addressInput } }));
       this.store.dispatch(appStateActions.setSearchHistoryActive({ searchHistoryActive: false }));

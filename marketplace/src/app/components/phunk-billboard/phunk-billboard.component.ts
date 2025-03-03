@@ -4,7 +4,7 @@ import { RouterModule } from '@angular/router';
 
 import { LazyLoadImageModule } from 'ng-lazyload-image';
 
-import { PhunkImageComponent } from '../shared/phunk-image/phunk-image.component';
+import { PhunkImageComponent } from '../phunk-image/phunk-image.component';
 
 import { TokenIdParsePipe } from '@/pipes/token-id-parse.pipe';
 
