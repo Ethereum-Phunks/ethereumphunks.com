@@ -124,6 +124,13 @@ export const appStateReducer: ActionReducer<AppState, Action> = createReducer(
     };
     return setTheme
   }),
+  on(actions.setIsMobile, (state, { isMobile }) => {
+    const setIsMobile = {
+      ...state,
+      isMobile
+    };
+    return setIsMobile
+  }),
   on(actions.addCooldown, (state, { cooldown }) => {
     // console.log('addCooldown', cooldown);
     const setCooldowns = {

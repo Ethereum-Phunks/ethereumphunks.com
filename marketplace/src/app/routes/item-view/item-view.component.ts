@@ -12,6 +12,7 @@ import { LazyLoadImageModule } from 'ng-lazyload-image';
 import { PhunkBillboardComponent } from '@/components/phunk-billboard/phunk-billboard.component';
 import { TxHistoryComponent } from '@/components/tx-history/tx-history.component';
 import { BreadcrumbsComponent } from '@/components/breadcrumbs/breadcrumbs.component';
+import { CommentsComponent } from '@/components/comments/comments.component';
 
 import { WalletAddressDirective } from '@/directives/wallet-address.directive';
 
@@ -57,6 +58,7 @@ import { setChat } from '@/state/actions/chat.actions';
     TxHistoryComponent,
     WalletAddressDirective,
     BreadcrumbsComponent,
+    CommentsComponent,
 
     TraitCountPipe,
     WeiToEthPipe,
@@ -122,6 +124,8 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
   scrollY$ = fromEvent(document, 'scroll').pipe(
     map(() => (window.scrollY / 2) * -1),
   );
+
+  isMobile$ = this.store.select(appStateSelectors.selectIsMobile);
 
   expanded = false;
 

@@ -21,6 +21,8 @@ import { upsertNotification } from '@/state/actions/notification.actions';
 import { Notification } from '@/models/global-state';
 import { UtilService } from '@/services/util.service';
 import { toObservable } from '@angular/core/rxjs-interop';
+import { TippyDirective } from '@/directives/tippy.directive';
+import { setConnected } from '@/state/actions/app-state.actions';
 
 type MintItem = {
   slug: string;
@@ -41,7 +43,10 @@ type MintState = {
   loadingMint: boolean;
   inscribing: boolean;
   error: string | null;
-  transaction: any;
+  transaction: {
+    hash: string | null;
+    status: 'wallet' | 'pending' | 'complete' | 'error' | null;
+  };
 }
 
 @Component({
@@ -50,6 +55,7 @@ type MintState = {
     CommonModule,
     FormsModule,
     ReactiveFormsModule,
+    TippyDirective,
   ],
   selector: 'app-mint',
   templateUrl: './mint.component.html',
@@ -91,22 +97,10 @@ export class MintComponent {
     ).subscribe();
   }
 
-  updateState(updates: Partial<MintState>): void {
-    const activeState = this.state();
-    this.state.set({ ...activeState, ...updates });
-  }
-
-  resetState(): void {
-    this.state.set({
-      activeMint: null,
-      mintProgress: 0,
-      loadingMint: false,
-      inscribing: false,
-      error: null,
-      transaction: { hash: null, status: null },
-    });
-  }
-
+  /**
+   * Fetches a random mint item from the collection
+   * Updates state with the fetched item and its image
+   */
   async randomMintItem(): Promise<any> {
     try {
       this.updateState({ loadingMint: true });
@@ -120,9 +114,11 @@ export class MintComponent {
       const response = await fetch(url + '?' + params.toString());
       const data = await response.json();
 
+      console.log({ exists: data.exists, data });
+
       if (data.error) throw data;
 
-      data.imageUrl = await this.getImageUrl(data.metadata.sha);
+      data.imageUrl = await this.fetchImage(data.metadata.sha);
       this.mintImage.emit(data.imageUrl);
 
       this.updateState({ activeMint: data });
@@ -133,15 +129,25 @@ export class MintComponent {
     }
   }
 
-  async getImageUrl(sha: string): Promise<string> {
+  /**
+   * Fetches an image by SHA and converts it to a blob URL
+   * @param sha SHA hash of the image to fetch
+   * @returns Promise resolving to the blob URL of the image
+   */
+  async fetchImage(sha: string): Promise<string> {
     const imageResponse = await fetch(this.baseUrl + '/static/images/' + sha);
     const imageBlob = await imageResponse.blob();
     const imageUrl = URL.createObjectURL(imageBlob);
     return imageUrl;
   }
 
+  /**
+   * Handles the inscription process for minting
+   * Creates notifications and updates state throughout the process
+   */
   async inscribe(): Promise<void> {
-    this.updateState({ inscribing: true });
+
+    this.updateState({ inscribing: true, error: null });
 
     const activeMint = this.state().activeMint;
     const image = activeMint?.imageUrl;
@@ -158,10 +164,17 @@ export class MintComponent {
     };
 
     this.store.dispatch(upsertNotification({ notification }));
+    this.updateState({ transaction: { hash: null, status: 'wallet' } });
 
     try {
-      const base64Image = await this.blobUrlToBase64(image);
+      let base64Image = await this.blobUrlToBase64(image);
+
+      if (!environment.production) {
+        base64Image = `data:image/png;base64,${new Date().getTime()}`;
+      }
+
       const hash = await this.web3Svc.inscribe(base64Image);
+      this.updateState({ transaction: { hash, status: 'pending' } });
 
       this.store.dispatch(upsertNotification({ notification }));
 
@@ -174,6 +187,7 @@ export class MintComponent {
       this.store.dispatch(upsertNotification({ notification }));
 
       const receipt = await this.web3Svc.pollReceipt(hash!);
+      this.updateState({ transaction: { hash, status: 'complete' } });
 
       notification = {
         ...notification,
@@ -184,7 +198,7 @@ export class MintComponent {
 
     } catch (error) {
       console.log(error);
-      this.updateState({ error: error as string });
+      this.updateState({ error: error as string, transaction: { hash: null, status: null } });
 
       notification = {
         ...notification,
@@ -197,6 +211,34 @@ export class MintComponent {
     }
   }
 
+  /**
+   * Updates the component state with partial updates
+   * @param updates Partial state updates to apply
+   */
+  updateState(updates: Partial<MintState>): void {
+    const activeState = this.state();
+    this.state.set({ ...activeState, ...updates });
+  }
+
+  /**
+   * Resets the component state to default values
+   */
+  resetState(): void {
+    this.state.set({
+      activeMint: null,
+      mintProgress: 0,
+      loadingMint: false,
+      inscribing: false,
+      error: null,
+      transaction: { hash: null, status: null },
+    });
+  }
+
+  /**
+   * Converts a blob URL to a base64 string
+   * @param blobUrl URL of the blob to convert
+   * @returns Promise resolving to the base64 string
+   */
   async blobUrlToBase64(blobUrl: string): Promise<string> {
     const response = await fetch(blobUrl);
     const blob = await response.blob();
@@ -208,5 +250,9 @@ export class MintComponent {
       reader.readAsDataURL(blob);
     });
     return image;
+  }
+
+  connect(): void {
+    this.web3Svc.connect();
   }
 }

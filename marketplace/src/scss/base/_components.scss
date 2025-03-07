@@ -17,7 +17,7 @@ a.button {
   align-items: center;
   padding: .5rem 1rem;
 
-  font-family: $primary-font-stack;
+  font-family: var(--primary-font-stack);
   font-weight: 600;
   font-size: 1.6rem;
   text-decoration: none;

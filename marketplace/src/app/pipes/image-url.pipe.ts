@@ -5,9 +5,9 @@ import { environment } from 'src/environments/environment';
 
 @Pipe({
   standalone: true,
-  name: 'imagePipe'
+  name: 'imageUrlPipe'
 })
-export class ImagePipe implements PipeTransform {
+export class ImageUrlPipe implements PipeTransform {
 
   transform(phunk: Phunk): string {
     if (!phunk) return '';

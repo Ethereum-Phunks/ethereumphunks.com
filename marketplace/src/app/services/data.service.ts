@@ -8,7 +8,7 @@ import { Web3Service } from '@/services/web3.service';
 import { EventType, GlobalState } from '@/models/global-state';
 import { Attribute, Bid, Event, Listing, Phunk } from '@/models/db';
 
-import { createClient } from '@supabase/supabase-js'
+import { createClient, RealtimePostgresUpdatePayload, RealtimePostgresInsertPayload } from '@supabase/supabase-js'
 
 import { Observable, of, BehaviorSubject, from, forkJoin, firstValueFrom, EMPTY, timer, merge } from 'rxjs';
 import { catchError, expand, map, reduce, switchMap, takeWhile, tap } from 'rxjs/operators';
@@ -21,6 +21,7 @@ import * as dataStateActions from '@/state/actions/data-state.actions';
 import * as appStateActions from '@/state/actions/app-state.actions';
 
 import { MarketState } from '@/models/market.state';
+import { DBComment, CommentWithReplies } from '@/models/comment';
 
 const supabaseUrl = environment.supabaseUrl;
 const supabaseKey = environment.supabaseKey;
@@ -592,40 +593,6 @@ export class DataService {
         } as Phunk);
       }),
     );
-
-
-    // slug: string
-    // hashId: string
-    // tokenId: number
-    // createdAt: Date
-    // owner: string
-    // prevOwner: string | null
-    // sha: string
-
-    // creator?: string | null
-    // data?: string | null
-
-    // isEscrowed?: boolean;
-    // isBridged?: boolean;
-
-    // attributes?: Attribute[]
-    // listing?: Listing | null
-    // bid?: Bid | null
-
-    // auction?: Auction | null
-
-    // singleName?: string | null
-    // collectionName?: string | null
-    // supply?: number | null
-
-    // consensus?: boolean
-
-    // nft?: {
-    //   owner: string
-    //   tokenId: number
-    // }
-
-    // loading: boolean
   }
 
   /**
@@ -753,7 +720,7 @@ export class DataService {
     query = query.eq('active', onlyDisabled ? false : true);
 
     let params: any = {
-      preview_limit: 10,
+      preview_limit: 20,
       show_inactive: onlyDisabled,
     };
 
@@ -961,5 +928,95 @@ export class DataService {
     return from(from(supabase.rpc('fetch_leaderboard' + this.prefix))).pipe(
       map((res: any) => res.data),
     );
+  }
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  // COMMENTS //////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  async fetchComments(rootTopic: string): Promise<CommentWithReplies[]> {
+    if (!rootTopic) return [];
+
+    // Helper function to fetch comments for a given topic
+    const fetchReplies = async (topic: string): Promise<CommentWithReplies[]> => {
+      const { data, error } = await supabase
+        .from('comments' + this.prefix)
+        .select('*')
+        .eq('topic', topic.toLowerCase())
+        // .eq('deleted', false)
+        .order('createdAt', { ascending: false });
+
+      if (error || !data) return [];
+
+      // For each comment, recursively fetch its replies
+      const commentsWithReplies = await Promise.all(
+        data.map(async (comment) => {
+          const replies = await fetchReplies(comment.id);
+          return {
+            ...comment,
+            replies: replies.length > 0 ? replies : undefined
+          };
+        })
+      );
+
+      return commentsWithReplies;
+    };
+
+    // Start fetching from the root topic
+    return await fetchReplies(rootTopic.toLowerCase());
+  }
+
+  /**
+   * Fetches comment changes for a given topic
+   * @param topics Array of topics to fetch changes for
+   */
+  getCommentChanges(topics: string[]): Observable<void> {
+    // console.log('getCommentChanges', topics);
+    const table = 'comments' + this.prefix;
+
+    const isInserted = (payload: RealtimePostgresInsertPayload<{
+      [key: string]: any;
+    }>, topics: string[]) => {
+      const topic = payload.new.topic || payload.new.id;
+      return topics.includes(topic);
+    };
+
+    const isUpdated = (payload: RealtimePostgresUpdatePayload<{
+      [key: string]: any;
+    }>, topics: string[]) => {
+      const topic = payload.new.topic || payload.new.id;
+      return topics.includes(topic);
+    };
+
+    return new Observable(subscriber => {
+      const subscription = supabase
+        .channel('comments')
+        .on('postgres_changes',
+          { event: 'INSERT', schema: 'public', table },
+          (payload) => {
+            if (isInserted(payload, topics)) subscriber.next();
+          }
+        )
+        .on('postgres_changes',
+          { event: 'UPDATE', schema: 'public', table },
+          (payload) => {
+            if (isUpdated(payload, topics)) subscriber.next();
+          }
+        )
+        .subscribe();
+
+      return () => subscription.unsubscribe();
+    });
+  }
+
+  async getUserAvatar(address: string): Promise<string> {
+    const { data, error } = await supabase
+      .from('ethscriptions' + this.prefix)
+      .select('*')
+      .eq('owner', address.toLowerCase())
+      .limit(1);
+
+    if (error) return '';
+    return data[0].sha;
   }
 }

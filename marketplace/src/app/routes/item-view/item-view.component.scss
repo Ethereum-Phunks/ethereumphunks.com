@@ -1,5 +1,5 @@
-@import 'abstracts/variables';
-@import 'abstracts/mixins';
+@use 'abstracts/variables' as *;
+@use 'abstracts/mixins' as *;
 
 :host {
   display: block;
@@ -148,7 +148,7 @@ app-phunk-billboard {
     grid-template-columns: auto 35rem;
     column-gap: 4rem;
 
-    padding-bottom: 6rem;
+    margin-bottom: 4rem;
 
     .left {
       &.disabled {
@@ -281,7 +281,7 @@ app-phunk-billboard {
     backdrop-filter: blur(.5rem);
 
     p {
-      font-family: $secondary-font-stack;
+      font-family: var(--secondary-font-stack);
       font-weight: normal;
       font-size: 1.2rem;
       text-align: right;
@@ -362,7 +362,7 @@ app-phunk-billboard {
     justify-content: space-between;
 
     .info-ind {
-      font-family: $secondary-font-stack;
+      font-family: var(--secondary-font-stack);
       font-weight: 400;
       color: rgba(var(--highlight), 1);
 
@@ -430,7 +430,7 @@ app-phunk-billboard {
   //     top: 50%;
   //     right: 1rem;
 
-  //     font-family: $primary-font-stack;
+  //     font-family: var(--primary-font-stack);
   //     font-size: 1.4rem;
   //     font-weight: 700;
 
@@ -457,4 +457,12 @@ app-phunk-billboard {
   //     opacity: 1;
   //   }
   // }
+}
+
+app-comments {
+  margin-top: 3rem;
+}
+
+app-tx-history {
+  margin-top: 6rem;
 }

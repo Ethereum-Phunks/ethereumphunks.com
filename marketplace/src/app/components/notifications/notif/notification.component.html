@@ -22,9 +22,13 @@
         <a class="single-image" [routerLink]="['/', 'details', txn.hashId]">
           <app-phunk-image [color]="txn.type === 'event'" [hashId]="txn.hashId" />
         </a>
-      } @else {
+      } @else if (txn.type === 'chat') {
         <div class="single-image">
           <img src="/assets/chat-image.png" alt="">
+        </div>
+      } @else {
+        <div class="single-image">
+          <img src="/assets/loadingphunk.png" alt="">
         </div>
       }
 

@@ -1,5 +1,5 @@
-@import 'abstracts/variables';
-@import 'abstracts/mixins';
+@use 'abstracts/variables' as *;
+@use 'abstracts/mixins' as *;
 
 :host {
   display: flex;
@@ -23,7 +23,7 @@
     align-items: center;
     padding: .5rem 1rem;
 
-    font-family: $secondary-font-stack;
+    font-family: var(--secondary-font-stack);
     font-weight: 400;
     font-size: 1rem;
 
@@ -64,7 +64,7 @@
   display: flex;
   flex-direction: column;
 
-  font-family: $secondary-font-stack;
+  font-family: var(--secondary-font-stack);
 
   .gas {
     font-size: 1.2rem;
@@ -82,7 +82,7 @@
 
   cursor: pointer;
 
-  font-family: $secondary-font-stack;
+  font-family: var(--secondary-font-stack);
   font-size: .8rem;
   font-weight: normal;
   color: rgba(var(--white), .75);

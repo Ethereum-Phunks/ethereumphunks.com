@@ -1,5 +1,5 @@
-@import 'abstracts/variables';
-@import 'abstracts/mixins';
+@use 'abstracts/variables' as *;
+@use 'abstracts/mixins' as *;
 
 :host {
   position: relative;
@@ -60,7 +60,7 @@ section {
 
       font-size: 1.2rem;
       font-weight: normal;
-      font-family: $secondary-font-stack;
+      font-family: var(--secondary-font-stack);
 
       background-color: rgba(var(--background), 1);
 
@@ -101,7 +101,7 @@ section {
         padding-right: 1.5rem;
         margin-bottom: 1rem;
 
-        font-family: $secondary-font-stack;
+        font-family: var(--secondary-font-stack);
         color: rgba(var(--white), 1);
         text-decoration: none;
 
@@ -184,7 +184,7 @@ section {
 
         font-size: 1.2rem;
         font-weight: normal;
-        font-family: $secondary-font-stack;
+        font-family: var(--secondary-font-stack);
 
         background-color: rgba(var(--background), 1);
 
@@ -211,7 +211,7 @@ section {
       padding: 1.5rem 1.5rem 1.2rem;
       margin-bottom: 3rem;
 
-      font-family: $secondary-font-stack;
+      font-family: var(--secondary-font-stack);
       color: rgba(var(--black), 1);
       font-size: 1.6rem;
 
@@ -239,7 +239,7 @@ section {
       padding: 1.5rem 1.5rem 0;
       margin-bottom: 3rem;
 
-      font-family: $secondary-font-stack;
+      font-family: var(--secondary-font-stack);
       color: rgba(var(--black), 1);
 
       background-color: rgba(var(--highlight), 1);
@@ -329,7 +329,7 @@ section {
 
     .notifications-wrapper {
       h3 {
-        font-family: $secondary-font-stack;
+        font-family: var(--secondary-font-stack);
         font-size: 1.2rem;
         font-weight: normal;
         padding-bottom: 1rem;
@@ -348,7 +348,7 @@ section {
         @include scrollbars();
 
         p {
-          font-family: $secondary-font-stack;
+          font-family: var(--secondary-font-stack);
           font-size: 1.2rem;
         }
 
@@ -366,7 +366,7 @@ section {
         padding-bottom: 3rem;
 
         p {
-          font-family: $primary-font-stack;
+          font-family: var(--primary-font-stack);
           font-size: 1.6rem;
           font-weight: 500;
 

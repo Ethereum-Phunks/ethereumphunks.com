@@ -16,7 +16,7 @@
     border-radius: 0;
     background: none;
 
-    font-family: $primary-font-stack;
+    font-family: var(--primary-font-stack);
     border: .2rem solid rgba(var(--text-color), 1);
     color: rgba(var(--dark-text), 1);
     font-size: 1.6rem;
@@ -33,7 +33,7 @@
 
       .ng-input {
         > input {
-          font-family: $primary-font-stack;
+          font-family: var(--primary-font-stack);
           font-size: 1.6rem;
           font-weight: 600;
           color: rgba(var(--dark-text), 1);
@@ -113,7 +113,7 @@
         .ng-placeholder,
         .ng-input > input,
         .ng-value {
-          font-family: $secondary-font-stack;
+          font-family: var(--secondary-font-stack);
           font-size: 1.6rem;
           font-weight: normal;
           color: rgba(var(--black), .25);

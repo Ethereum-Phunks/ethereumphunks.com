@@ -219,6 +219,12 @@
                     </a>
                   }
               </div>
+
+              @if (!(isMobile$ | async)) {
+                @defer {
+                  <app-comments [hashId]="phunk.hashId" />
+                }
+              }
             </div>
 
             <div class="right">
@@ -272,6 +278,12 @@
               </a>
             </div>
           </div>
+        }
+
+        @if (isMobile$ | async) {
+          @defer {
+            <app-comments [hashId]="phunk.hashId" />
+          }
         }
 
         @defer {

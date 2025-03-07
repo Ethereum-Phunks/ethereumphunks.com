@@ -1,5 +1,5 @@
-@import 'abstracts/variables';
-@import 'abstracts/mixins';
+@use 'abstracts/variables' as *;
+@use 'abstracts/mixins' as *;
 
 main {
   min-height: calc(100vh - 21rem);
@@ -28,6 +28,16 @@ main {
   z-index: 993;
   bottom: 0;
   right: 0;
+
+  @include trans($duration: .2s);
+
+  @media (max-width: $mobile) {
+    bottom: -100%;
+
+    &.visible {
+      bottom: 0;
+    }
+  }
 }
 
 app-ordex-withdrawal {

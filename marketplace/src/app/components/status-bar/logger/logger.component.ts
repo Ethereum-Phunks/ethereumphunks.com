@@ -26,7 +26,8 @@ export class LoggerComponent implements AfterViewInit {
     private cdr: ChangeDetectorRef
   ) {
     effect(() => {
-      // console.log('Logs:', this.logs());
+      const logs = this.logs();
+      if (!logs) return;
       this.scrollToBottom();
     });
   }

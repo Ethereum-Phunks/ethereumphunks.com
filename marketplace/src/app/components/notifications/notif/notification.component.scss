@@ -1,9 +1,9 @@
-@import 'abstracts/variables';
-@import 'abstracts/mixins';
+@use 'abstracts/variables' as *;
+@use 'abstracts/mixins' as *;
 
 :host {
   display: block;
-  font-family: $secondary-font-stack;
+  font-family: var(--secondary-font-stack);
 }
 
 .txn-item {
@@ -31,7 +31,7 @@
     align-items: center;
     justify-content: center;
 
-    font-family: $secondary-font-stack;
+    font-family: var(--secondary-font-stack);
     font-size: 1.2rem;
     font-weight: normal;
 
@@ -104,7 +104,7 @@
         display: inline-flex;
         align-items: center;
 
-        font-family: $secondary-font-stack;
+        font-family: var(--secondary-font-stack);
         font-size: 1rem;
         color: rgba(var(--highlight), 1);
         font-weight: normal;

@@ -16,7 +16,7 @@
 @if (blocks$ | async; as blocks) {
   <div
     class="blocks-wrapper"
-    [class.active]="expanded"
+    [class.active]="expanded()"
     [title]="(blocks[0] - blocks[1]) ? (blocks[0] - blocks[1]) + ' blocks behind' : 'synced'"
     (click)="expandCollapse()">
 
@@ -37,7 +37,7 @@
 
     <button
       class="expand-button"
-      [class.active]="expanded">
+      [class.active]="expanded()">
 
       <ng-template [ngTemplateOutlet]="arrowIcon" />
     </button>
@@ -45,7 +45,7 @@
 }
 
 @if ((logs$ | async); as logs) {
-  @if (expanded) {
+  @if (expanded()) {
     <div class="logger">
       <div class="title-bar">
         <div class="title">Indexer Logs</div>

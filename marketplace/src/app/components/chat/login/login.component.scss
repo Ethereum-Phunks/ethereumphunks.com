@@ -1,8 +1,8 @@
-@import 'abstracts/variables';
-@import 'abstracts/mixins';
+@use 'abstracts/variables' as *;
+@use 'abstracts/mixins' as *;
 
 :host {
-  font-family: $secondary-font-stack;
+  font-family: var(--secondary-font-stack);
   font-weight: 400;
   text-align: center;
 
@@ -25,7 +25,7 @@ h2 {
 }
 
 p {
-  font-family: $primary-font-stack;
+  font-family: var(--primary-font-stack);
   font-size: 1.4rem;
   font-weight: 600;
   line-height: 1.35;
@@ -58,7 +58,7 @@ p {
     background-color: rgba(var(--base-color), 1);
     color: rgba(var(--black), 1);
 
-    font-family: $secondary-font-stack;
+    font-family: var(--secondary-font-stack);
     font-weight: 400;
     font-size: 1.2rem;
   }

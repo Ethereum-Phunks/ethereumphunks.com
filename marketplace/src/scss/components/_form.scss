@@ -1,5 +1,5 @@
 input {
-  font-family: $primary-font-stack;
+  font-family: var(--primary-font-stack);
   // height: 4rem;
   color: rgba(var(--text-color), 1);
   font-size: 2rem;

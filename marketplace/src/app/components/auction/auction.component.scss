@@ -1,5 +1,5 @@
-@import 'abstracts/variables';
-@import 'abstracts/mixins';
+@use 'abstracts/variables' as *;
+@use 'abstracts/mixins' as *;
 
 :host {
   display: block;
@@ -44,7 +44,7 @@
     }
 
     .value {
-      font-family: $secondary-font-stack;
+      font-family: var(--secondary-font-stack);
       font-size: 2.6rem;
 
       .eth-symbol {
@@ -245,7 +245,7 @@
     top: -.5rem;
     right: -1rem;
 
-    font-family: $secondary-font-stack;
+    font-family: var(--secondary-font-stack);
     font-weight: normal;
     color: rgba(var(--text-color), 1);
   }

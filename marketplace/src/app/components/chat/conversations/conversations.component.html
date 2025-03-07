@@ -19,7 +19,7 @@
       <div class="profile-item">
         <div class="image-wrapper">
           <img
-            [lazyLoad]="conversation.profileItem | imagePipe"
+            [lazyLoad]="conversation.profileItem | imageUrlPipe"
             [defaultImage]="'assets/loadingphunk.png'"
             width="50"
             height="50"

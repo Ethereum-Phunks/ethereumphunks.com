@@ -1,37 +1,38 @@
-// $tippy-color: var(--background);
-// $tippy-border: var(--color1);
-
 .tippy-box {
 
-  border-radius: 2rem;
+  border-radius: 0;
 
   .tippy-content {
-    font-size: 1.2rem;
-    font-weight: 700;
+    font-family: var(--secondary-font-stack);
+    font-weight: normal;
+    font-size: 1rem;
     padding: .5rem 1rem;
-    min-width: 5rem;
     text-align: center;
 
-    h2 {
-      padding-top: .3rem;
-      font-weight: 700;
+    box-shadow: .2rem .2rem 0 0 rgba(var(--pink), 1);
+
+    a {
+      color: rgba(var(--black), 1);
+      text-decoration: underline;
     }
   }
 
-  &[data-theme~='tipelectric'] {
+  &[data-theme="phunks"] {
 
-    background-color: rgba(var(--highlight), 1);
-    box-shadow: 0 2rem 7rem 0 rgba(var(--dark-text), .1);
+    background-color: rgba(var(--escrow-color), 1);
+    box-shadow: none;
 
-    > .tippy-svg-arrow {
-      svg {
-        fill: rgba(var(--highlight), 1);
+    .tippy-arrow {
+      display: none;
+      z-index: 1;
+
+      &:before {
+        color: rgba(var(--escrow-color), 1);
       }
     }
 
     .tippy-content {
-      color: rgba(var(--background), 1);
+      color: rgba(var(--black), 1);
     }
   }
-
 }

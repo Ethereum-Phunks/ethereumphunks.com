@@ -1,11 +1,5 @@
 <div class="collection-info-wrapper">
-  <h1>INSCRIBE</h1>
-  <h2>{{ collection()?.name }}</h2>
-  <p>On the ethereum blockchain</p>
-
-  <div class="mint-info-wrapper">
-    <span class="minted">{{ state().mintProgress | number }}</span>/{{ collection()?.supply | number }} inscribed
-  </div>
+  <img [src]="'/assets/collections/' + collection()?.slug + '/logo.png'" alt="">
 
   <!-- <small style="font-size: .8rem">
     {{ pendingInscriptionShas$ | async | json }}
@@ -14,16 +8,31 @@
 
 <div class="actions-wrapper">
 
+  <div class="mint-info-wrapper">
+    <div>
+      <span class="minted">{{ state().mintProgress | number }}</span>/{{ collection()?.supply | number }} inscribed
+    </div>
+
+    <div>
+      <button
+        tippy
+        data-tippy-placement="top"
+        data-tippy-content="Inscriptions are available on a first come first serve basis. Each one is unique and cannot be duplicated based on <a href='https://docs.ethscriptions.com/overview/protocol-specification#creating-ethscriptions' target='_blank'>these protocol rules</a>.">
+
+        ?
+      </button>
+    </div>
+  </div>
+
   <div class="actions-buttons-wrapper">
     <button
       (click)="randomMintItem()"
-      [class.disabled]="state().inscribing">
+      [class.disabled]="state().inscribing || !(connected$ | async)">
 
-      Random
       @if (state().loadingMint) {
-        <div class="loader">
-          <img src="/assets/loader-light.gif" width="14" height="14" alt="">
-        </div>
+        <ng-container *ngTemplateOutlet="loading" />
+      } @else {
+        Random
       }
     </button>
 
@@ -31,9 +40,20 @@
       <button
         (click)="inscribe()"
         class="inscribe"
+        [class.inscribed]="state().activeMint?.exists"
         [class.disabled]="state().inscribing || !state().activeMint?.imageUrl || state().activeMint?.exists">
 
-        {{ state().activeMint?.exists ? 'Already inscribed' : 'Inscribe' }}
+        @if (state().inscribing) {
+          <ng-container *ngTemplateOutlet="loading" />
+        } @else {
+          {{ state().activeMint?.exists ? 'Already inscribed' : 'Inscribe' }}
+        }
+      </button>
+    } @else {
+      <button
+        (click)="connect()"
+        class="connect">
+        Connect
       </button>
     }
   </div>
@@ -42,8 +62,41 @@
     <pre class="pink">{{ error() }}</pre>
   } -->
 
-  @if (state().transaction.status) {
-    <p class="pink">Your transaction is {{ state().transaction.status }}. <a [href]="'https://etherscan.com/tx/' + state().transaction.hash" target="_blank">View it on Etherscan</a></p>
-  }
+  <!-- @if (state().transaction.status; as status) {
+    <p>
+      @if (status === 'wallet') {
+        Please submit the transaction using your connected Ethereum wallet.
+      } @else {
+        Your transaction is {{ status }}.
+      }
+
+      @if (state().transaction.hash; as hash) {
+        <a
+          [href]="'https://sepolia.etherscan.io/tx/' + hash"
+          target="_blank">
+
+          View it on Etherscan <ng-container [ngTemplateOutlet]="externalIcon" />
+        </a>
+      }
+    </p>
+  } -->
+
+  <div class="legal">
+    <p>By clicking the "inscribe" button, you agree to our <a href="https://bafybeie75bq3qinz2t2rqkoew5ypxu5zgoecqsnhfq45kwsubcrwpi7heu.ipfs.dweb.link/" target="_blank">terms</a>.</p>
+    <p>Network fees apply</p>
+  </div>
 </div>
 
+<ng-template #loading>
+  <img
+    src="/assets/loader-C3FF00.gif"
+    class="loader"
+    width="19"
+    height="19"
+    alt="loading"
+  />
+</ng-template>
+
+<ng-template #externalIcon>
+  <svg height="9" viewBox="0 0 9 9" width="9" xmlns="http://www.w3.org/2000/svg"><path d="m3 0v1.5h-1.5v6h6v-1.5h1.5v3h-9v-9zm1.5 4.5v1.5h-1.5v-1.5zm1.5 0h-1.5v-1.5h1.5v-1.5h-1.5v-1.5h4.5v4.5h-1.5v-1.5h-1.5z" fill="currentColor" fill-rule="evenodd" /></svg>
+</ng-template>

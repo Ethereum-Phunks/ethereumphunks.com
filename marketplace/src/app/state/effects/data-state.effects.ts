@@ -18,6 +18,7 @@ import * as marketStateActions from '@/state/actions/market-state.actions';
 import * as marketStateSelectors from '@/state/selectors/market-state.selectors';
 
 import { asyncScheduler, distinctUntilChanged, filter, forkJoin, from, map, mergeMap, of, switchMap, take, tap, throttleTime, withLatestFrom } from 'rxjs';
+import { environment } from 'src/environments/environment';
 
 @Injectable()
 export class DataStateEffects {
@@ -53,7 +54,7 @@ export class DataStateEffects {
     ofType(appStateActions.setWalletAddress),
     filter((action) => {
       // console.log('fetchDisabledCollections$', { action });
-      if (!action.walletAddress) return false;
+      if (!action.walletAddress) return !environment.production;
       return this.whitelist
         .map((w) => w.toLowerCase())
         .includes(action.walletAddress.toLowerCase());

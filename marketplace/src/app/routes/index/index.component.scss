@@ -1,5 +1,5 @@
-@import 'abstracts/variables';
-@import 'abstracts/mixins';
+@use 'abstracts/variables' as *;
+@use 'abstracts/mixins' as *;
 
 :host {
   display: block;
@@ -18,8 +18,8 @@ app-mint {
   z-index: 2;
   width: 100%;
   max-width: calc(var(--max-width) / 2);
-  height: 18rem;
-
+  // height: 18rem;
+  overflow: visible;
   margin: 0 auto;
 }
 

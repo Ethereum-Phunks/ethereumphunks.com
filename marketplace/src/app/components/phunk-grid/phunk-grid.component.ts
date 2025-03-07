@@ -20,7 +20,7 @@ import { WeiToEthPipe } from '@/pipes/wei-to-eth.pipe';
 import { FormatCashPipe } from '@/pipes/format-cash.pipe';
 import { SortPipe } from '@/pipes/sort.pipe';
 import { PropertiesPipe } from '@/pipes/properties';
-import { ImagePipe } from '@/pipes/image.pipe';
+import { ImageUrlPipe } from '@/pipes/image-url.pipe';
 
 import { environment } from 'src/environments/environment';
 
@@ -38,12 +38,11 @@ import * as marketStateActions from '@/state/actions/market-state.actions';
     NgxPaginationModule,
     IntersectionObserverModule,
 
-    TokenIdParsePipe,
     WeiToEthPipe,
     FormatCashPipe,
     SortPipe,
     PropertiesPipe,
-    ImagePipe,
+    ImageUrlPipe,
   ],
   host:  {
     '[class.selectable]': 'selectable',

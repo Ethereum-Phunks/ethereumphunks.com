@@ -1,5 +1,5 @@
-@import 'abstracts/variables';
-@import 'abstracts/mixins';
+@use 'abstracts/variables' as *;
+@use 'abstracts/mixins' as *;
 
 :host {
   display: block;
@@ -32,7 +32,7 @@ img,
     max-width: 100%;
     text-align: center;
 
-    font-family: $secondary-font-stack;
+    font-family: var(--secondary-font-stack);
     font-weight: 400;
   }
 

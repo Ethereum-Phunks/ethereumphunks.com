@@ -1,3 +1,6 @@
+@use 'abstracts/variables' as *;
+@use 'abstracts/mixins' as *;
+
 .inner {
   @include max-width();
 }

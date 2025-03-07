@@ -1,5 +1,5 @@
-@import 'abstracts/variables';
-@import 'abstracts/mixins';
+@use 'abstracts/variables' as *;
+@use 'abstracts/mixins' as *;
 
 .bid-history-wrapper {
   padding: 2.2rem 0 0;
@@ -40,7 +40,7 @@
   }
   .bid-history {
     .bid-item {
-      font-family: $secondary-font-stack;
+      font-family: var(--secondary-font-stack);
       font-size: 1.4rem;
 
       display: flex;

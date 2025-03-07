@@ -20,8 +20,11 @@
 <app-footer />
 <app-notifications />
 
-<div class="status-wrapper">
-  <app-status-bar />
+<div
+  class="status-wrapper"
+  [class.visible]="statusBarVisible()">
+
+  <app-status-bar [visible]="statusBarVisible()" />
 </div>
 
 @if ((chatActive$ | async); as active) {

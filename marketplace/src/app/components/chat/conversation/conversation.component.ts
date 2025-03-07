@@ -20,7 +20,6 @@ import { selectChatState } from '@/state/selectors/chat.selectors';
   standalone: true,
   imports: [
     AsyncPipe,
-    JsonPipe,
     DatePipe,
     NgTemplateOutlet,
 

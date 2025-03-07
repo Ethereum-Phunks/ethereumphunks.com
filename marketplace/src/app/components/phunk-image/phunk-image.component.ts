@@ -7,9 +7,9 @@ import { catchError, firstValueFrom, of } from 'rxjs';
 
 import { Phunk } from '@/models/db';
 import { Web3Service } from '@/services/web3.service';
+import { ImageService } from '@/services/image.service';
 
 import { environment } from 'src/environments/environment';
-
 type DecodedData = {
   type: 'text' | 'json' | 'html' | 'image' | 'video' | 'url' | 'unsupported';
   data: string;
@@ -28,7 +28,7 @@ export class PhunkImageComponent {
   color = input<boolean>(true);
 
   phunk = input<Phunk | null>();
-  // sha = input<string>();
+  sha = input<string>();
 
   // imageData = input<string>();
 
@@ -43,6 +43,7 @@ export class PhunkImageComponent {
   constructor(
     private http: HttpClient,
     private web3Svc: Web3Service,
+    private imageSvc: ImageService
   ) {
 
     effect(() => {
@@ -78,7 +79,8 @@ export class PhunkImageComponent {
             this.phunkText = 'Unsupported content type';
           }
         } else {
-          this.getPhunkBySha(phunk.sha);
+          console.log('phunk.sha', phunk.sha);
+          this.getPhunkImageBySha(phunk.sha);
         }
       }
 
@@ -88,33 +90,39 @@ export class PhunkImageComponent {
     });
   }
 
-  async getPhunkBySha(sha: string): Promise<any> {
-    const baseImageUrl = `${environment.staticUrl}/static/images`;
-    const image = await firstValueFrom(
-      this.http.get(`${baseImageUrl}/${sha}`, { responseType: 'arraybuffer' }).pipe(
-        catchError(err => {
-          console.error(err);
-          return of(null);
-        }),
-      ),
-    );
-
+  /**
+   * Fetches and processes an image by its SHA hash
+   * @param sha SHA hash of the image to fetch
+   * @returns Promise resolving to null if image fetch fails
+   */
+  async getPhunkImageBySha(sha: string): Promise<any> {
+    const image = await this.imageSvc.fetchSupportedImageBySha(sha);
     if (!image) return null;
     const dataUri = `data:image/png;base64,${Buffer.from(image).toString('base64')}`;
     this.phunkImgSrc = dataUri;
   }
 
+  /**
+   * Fetches and processes a phunk by its transaction hash ID
+   * @param hashId Transaction hash ID
+   * @returns Promise resolving when image is processed
+   */
   async getPhunkByHashId(hashId: string): Promise<any> {
     const tx = await this.web3Svc.getTransactionL1(hashId);
     const isDevMode = environment.chainId === 11155111;
 
     if (isDevMode && hexToString(tx.input).startsWith('data:application/phunky')) {
-      this.getPhunkBySha(hexToString(tx.input).split(',')[1]);
+      this.getPhunkImageBySha(hexToString(tx.input).split(',')[1]);
     } else {
       this.phunkImgSrc = hexToString(tx.input);
     }
   }
 
+  /**
+   * Decodes a data URI into its component parts and determines content type
+   * @param dataURI Data URI string to decode
+   * @returns Object containing decoded type and data
+   */
   decodeDataURI(dataURI: string): DecodedData {
     if (!dataURI) return { type: 'unsupported', data: 'No Data URI' };
 

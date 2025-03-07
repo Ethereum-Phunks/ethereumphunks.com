@@ -1,30 +1,30 @@
 import { Component, effect, ElementRef, input, viewChild } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { AsyncPipe, CommonModule } from '@angular/common';
 
 import { LazyLoadImageModule } from 'ng-lazyload-image';
 
+import { toObservable } from '@angular/core/rxjs-interop';
+import { distinctUntilChanged, filter, from, map, Observable, of, scan, shareReplay, startWith, switchMap, tap } from 'rxjs';
+
 import { Collection } from '@/models/data.state';
 
-import anime from 'animejs';
-
-import { catchError, filter, firstValueFrom, from, map, of, switchMap, Observable, throwError, retry } from 'rxjs';
-
-import { environment } from 'src/environments/environment';
 import { PixelArtService } from '@/services/pixel-art.service';
+import { ImageService } from '@/services/image.service';
 
-const IMAGE_LIMIT = 9;
-// Define a size threshold (in bytes) for what's considered a "large" image
-const MAX_IMAGE_SIZE = 500000; // 500KB
-// Maximum number of retry attempts
-const MAX_RETRY_ATTEMPTS = 3;
+import { gsap } from 'gsap';
+
+interface Image {
+  src: string;
+  type: 'loading' | 'mint' | 'gray';
+}
 
 @Component({
   selector: 'app-splash',
   standalone: true,
   imports: [
     CommonModule,
-    LazyLoadImageModule
+    LazyLoadImageModule,
+    AsyncPipe
   ],
   templateUrl: './splash.component.html',
   styleUrls: ['./splash.component.scss'],
@@ -33,115 +33,158 @@ export class SplashComponent {
 
   imagesWrapper = viewChild<ElementRef>('imagesWrapper');
 
+  Array = Array;
+
+  readonly IMAGE_LIMIT = 9;
+  readonly MAX_IMAGE_SIZE = 2000;
+  readonly defaultImage = { src: '/assets/loadingphunk.png', type: 'loading' };
+  readonly defaultImages: Image[] = Array(this.IMAGE_LIMIT).fill(this.defaultImage);
+
   collection = input<Collection | null>();
+  collection$ = toObservable(this.collection);
 
   mintImage = input<string | null>();
+  mintImage$ = toObservable(this.mintImage);
 
-  images: string[] = [];
+  images$: Observable<Image[]> = this.collection$.pipe(
+    distinctUntilChanged((prev, curr) => prev?.slug === curr?.slug),
+    switchMap((collection) => {
+      if (!collection) return of(this.defaultImages);
+      const shas = collection.previews?.map(({ sha }) => sha);
+
+      return from(this.createImageArray(shas)).pipe(
+        switchMap((images) => {
+          return this.mintImage$.pipe(
+            map((mintImage) => {
+              if (!mintImage || !collection.isMinting) return images;
+              const newImages: Image[] = [...images];
+              const centerIndex = Math.floor(this.IMAGE_LIMIT / 2);
+              newImages[centerIndex] = {
+                src: mintImage,
+                type: 'mint'
+              };
+              return newImages;
+            }),
+          );
+        }),
+        startWith(this.defaultImages)
+      );
+    }),
+  );
 
   constructor(
-    private http: HttpClient,
-    private pixelArtSvc: PixelArtService
-  ) {
-    effect(async () => {
-      const collection = this.collection();
-      if (!collection) return;
+    private pixelArtSvc: PixelArtService,
+    private imageSvc: ImageService
+  ) {}
 
-      const images = await this.createImageArray(collection.previews?.map(({ sha }) => sha) || []);
-      this.images = images.slice(0, IMAGE_LIMIT);
-    });
+  // async formatImages(images: Image[]): Promise<Image[]> {
+  //   const centerImageIndex = Math.floor(this.IMAGE_LIMIT / 2);
 
-    effect(async () => {
-      const mintImage = this.mintImage();
-      console.log(mintImage);
-      if (!mintImage) return;
+  //   if (images[centerImageIndex]?.type === 'mint') {
+  //     const buffer = await fetch(images[centerImageIndex].src).then((res) => res.arrayBuffer());
+  //     const pixelArtImage = await this.pixelArtSvc.processPixelArtImage(buffer);
+  //     const svg = this.pixelArtSvc.convertToSvg(pixelArtImage);
+  //     const newImage = this.pixelArtSvc.stripColors(svg);
+  //     images[centerImageIndex] = {
+  //       src: this.pixelArtSvc.convertToBase64(newImage),
+  //       type: 'gray'
+  //     };
+  //   }
 
-      const imagesWrapper = this.imagesWrapper()?.nativeElement;
-      if (!imagesWrapper) return;
+  //   return images;
+  // }
 
-      const centerImageIndex = Math.floor(IMAGE_LIMIT / 2);
-      console.log(centerImageIndex);
+  async animateMint() {
+    const children = this.imagesWrapper()?.nativeElement.children;
+    console.log({children});
+    if (!children) return;
 
-      // Create a new array with the last image moved to the front
-      // and the mint image in the center position
-      const newImages = [
-        this.images[this.images.length - 1],  // Move last image to front
-        ...this.images.slice(0, centerImageIndex - 1),  // Add images up to before center
-        mintImage,  // Add mint image in center
-        ...this.images.slice(centerImageIndex, IMAGE_LIMIT - 1)  // Add remaining images
-      ];
-
-      console.log(newImages);
-
-      // Process the mint image if it's a blob URL
-      if (newImages[centerImageIndex].startsWith('blob:')) {
-        const buffer = await fetch(newImages[centerImageIndex]).then((res) => res.arrayBuffer());
-        const pixelArtImage = await this.pixelArtSvc.processPixelArtImage(buffer);
-        const svg = this.pixelArtSvc.convertToSvg(pixelArtImage);
-        const newImage = this.pixelArtSvc.stripColors(svg);
-        newImages[centerImageIndex] = this.pixelArtSvc.convertToBase64(newImage);
-      }
-
-      this.images = newImages;
-      console.log(this.images);
-
-      const animation = anime
-        .timeline()
-        .add({
-          targets: imagesWrapper,
-          translateX: [0, 320],
-          duration: 250,
-          easing: 'easeInOutSine',
-        })
-        .add({
-          targets: Array.from(imagesWrapper.children).filter((_, i) => i !== (centerImageIndex - 1)),
-          opacity: 0.35,
-          duration: 250,
-          easing: 'easeInOutSine',
-        });
-
-      await animation.finished;
+    await gsap.to(children, {
+      opacity: .1,
+      duration: 0.5,
+      ease: 'power2.inOut'
     });
   }
 
-  async createImageArray(shas: string[]): Promise<string[]> {
+  /**
+   * Creates an array of processed images from a list of SHA hashes
+   *
+   * @param shas - Array of SHA hashes identifying the images to fetch and process
+   * @returns Promise that resolves when image processing is complete
+   */
+  async createImageArray(shas: string[]): Promise<Image[]> {
     if (!shas?.length) return [];
 
-    console.log(shas);
+    const imageArray = [...this.defaultImages];
+    let validImages = 0;
+    let currentIndex = 0;
 
-    const baseImageUrl = `${environment.staticUrl}/static/images`;
-    const imageArray = await Promise.all(
-      shas.map((sha) => {
-        const url = `${baseImageUrl}/${sha}`;
+    // Keep processing until we have 9 valid images or run out of SHAs
+    while (validImages < this.IMAGE_LIMIT && currentIndex < shas.length) {
+      // Process next batch of images in parallel
+      const batchSize = Math.min(5, shas.length - currentIndex);
+      const batchPromises = shas.slice(currentIndex, currentIndex + batchSize).map(async (sha) => {
+        try {
+          const image = await this.imageSvc.fetchSupportedImageBySha(sha);
+          if (image.byteLength > this.MAX_IMAGE_SIZE) return null;
 
-        return firstValueFrom(
-          this.http.get(url, { responseType: 'arraybuffer' }).pipe(
-            switchMap((data: ArrayBuffer) => {
-              // Check if the image is too large
-              if (data.byteLength > MAX_IMAGE_SIZE) {
-                console.warn(`Image ${sha} is too large (${data.byteLength} bytes), retrying...`);
-                return throwError(() => new Error('IMAGE_TOO_LARGE'));
-              }
-              return from(this.pixelArtSvc.processPixelArtImage(data));
-            }),
-            // Simple retry mechanism - will retry the entire pipeline up to MAX_RETRY_ATTEMPTS times
-            retry(MAX_RETRY_ATTEMPTS),
-            map((data) => this.pixelArtSvc.convertToSvg(data)),
-            map((data) => this.pixelArtSvc.stripColors(data)),
-            map((data) => this.pixelArtSvc.convertToBase64(data)),
-            catchError((err) => {
-              console.error(`Error processing image ${sha}:`, err);
-              return of(null);
-            })
-          )
-        );
-      })
-    );
-    return imageArray.filter((image): image is string => !!image);
+          const pixels = await this.pixelArtSvc.processPixelArtImage(image);
+          const svg = this.pixelArtSvc.convertToSvg(pixels);
+          const stripped = this.pixelArtSvc.stripColors(svg);
+          const base64 = this.pixelArtSvc.convertToBase64(stripped);
+
+          return {
+            src: base64,
+            type: 'gray' as const
+          };
+        } catch (error) {
+          console.error(`Error processing image ${sha}:`, error);
+          return null;
+        }
+      });
+
+      const results = await Promise.all(batchPromises);
+
+      // Add valid results to our array
+      for (const result of results) {
+        if (result && validImages < this.IMAGE_LIMIT) {
+          imageArray[validImages] = result;
+          validImages++;
+        }
+      }
+
+      currentIndex += batchSize;
+    }
+
+    return imageArray;
   }
 
   formatNumber(num: string): string | null {
     if (!num) return null;
     return String(num).padStart(4, '0');
+  }
+
+  async handleMintImage(mintImage: string, images: string[]) {
+    const imagesWrapper = this.imagesWrapper()?.nativeElement;
+    if (!imagesWrapper) return;
+
+    let newImages = [...images];
+    const centerImageIndex = Math.floor(this.IMAGE_LIMIT / 2); // 4th image
+    const lastImage = newImages[newImages.length - 1];
+    newImages.pop();
+
+    newImages = [ lastImage, ...newImages ];
+    newImages[centerImageIndex] = mintImage;
+
+    // Process the mint image if it's a blob URL
+    if (newImages[centerImageIndex + 1].startsWith('blob:')) {
+      const buffer = await fetch(newImages[centerImageIndex + 1]).then((res) => res.arrayBuffer());
+      const pixelArtImage = await this.pixelArtSvc.processPixelArtImage(buffer);
+      const svg = this.pixelArtSvc.convertToSvg(pixelArtImage);
+      const newImage = this.pixelArtSvc.stripColors(svg);
+      newImages[centerImageIndex + 1] = this.pixelArtSvc.convertToBase64(newImage);
+    }
+
+    return newImages;
   }
 }

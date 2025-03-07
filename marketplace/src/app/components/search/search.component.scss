@@ -1,5 +1,5 @@
-@import 'abstracts/variables';
-@import 'abstracts/mixins';
+@use 'abstracts/variables' as *;
+@use 'abstracts/mixins' as *;
 
 :host {
   display: block;
@@ -23,7 +23,7 @@ form {
     top: 0;
     right: 0;
 
-    font-family: $secondary-font-stack;
+    font-family: var(--secondary-font-stack);
     font-size: 1.4rem;
     font-weight: normal;
     text-align: center;
@@ -52,7 +52,7 @@ form {
 
       background-color: rgba(var(--black), .1);
 
-      font-family: $secondary-font-stack;
+      font-family: var(--secondary-font-stack);
       font-size: 1.4rem;
       color: rgba(var(--black), 1);
       border-radius: 0;
@@ -62,7 +62,7 @@ form {
       padding-right: 5rem;
 
       &::placeholder {
-        font-family: $secondary-font-stack;
+        font-family: var(--secondary-font-stack);
         font-size: 1.2rem;
         font-weight: normal;
         transform: translateY(-1px);
@@ -120,10 +120,10 @@ form {
       display: flex;
       flex-direction: column;
 
-      font-family: $secondary-font-stack;
+      font-family: var(--secondary-font-stack);
 
       button {
-        font-family: $secondary-font-stack;
+        font-family: var(--secondary-font-stack);
       }
 
       .dropdown-header {

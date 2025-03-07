@@ -1,51 +1,39 @@
 @charset 'UTF-8';
 
-@import 'tippy.js/dist/tippy.css';
-@import 'tippy.js/themes/translucent.css';
-@import 'tippy.js/animations/shift-away-subtle.css';
-@import 'tippy.js/dist/svg-arrow.css';
-@import 'tippy.js/dist/border.css';
+@use 'tippy.js/dist/tippy.css';
+@use 'tippy.js/themes/translucent.css';
+@use 'tippy.js/animations/shift-away-subtle.css';
+@use 'tippy.js/dist/svg-arrow.css';
+@use 'tippy.js/dist/border.css';
 
 // 1. Configuration and helpers
-@import
-  'abstracts/variables',
-  'abstracts/functions',
-  'abstracts/mixins';
+@use 'abstracts/variables';
+@use 'abstracts/functions';
+@use 'abstracts/mixins';
+@use 'abstracts/animations';
 
 // 2. Vendors
-@import
-  'vendor/normalize';
+@use 'vendor/normalize';
 
 // 3. Base stuff
-@import
-  'base/base',
-  'base/fonts',
-  'base/typography',
-  'base/helpers',
-  'base/components';
-
-// 5. Components
-@import
-  'components/button',
-  'components/form',
-  'components/pagination',
-  'components/web3modal',
-  'components/ng-select',
-  'components/tippy',
-  'components/app-address';
-//   'components/app-home',
-//   'components/app-phunks-list',
-//   'components/app-item-view';
+@use 'base/base';
+@use 'base/fonts';
+@use 'base/typography';
+@use 'base/helpers';
+@use 'base/components';
 
 // 4. Layout-related sections
-@import
-  'layout/header',
-  'layout/layout';
+@use 'layout/header';
+@use 'layout/layout';
+
+// 5. Components
+@use 'components/button';
+@use 'components/form';
+@use 'components/pagination';
+@use 'components/web3modal';
+@use 'components/ng-select';
+@use 'components/tippy' as tippy2;
+@use 'components/app-address';
 
 // 6. Themes
-@import
-  'themes/default';
-
-// 7. Animations
-@import
-  'abstracts/animations';
+@use 'themes/default';

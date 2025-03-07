@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, effect, inject, Injector, input, signal, untracked } from '@angular/core';
 import { AsyncPipe, DecimalPipe, JsonPipe, NgTemplateOutlet } from '@angular/common';
 
 import { Store } from '@ngrx/store';
@@ -30,6 +30,8 @@ import { environment } from 'src/environments/environment';
 })
 export class StatusBarComponent {
 
+  visible = input.required<boolean>();
+
   blocks$ = combineLatest([
     this.store.select(appStateSelectors.selectCurrentBlock),
     this.store.select(appStateSelectors.selectIndexerBlock),
@@ -55,16 +57,23 @@ export class StatusBarComponent {
     3: 'behind3'
   };
 
-  expanded = false;
+  expanded = signal(false);
 
   constructor(
     private store: Store<GlobalState>,
     public gasSvc: GasService,
     private socketSvc: SocketService
-  ) {}
+  ) {
+    effect(() => {
+      const visible = this.visible();
+      if (!visible && this.expanded()) {
+        untracked(() => this.expanded.set(false));
+      }
+    }, { allowSignalWrites: true });
+  }
 
   expandCollapse() {
-    this.expanded = !this.expanded;
+    this.expanded.update(expanded => !expanded);
   }
 
   openChat() {

@@ -1,4 +1,4 @@
-import { Component, Inject, OnInit } from '@angular/core';
+import { Component, Inject, OnInit, signal } from '@angular/core';
 import { CommonModule, DOCUMENT } from '@angular/common';
 import { NavigationEnd, NavigationStart, Router, RouterModule } from '@angular/router';
 
@@ -25,13 +25,13 @@ import { GasService } from '@/services/gas.service';
 import { PwaUpdateService } from '@/services/pwa-update.service';
 
 import { selectChatActive } from '@/state/selectors/chat.selectors';
-import { selectWalletAddress } from '@/state/selectors/app-state.selectors';
+import { selectIsMobile, selectWalletAddress } from '@/state/selectors/app-state.selectors';
 
 import * as appStateActions from '@/state/actions/app-state.actions';
 import * as dataStateActions from '@/state/actions/data-state.actions';
 import * as marketStateActions from '@/state/actions/market-state.actions';
 
-import { debounceTime, filter, map, observeOn, scan, tap } from 'rxjs/operators';
+import { debounceTime, filter, map, observeOn, scan, switchMap, tap, withLatestFrom } from 'rxjs/operators';
 import { asyncScheduler, fromEvent } from 'rxjs';
 
 import { environment } from 'src/environments/environment';
@@ -63,6 +63,8 @@ export class AppComponent implements OnInit {
 
   chatActive$ = this.store.select(selectChatActive).pipe(map(({ active }) => active));
 
+  statusBarVisible = signal(false);
+
   constructor(
     @Inject(DOCUMENT) private document: Document,
     private store: Store<GlobalState>,
@@ -73,7 +75,9 @@ export class AppComponent implements OnInit {
     private socketSvc: SocketService,
     private gasSvc: GasService,
     private pwaUpdateSvc: PwaUpdateService,
-  ) {
+  ) {}
+
+  ngOnInit(): void {
     this.store.dispatch(appStateActions.setTheme({ theme: 'initial' }));
     this.store.dispatch(dataStateActions.fetchCollections());
     this.store.dispatch(marketStateActions.fetchMarketData());
@@ -120,14 +124,22 @@ export class AppComponent implements OnInit {
     ).subscribe();
 
     fromEvent(window, 'resize').pipe(
-      debounceTime(500),
+      debounceTime(100),
       tap(() => this.setIsMobile())
     ).subscribe();
 
-    this.setIsMobile();
-  }
+    // scroll event
+    fromEvent(window, 'scroll').pipe(
+      withLatestFrom(this.store.select(selectIsMobile)),
+      filter(([_, isMobile]) => !!isMobile),
+      tap(([$event, isMobile]) => {
+        const scrollY = window.scrollY;
+        this.statusBarVisible.set(scrollY > 100);
+      })
+    ).subscribe();
 
-  ngOnInit(): void {
+    this.setIsMobile();
+
     this.pwaUpdateSvc.checkForUpdate();
   }
 

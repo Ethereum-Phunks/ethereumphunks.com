@@ -1,50 +1,22 @@
-<!-- @if (mintImage()) {
-  <div class="image-wrapper mint-image-wrapper">
-    <img
-      [lazyLoad]="mintImage()!"
-      [defaultImage]="'/assets/loadingphunk.png'"
-      width="300"
-      height="300"
-    />
-  </div>
-} -->
-
 <div
   #imagesWrapper
   class="images-wrapper"
-  [class.is-minting]="!!mintImage()">
+  [class.mint-mode]="collection()?.isMinting"
+  [class.is-minting]="!!mintImage() && collection()?.isMinting">
 
-  @for (image of images; track idx; let idx = $index) {
-    <div class="image-wrapper">
-      <img
-        [src]="image"
-        width="300"
-        height="300"
-      />
+  @for (
+    image of ((images$ | async) || defaultImages);
+    track image.src + image.type + idx;
+    let idx = $index;
+  ) {
+    <div class="image-wrapper" [class]="image.type">
+      <img [src]="image.src" width="300" height="300" />
     </div>
-    } @empty {
-      @for (i of [1, 2, 3, 4, 5, 6, 7]; track i) {
-      <div class="image-wrapper">
-        <img
-          src="/assets/loadingphunk.png"
-          width="300"
-          height="300"
-        />
+  } @empty {
+    @for (image of defaultImages; track image.src + image.type + idx; let idx = $index) {
+      <div class="image-wrapper" [class]="image.type">
+        <img [src]="image.src" width="300" height="300" />
       </div>
     }
   }
 </div>
-
-<!-- @if (collection(); as coll) {
-  <div class="info">
-    <span>Collection</span>
-    <h1>{{ coll.name }}</h1>
-    @if (coll.stats; as stats) {
-      <div class="days">7 Day</div>
-      <div>Sales {{ stats.sales }}</div>
-      <div>Volume Ξ{{ stats.volume | number : '1.0-3' }}</div>
-    }
-  </div>
-} -->
-
-<!-- {{ activeCollection$ | async | json }} -->

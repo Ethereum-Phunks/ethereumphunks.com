@@ -1,5 +1,5 @@
-@import 'abstracts/variables';
-@import 'abstracts/mixins';
+@use 'abstracts/variables' as *;
+@use 'abstracts/mixins' as *;
 
 :host {
   width: 100%;
@@ -129,7 +129,7 @@
           align-items: center;
           justify-content: center;
 
-          font-family: $secondary-font-stack;
+          font-family: var(--secondary-font-stack);
           font-size: 1.2rem;
           line-height: 1.5;
           font-weight: normal;

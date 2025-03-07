@@ -2,14 +2,14 @@
 // This file contains all application-wide Sass variables.
 // -----------------------------------------------------------------------------
 
-$primary-font-stack: 'Montserrat', sans-serif !default;
-$secondary-font-stack: 'Retro Computer', sans-serif !default;
-
 $mobile: 800px;
 
-$base-url: '/assets/' !default;
-
 :root {
+  --base-url: '/assets/';
+
+  --primary-font-stack: 'Montserrat', sans-serif;
+  --secondary-font-stack: 'Retro Computer', sans-serif;
+
   --header-height: 8rem;
   --billboard-height: 46rem;
   --slideout-width: 46rem;

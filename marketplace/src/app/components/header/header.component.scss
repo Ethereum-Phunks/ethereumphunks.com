@@ -1,8 +1,8 @@
-@import 'abstracts/variables';
-@import 'abstracts/mixins';
+@use 'abstracts/variables' as * ;
+@use 'abstracts/mixins' as *;
 
 :host {
-  font-family: $secondary-font-stack;
+  font-family: var(--secondary-font-stack);
   display: block;
   position: fixed;
   z-index: 9999;
@@ -95,7 +95,7 @@
           text-decoration: none;
 
           app-address {
-            font-family: $secondary-font-stack;
+            font-family: var(--secondary-font-stack);
             color: rgba(var(--header-text), 1);
             font-size: 1.4rem;
             font-weight: normal;
@@ -104,7 +104,7 @@
         }
 
         button {
-          font-family: $secondary-font-stack;
+          font-family: var(--secondary-font-stack);
           color: rgba(var(--header-highlight), 1);
           background-color: rgba(var(--header-text), 1);
 
@@ -161,7 +161,7 @@
             display: flex;
             align-items: center;
 
-            font-family: $secondary-font-stack;
+            font-family: var(--secondary-font-stack);
             font-size: 1.2rem;
 
             color: rgba(var(--base-color), 1);

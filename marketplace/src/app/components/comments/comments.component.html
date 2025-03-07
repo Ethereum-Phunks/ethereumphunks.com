@@ -1,0 +1,107 @@
+<div class="comments-header">
+  <h2 i18n>Comments</h2>
+</div>
+
+<div class="comments-wrapper">
+  <ng-container *ngTemplateOutlet="commentsList; context: { $implicit: comments$ | async }" />
+</div>
+
+<div class="main-comment-form-wrapper">
+  <ng-container
+    *ngTemplateOutlet="commentForm; context: {
+      topic: hashId(),
+      placeholder: 'Leave a comment...'
+    }"
+  />
+</div>
+
+<ng-template #commentsList let-comments>
+  @for (comment of comments; track comment.id; let i = $index) {
+
+    <div class="comment-wrapper">
+      <div
+        class="comment"
+        [class.has-more]="comment.replies?.length">
+
+        <div class="comment-header">
+          <span class="author">
+            <app-avatar [address]="comment.from" />
+            <app-address [address]="comment.from" />
+          </span>
+
+          <span class="date">{{ comment.createdAt | date }}</span>
+
+          <button
+            class="reply-button"
+            [class.active]="replyActive() === comment.id"
+            (click)="setReplyActive(comment.id)">
+
+            [reply]
+          </button>
+
+          @if ((connectedAddress$ | async) === comment.from) {
+            <button
+              class="delete-button"
+              (click)="deleteComment(comment.id)">
+
+              [delete]
+            </button>
+          }
+        </div>
+
+        <div class="comment-content">
+          <p [class.deleted]="comment.deleted">
+            {{ comment.deleted ? '[deleted]' : comment.content }}
+          </p>
+
+          @if (comment.replies) {
+            <button class="expand-button" (click)="expandComment(comment.id)">
+              {{ comment.replies.length }} {{ (comment.replies.length > 1 ? 'replies' : 'reply') }} {{ expanded()[comment.id] ? '[-]' : '[+]' }}
+            </button>
+          }
+        </div>
+      </div>
+
+      @if (comment.replies && expanded()[comment.id]) {
+        <div class="replies">
+          <ng-container *ngTemplateOutlet="commentsList; context: { $implicit: comment.replies }" />
+        </div>
+      }
+
+      <div class="reply-form-wrapper">
+        @if (replyActive() === comment.id) {
+          <ng-container
+            *ngTemplateOutlet="commentForm; context: {
+              topic: comment.id,
+              placeholder: 'Reply'
+            }"
+          />
+        }
+      </div>
+    </div>
+  }
+</ng-template>
+
+<ng-template
+  #commentForm
+  let-topic="topic"
+  let-placeholder="placeholder">
+
+  <div class="form-wrapper">
+    <textarea
+      class="comments-textarea"
+      rows="4"
+      [ngModel]="commentValue()[topic]"
+      (ngModelChange)="handleCommentChanged($event, topic)"
+      [placeholder]="placeholder">
+    </textarea>
+
+    <button
+      class="comment-button"
+      [class.disabled]="!commentValue()[topic]"
+      (click)="addComment(commentValue()[topic], topic)">
+
+      Add comment
+    </button>
+  </div>
+</ng-template>

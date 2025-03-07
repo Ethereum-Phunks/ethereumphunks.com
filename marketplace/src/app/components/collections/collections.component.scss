@@ -1,5 +1,5 @@
-@import 'abstracts/variables';
-@import 'abstracts/mixins';
+@use 'abstracts/variables' as *;
+@use 'abstracts/mixins' as *;
 
 :host {
   display: block;
@@ -8,7 +8,7 @@
 
 h2 {
   color: rgba(var(--base-color), 1);
-  font-family: $secondary-font-stack;
+  font-family: var(--secondary-font-stack);
   font-size: 2rem;
   font-weight: 400;
   padding-bottom: 2rem;
@@ -57,7 +57,7 @@ h2 {
 
       .title {
         font-size: 1.6rem;
-        font-family: $secondary-font-stack;
+        font-family: var(--secondary-font-stack);
       }
     }
 

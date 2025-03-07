@@ -18,7 +18,7 @@ button {
 
     width: fit-content;
 
-    font-family: $secondary-font-stack;
+    font-family: var(--secondary-font-stack);
     font-size: 1rem;
     font-weight: normal;
     text-align: center;

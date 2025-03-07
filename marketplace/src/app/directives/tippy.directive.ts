@@ -9,8 +9,6 @@ import tippy, { Placement, roundArrow, followCursor, Instance, Props } from 'tip
 
 export class TippyDirective implements OnInit, OnChanges {
 
-  @Input('tippyOptions') public tippyOptions!: Object;
-
   private instance!: Instance<Props>;
 
   constructor(
@@ -27,18 +25,18 @@ export class TippyDirective implements OnInit, OnChanges {
     }
 
     const position = el.dataset.tippyPosition as Placement;
-    const hide = el.dataset.tippyKeep;
     const appendTo = el.dataset.appendTo as Element | "parent" | ((ref: Element) => Element);
 
     this.instance = tippy(el, {
       content: el.dataset.tippyContent,
       followCursor: el.dataset.tippyFollow as any,
-      plugins: [followCursor],
       zIndex: 21474841,
-      theme: 'tipelectric',
-      hideOnClick: hide ? false : true,
-      arrow: roundArrow,
-      allowHTML: true
+      theme: 'phunks',
+      hideOnClick: true,
+      allowHTML: true,
+      interactive: true,
+      trigger: 'click',
+      placement: el.dataset.tippyPlacement as Placement,
     });
 
     if (position) this.instance.props.placement = position;
