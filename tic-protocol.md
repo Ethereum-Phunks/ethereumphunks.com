@@ -12,7 +12,7 @@ Comments must be formatted as JSON and encoded as a data URL with the following 
 
 ### 2. Comment Object Schema
 ```typescript
-interface EVMComment {
+interface TIC {
   // Required: Identifier that links the comment to a blockchain entity
   topic: `0x${string}`;  
   
@@ -143,5 +143,4 @@ await transferEthscription({
 - Deleted comments' replies should still be preserved and displayed
 
 ## References
-- [Ethscriptions Documentation](https://docs.ethscriptions.com/)
 - [Ethscriptions Protocol Specification](https://docs.ethscriptions.com/overview/protocol-specification)
