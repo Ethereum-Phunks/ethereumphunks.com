@@ -115,6 +115,7 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
     map((blocksBehind) => blocksBehind > 6),
   );
 
+  globalConfig$ = this.store.select(appStateSelectors.selectConfig);
   walletAddress$ = this.store.select(appStateSelectors.selectWalletAddress);
   theme$ = this.store.select(appStateSelectors.selectTheme);
   usd$ = this.store.select(dataStateSelectors.selectUsd);

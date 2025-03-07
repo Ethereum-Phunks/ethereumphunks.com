@@ -39,7 +39,8 @@ export const initialState: AppState = {
 
   config: {
     maintenance: false,
-    chat: true
+    chat: false,
+    comments: false
   }
 };
 

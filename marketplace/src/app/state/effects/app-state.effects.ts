@@ -212,23 +212,23 @@ export class AppStateEffects {
   ), { dispatch: false });
 
   globalConfig$ = createEffect(() => this.actions$.pipe(
-    ofType(appStateActions.setGlobalConfig),
-    withLatestFrom(this.web3Svc.checkContractPaused()),
-    // tap(([action, paused]) => console.log({ action, paused })),
-    map(([action, paused]) => {
-      const newConfig = {
-        ...action.config,
-        maintenance: paused || action.config.maintenance,
-      };
-
-      // Only dispatch if there's a change
-      if (JSON.stringify(newConfig) !== JSON.stringify(action.config)) {
-        return appStateActions.setGlobalConfig({ config: newConfig });
-      } else {
-        return { type: 'NO_ACTION' };
-      }
-    }),
-    filter(action => action.type !== 'NO_ACTION')
+    ofType(appStateActions.initGlobalConfig),
+    switchMap(() => {
+      return this.dataSvc.listenGlobalConfig().pipe(
+        switchMap((config) => {
+          return from(this.web3Svc.checkContractPaused()).pipe(
+            map((paused) => {
+              const newConfig = {
+                ...config,
+                maintenance: paused || config.maintenance,
+              };
+              console.log({ newConfig });
+              return appStateActions.setGlobalConfig({ config: newConfig });
+            })
+          )
+        })
+      )
+    })
   ));
 
   constructor(

@@ -78,6 +78,8 @@ export class AppComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
+
+    this.store.dispatch(appStateActions.initGlobalConfig());
     this.store.dispatch(appStateActions.setTheme({ theme: 'initial' }));
     this.store.dispatch(dataStateActions.fetchCollections());
     this.store.dispatch(marketStateActions.fetchMarketData());

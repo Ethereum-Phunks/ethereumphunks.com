@@ -10,7 +10,7 @@ import { Attribute, Bid, Event, Listing, Phunk } from '@/models/db';
 
 import { createClient, RealtimePostgresUpdatePayload, RealtimePostgresInsertPayload } from '@supabase/supabase-js'
 
-import { Observable, of, BehaviorSubject, from, forkJoin, firstValueFrom, EMPTY, timer, merge } from 'rxjs';
+import { Observable, of, BehaviorSubject, from, forkJoin, firstValueFrom, EMPTY, timer, merge, filter } from 'rxjs';
 import { catchError, expand, map, reduce, switchMap, takeWhile, tap } from 'rxjs/operators';
 
 import { NgForage } from 'ngforage';
@@ -55,7 +55,6 @@ export class DataService {
     // Initialize listeners and data fetching
     this.listenEvents();
     this.listenForBlocks();
-    this.listenGlobalConfig();
     this.fetchUSDPrice();
   }
 
@@ -82,32 +81,41 @@ export class DataService {
   /**
    * Sets up real-time listener for global config changes
    */
-  listenGlobalConfig() {
-    supabase
-      .from('_global_config')
-      .select('*')
-      .eq('network', environment.chainId)
-      .limit(1)
-      .then(({ data, error }) => {
-        if (error) return;
-        this.store.dispatch(appStateActions.setGlobalConfig({ config: data[0] }));
-      });
+  listenGlobalConfig(): Observable<any> {
+    const initial$ = from(
+      supabase
+        .from('_global_config')
+        .select('*')
+        .eq('network', environment.chainId)
+        .limit(1)
+    ).pipe(
+      map(({ data }) => data?.[0])
+    );
 
-    supabase
-      .channel('_global_config')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: '_global_config'
-        },
-        (payload) => {
-          const config: any = payload.new;
-          if (config.network !== environment.chainId) return;
-          this.store.dispatch(appStateActions.setGlobalConfig({ config }));
-        },
-      ).subscribe();
+    const changes$ = new Observable(subscriber => {
+      const channel = supabase
+        .channel('_global_config')
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: '_global_config',
+            filter: `network=eq.${environment.chainId}`
+          },
+          payload => subscriber.next((payload as any).new)
+        )
+        .subscribe();
+
+      return () => channel.unsubscribe();
+    });
+
+    return merge(initial$, changes$).pipe(
+      filter(config => !!config),
+      tap((config) => {
+        console.log('listenGlobalConfig', config);
+      })
+    );
   }
 
   /**

@@ -171,6 +171,10 @@ export const setCollectionsMenuActive = createAction(
   props<{ collectionsMenuActive: boolean }>()
 );
 
+export const initGlobalConfig = createAction(
+  '[App State] Init Global Config'
+);
+
 export const setGlobalConfig = createAction(
   '[App State] Set Global Config State',
   props<{ config: GlobalConfig }>()

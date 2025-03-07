@@ -220,7 +220,7 @@
                   }
               </div>
 
-              @if (!(isMobile$ | async)) {
+              @if (!(isMobile$ | async) && (globalConfig$ | async)?.comments) {
                 @defer {
                   <app-comments [hashId]="phunk.hashId" />
                 }
@@ -280,7 +280,7 @@
           </div>
         }
 
-        @if (isMobile$ | async) {
+        @if ((isMobile$ | async) && (globalConfig$ | async)?.comments) {
           @defer {
             <app-comments [hashId]="phunk.hashId" />
           }

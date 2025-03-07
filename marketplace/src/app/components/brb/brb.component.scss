@@ -6,13 +6,12 @@
   top: var(--header-height);
   left: 0;
 
-  z-index: -1;
+  z-index: 1;
 
   width: 100%;
   height: calc(var(--billboard-height) - var(--header-height));
 
   background-color: rgba(var(--base-color), 1);
-  // backdrop-filter: blur(2rem);
 
   display: flex;
   justify-content: center;

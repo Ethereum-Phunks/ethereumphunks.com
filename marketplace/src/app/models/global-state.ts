@@ -49,6 +49,7 @@ export interface AppState {
 export interface GlobalConfig {
   maintenance: boolean;
   chat: boolean;
+  comments: boolean;
 };
 
 export interface ChatState {
