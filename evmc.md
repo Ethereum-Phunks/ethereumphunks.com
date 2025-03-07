@@ -106,9 +106,8 @@ const dataUrl = `data:message/vnd.evmc+json,${JSON.stringify(comment)}`;
 4. Submit the data URL as calldata in an Ethereum transaction following the Ethscriptions protocol
 
 ### 6. Comment Deletion
-Comments can be marked as deleted by transferring the comment's Ethscription to either of these addresses:
+Comments can be marked as deleted by transferring the comment's Ethscription to the zero address:
 - Zero address: `0x0000000000000000000000000000000000000000`
-- Dead address: `0x000000000000000000000000000000000000dEaD`
 
 The transfer of a comment Ethscription to either of these addresses signals that the original author intends to delete their comment. While the comment data remains on-chain due to the immutable nature of blockchain data, indexers and applications should:
 1. Mark these comments as deleted
