@@ -1,13 +1,13 @@
-# EVMC (EVM Comments) Protocol Specification
+# TIC (Transaction Inscribed Comments) Protocol Specification
 
 ## Overview
-EVMC is a child protocol built on top of [Ethscriptions](https://docs.ethscriptions.com/) that enables on-chain commenting capabilities through Ethereum transaction calldata. It provides a standardized way to associate comments with blockchain entities such as addresses, transaction hashes, or other on-chain identifiers. Comments can be nested and replied to by setting the topic to the hash of the parent comment.
+TIC is a child protocol built on top of [Ethscriptions](https://docs.ethscriptions.com/) that enables on-chain commenting capabilities through Ethereum transaction calldata. It provides a standardized way to associate comments with blockchain entities such as addresses, transaction hashes, or other on-chain identifiers. Comments can be nested and replied to by setting the topic to the hash of the parent comment.
 
 ## Protocol Rules
 
 ### 1. Data Structure
 Comments must be formatted as JSON and encoded as a data URL with the following MIME type:
-`data:message/vnd.evmc+json`
+`data:message/vnd.tic+json`
 
 
 ### 2. Comment Object Schema
@@ -96,13 +96,13 @@ const reaction = {
 };
 
 // Data URL format
-const dataUrl = `data:message/vnd.evmc+json,${JSON.stringify(comment)}`;
+const dataUrl = `data:message/vnd.tic+json,${JSON.stringify(comment)}`;
 ```
 
 ### 5. Inscription Process
 1. Create a valid comment object following the schema
 2. Convert the object to a JSON string
-3. Create a data URL with the MIME type `message/vnd.evmc+json`
+3. Create a data URL with the MIME type `message/vnd.tic+json`
 4. Submit the data URL as calldata in an Ethereum transaction following the Ethscriptions protocol
 
 ### 6. Comment Deletion

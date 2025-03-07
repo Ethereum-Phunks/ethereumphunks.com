@@ -114,7 +114,7 @@ export class MintComponent {
       const response = await fetch(url + '?' + params.toString());
       const data = await response.json();
 
-      console.log({ exists: data.exists, data });
+      console.log(data);
 
       if (data.error) throw data;
 
@@ -194,7 +194,6 @@ export class MintComponent {
         type: 'complete',
         hash: receipt.transactionHash,
       };
-      // this.store.dispatch(appStateActions.addCooldown({ cooldown: { [hashId]: Number(receipt.blockNumber) }}))
 
     } catch (error) {
       console.log(error);

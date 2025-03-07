@@ -23,7 +23,7 @@ export class CommentsService {
 
     const stringData = hexToString(input.toString() as `0x${string}`);
     const cleanedString = stringData.replace(/\x00/g, '');
-    const possibleComment = cleanedString.startsWith('data:message/vnd.evmc+json,');
+    const possibleComment = cleanedString.startsWith('data:message/vnd.tic+json,');
 
     if (possibleComment) {
       await this.sbSvc.addComment(transaction, createdAt);

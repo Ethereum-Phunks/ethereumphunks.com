@@ -106,7 +106,7 @@ export class CommentsComponent {
     };
 
     const commentString = JSON.stringify(commentObject);
-    const commentUrl = `data:message/vnd.evmc+json,${commentString}`;
+    const commentUrl = `data:message/vnd.tic+json,${commentString}`;
     console.log({commentUrl});
 
     const commentInscription = await this.web3Service.inscribe(commentUrl);
