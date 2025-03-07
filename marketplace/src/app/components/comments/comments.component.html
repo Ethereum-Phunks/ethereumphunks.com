@@ -6,14 +6,17 @@
   <ng-container *ngTemplateOutlet="commentsList; context: { $implicit: comments$ | async }" />
 </div>
 
-<div class="main-comment-form-wrapper">
-  <ng-container
-    *ngTemplateOutlet="commentForm; context: {
-      topic: hashId(),
-      placeholder: 'Leave a comment...'
-    }"
-  />
-</div>
+@if ((connectedAddress$ | async)) {
+  <div class="main-comment-form-wrapper">
+    <ng-container
+      *ngTemplateOutlet="commentForm; context: {
+        topic: hashId(),
+        placeholder: 'Leave a comment...',
+        help: true
+      }"
+    />
+  </div>
+}
 
 <ng-template #commentsList let-comments>
   @for (comment of comments; track comment.id; let i = $index) {
@@ -79,11 +82,16 @@
         }
       </div>
     </div>
+  } @empty {
+    <div class="empty">
+      <p>No comments.</p>
+    </div>
   }
 </ng-template>
 
 <ng-template
   #commentForm
+  let-help="help"
   let-topic="topic"
   let-placeholder="placeholder">
 
@@ -96,12 +104,25 @@
       [placeholder]="placeholder">
     </textarea>
 
-    <button
-      class="comment-button"
-      [class.disabled]="!commentValue()[topic]"
-      (click)="addComment(commentValue()[topic], topic)">
+    <div class="actions-wrapper">
+      <button
+        class="comment-button"
+        [class.disabled]="!commentValue()[topic]"
+        (click)="addComment(commentValue()[topic], topic)">
 
-      Add comment
-    </button>
+        Add comment
+      </button>
+
+      @if (help) {
+        <button
+          tippy
+          data-tippy-placement="top"
+          data-tippy-content="Comments (evmc) enables on-chain commenting capabilities through Ethereum transaction calldata. It provides a standardized way to associate comments with blockchain entities such as addresses, transaction hashes, or other on-chain identifiers. <a href='https://github.com/chopperdaddy/ethereumphunks.com/blob/sepolia/evmc.md' target='_blank'>Learn more</a>."
+          class="help-button">
+
+          ?
+        </button>
+      }
+    </div>
   </div>
 </ng-template>

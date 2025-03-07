@@ -15,6 +15,8 @@ import { Comment, DBComment, CommentWithReplies } from '@/models/comment';
 import { GlobalState } from '@/models/global-state';
 
 import { WalletAddressDirective } from '@/directives/wallet-address.directive';
+import { TippyDirective } from '@/directives/tippy.directive';
+
 import { AvatarComponent } from '@/components/avatar/avatar.component';
 
 import { selectWalletAddress } from '@/state/selectors/app-state.selectors';
@@ -27,6 +29,7 @@ import { ZERO_ADDRESS } from '@/constants/utils';
     CommonModule,
     FormsModule,
     WalletAddressDirective,
+    TippyDirective,
     AvatarComponent,
   ],
   templateUrl: './comments.component.html',
