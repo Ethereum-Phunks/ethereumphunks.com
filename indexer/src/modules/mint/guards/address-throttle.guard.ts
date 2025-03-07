@@ -6,13 +6,13 @@ import { THROTTLER_OPTIONS } from '@nestjs/throttler/dist/throttler.constants';
 const PENALTY_TIMEOUT = 60000; // 1 minute
 
 /**
- * Guard that implements rate limiting based on Ethereum addresses.
- * Extends the base ThrottlerGuard to provide address-specific throttling with penalty timeouts.
+ * Guard that implements rate limiting based on both Ethereum addresses and IP addresses.
+ * Extends the base ThrottlerGuard to provide address-specific and IP-specific throttling with penalty timeouts.
  */
 @Injectable()
 export class AddressThrottlerGuard extends ThrottlerGuard {
   private readonly logger = new Logger(AddressThrottlerGuard.name);
-  // Store addresses that are in penalty timeout
+  // Store addresses and IPs that are in penalty timeout
   private penaltyTimeouts: Map<string, number> = new Map();
 
   constructor(
@@ -24,46 +24,51 @@ export class AddressThrottlerGuard extends ThrottlerGuard {
   }
 
   /**
-   * Generates a unique throttling key for each request based on the Ethereum address.
-   * This overrides the default IP-based throttling to use address-based throttling instead.
+   * Generates unique throttling keys for each request based on both the Ethereum address and IP.
+   * This implements dual throttling to prevent abuse from both addresses and IPs.
    *
    * @param context - The execution context containing the request
-   * @returns A unique string key combining a prefix and the lowercase Ethereum address
+   * @returns An array of unique string keys for both address and IP throttling
    */
-  protected getKeyForRequest(context: ExecutionContext): string {
+  protected getKeyForRequest(context: ExecutionContext): string[] {
     const request = context.switchToHttp().getRequest();
     const address = request.query?.address?.toLowerCase() || 'anonymous';
+    const ip = request.ip || 'unknown';
 
-    // Create a unique key that includes the address
-    const key = `address-throttle-${address}`;
-    this.logger.debug(`Using throttle key: ${key}`);
+    // Create unique keys for both address and IP
+    const addressKey = `address-throttle-${address}`;
+    const ipKey = `ip-throttle-${ip}`;
 
-    return key;
+    this.logger.debug(`Using throttle keys: ${addressKey}, ${ipKey}`);
+
+    return [addressKey, ipKey];
   }
 
   /**
    * Main guard method that checks if a request should be allowed through based on rate limits
-   * and penalty timeouts. Implements sophisticated error handling and logging.
+   * and penalty timeouts for both address and IP.
    *
    * @param context - The execution context containing request and response
    * @returns A promise resolving to true if the request is allowed, throws an exception otherwise
    * @throws HttpException when rate limits are exceeded or during penalty timeout
    */
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    // Get the request and extract the address
     const request = context.switchToHttp().getRequest();
     const address = request.query?.address?.toLowerCase() || 'anonymous';
+    const ip = request.ip || 'unknown';
     const response = context.switchToHttp().getResponse();
 
-    // Check if the address is in penalty timeout
-    if (this.isInPenaltyTimeout(address)) {
-      const timeLeft = this.getPenaltyTimeLeft(address);
+    // Check if either the address or IP is in penalty timeout
+    if (this.isInPenaltyTimeout(address) || this.isInPenaltyTimeout(ip)) {
+      const addressTimeLeft = this.getPenaltyTimeLeft(address);
+      const ipTimeLeft = this.getPenaltyTimeLeft(ip);
+      const timeLeft = Math.max(addressTimeLeft, ipTimeLeft);
 
       // Set the Retry-After header (in seconds)
       response.header('Retry-After', String(Math.ceil(timeLeft / 1000)));
 
       // Use WARN level to ensure it's visible in logs
-      this.logger.warn(`⛔ PENALTY ACTIVE: Address ${address} is in penalty timeout for ${Math.ceil(timeLeft / 1000)} more seconds`);
+      this.logger.warn(`⛔ PENALTY ACTIVE: ${addressTimeLeft > 0 ? `Address ${address}` : ''} ${addressTimeLeft > 0 && ipTimeLeft > 0 ? 'and' : ''} ${ipTimeLeft > 0 ? `IP ${ip}` : ''} in penalty timeout for ${Math.ceil(timeLeft / 1000)} more seconds`);
 
       // Throw an exception to stop the request flow
       throw new HttpException({
@@ -71,6 +76,7 @@ export class AddressThrottlerGuard extends ThrottlerGuard {
         error: 'Too Many Requests',
         message: `You have exceeded the rate limit and are in a penalty timeout. Please wait ${Math.ceil(timeLeft / 1000)} seconds before trying again.`,
         address: address,
+        ip: ip,
         retryAfter: Math.ceil(timeLeft / 1000),
         penaltyTimeout: true
       }, HttpStatus.TOO_MANY_REQUESTS);
@@ -78,7 +84,7 @@ export class AddressThrottlerGuard extends ThrottlerGuard {
 
     // Get the throttler options for this request
     const { limit, ttl } = this.getThrottlerOptions(context);
-    this.logger.debug(`Throttle check for address: ${address} with limit: ${limit}, ttl: ${ttl}ms`);
+    this.logger.debug(`Throttle check for address: ${address} and IP: ${ip} with limit: ${limit}, ttl: ${ttl}ms`);
 
     try {
       // Use a try-catch to intercept ThrottlerException before it's handled by NestJS
@@ -88,13 +94,18 @@ export class AddressThrottlerGuard extends ThrottlerGuard {
       } catch (throttlerError) {
         if (throttlerError instanceof ThrottlerException) {
           // Log the rate limit exceeded with WARN level
-          this.logger.warn(`⛔ RATE LIMIT EXCEEDED: Address ${address} exceeded limit of ${limit} requests per ${ttl/1000} seconds`);
+          this.logger.warn(`⛔ RATE LIMIT EXCEEDED: ${address !== 'anonymous' ? `Address ${address}` : ''} ${address !== 'anonymous' && ip !== 'unknown' ? 'and/or' : ''} ${ip !== 'unknown' ? `IP ${ip}` : ''} exceeded limit of ${limit} requests per ${ttl/1000} seconds`);
 
-          // Apply the penalty timeout
-          this.applyPenaltyTimeout(address, PENALTY_TIMEOUT);
+          // Apply the penalty timeout to both address and IP
+          if (address !== 'anonymous') {
+            this.applyPenaltyTimeout(address, PENALTY_TIMEOUT);
+          }
+          if (ip !== 'unknown') {
+            this.applyPenaltyTimeout(ip, PENALTY_TIMEOUT);
+          }
 
           // Log the penalty application
-          this.logger.warn(`⛔ PENALTY APPLIED: Address ${address} placed in ${PENALTY_TIMEOUT/1000} second penalty timeout`);
+          this.logger.warn(`⛔ PENALTY APPLIED: ${address !== 'anonymous' ? `Address ${address}` : ''} ${address !== 'anonymous' && ip !== 'unknown' ? 'and' : ''} ${ip !== 'unknown' ? `IP ${ip}` : ''} placed in ${PENALTY_TIMEOUT/1000} second penalty timeout`);
 
           // Set the Retry-After header (in seconds)
           const retryAfterSeconds = PENALTY_TIMEOUT / 1000;
@@ -106,6 +117,7 @@ export class AddressThrottlerGuard extends ThrottlerGuard {
             error: 'Too Many Requests',
             message: `Rate limit exceeded. You have been placed in a 1 minute penalty timeout.`,
             address: address,
+            ip: ip,
             retryAfter: retryAfterSeconds,
             penaltyTimeout: true
           }, HttpStatus.TOO_MANY_REQUESTS);
@@ -122,8 +134,13 @@ export class AddressThrottlerGuard extends ThrottlerGuard {
       // For unexpected errors, log them and apply a penalty
       this.logger.error('Unexpected error in throttling:', error);
 
-      // Apply the penalty timeout
-      this.applyPenaltyTimeout(address, PENALTY_TIMEOUT);
+      // Apply the penalty timeout to both address and IP
+      if (address !== 'anonymous') {
+        this.applyPenaltyTimeout(address, PENALTY_TIMEOUT);
+      }
+      if (ip !== 'unknown') {
+        this.applyPenaltyTimeout(ip, PENALTY_TIMEOUT);
+      }
 
       // Set the Retry-After header (in seconds)
       const retryAfterSeconds = PENALTY_TIMEOUT / 1000;
@@ -135,6 +152,7 @@ export class AddressThrottlerGuard extends ThrottlerGuard {
         error: 'Too Many Requests',
         message: `Rate limit exceeded. You have been placed in a 1 minute penalty timeout.`,
         address: address,
+        ip: ip,
         retryAfter: retryAfterSeconds,
         penaltyTimeout: true
       }, HttpStatus.TOO_MANY_REQUESTS);
