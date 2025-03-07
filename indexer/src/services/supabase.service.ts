@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 
 import { createClient } from '@supabase/supabase-js';
 
-import { Transaction, hexToString, zeroAddress } from 'viem';
+import { Transaction, fromHex, zeroAddress } from 'viem';
 import { writeFile } from 'fs/promises';
 
 import {
@@ -18,6 +18,8 @@ import {
   Ethscription,
   AttributeItem,
   AttributesResponse,
+  CommentResponse,
+  DBComment,
 } from '@/models/db';
 
 const supabaseUrl = process.env.SUPABASE_URL;
@@ -724,6 +726,61 @@ export class SupabaseService {
   }
 
   ////////////////////////////////////////////////////////////////////////////////
+  // Comments ////////////////////////////////////////////////////////////////////
+  ////////////////////////////////////////////////////////////////////////////////
+
+  async addComment(txn: Transaction, createdAt: Date): Promise<void> {
+
+    const jsonPart = fromHex(txn.input, 'string').replace('data:message/vnd.evmc+json,', '');
+    const commentData = JSON.parse(jsonPart);
+
+    const topicType =
+      commentData.topic?.length === 42 ? 'address' :
+      commentData.topic?.length === 66 ? 'hash' :
+      undefined;
+
+    const comment: DBComment = {
+      id: txn.hash.toLowerCase(),
+      topic: commentData.topic?.toLowerCase(),
+      topicType,
+      content: commentData.content,
+      version: commentData.version,
+      encoding: commentData.encoding,
+      createdAt,
+      from: txn.from.toLowerCase(),
+    };
+
+    const response: CommentResponse = await supabase
+      .from('comments' + this.suffix)
+      .upsert(comment);
+
+    const { error, data } = response;
+
+    if (error) throw error;
+  }
+
+  async getCommentByHashId(hashId: string): Promise<DBComment> {
+    const response: CommentResponse = await supabase
+      .from('comments' + this.suffix)
+      .select('*')
+      .eq('id', hashId.toLowerCase());
+
+    const { data, error } = response;
+    if (error) throw error;
+    return data[0];
+  }
+
+  async deleteComment(hashId: string): Promise<void> {
+    const response: CommentResponse = await supabase
+      .from('comments' + this.suffix)
+      .update({ deleted: true })
+      .eq('id', hashId.toLowerCase());
+
+    const { error } = response;
+    if (error) throw error;
+  }
+
+
   // Bridge //////////////////////////////////////////////////////////////////////
   ////////////////////////////////////////////////////////////////////////////////
 

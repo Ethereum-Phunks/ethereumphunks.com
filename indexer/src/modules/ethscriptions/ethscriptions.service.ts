@@ -2,15 +2,15 @@ import { Inject, Injectable, Logger, Optional } from '@nestjs/common';
 
 import { SupabaseService } from '@/services/supabase.service';
 import { DataService } from '@/services/data.service';
+import { UtilityService } from '@/modules/shared/services/utility.service';
+import { Web3Service } from '@/modules/shared/services/web3.service';
 
 import { BridgeProcessingQueue } from '@/modules/queue/queues/bridge-processing.queue';
-import { NotifsService } from '@/modules/notifs/notifs.service';
-import { Web3Service } from '@/modules/shared/services/web3.service';
 
 import { esip1Abi, esip2Abi } from '@/abi/EthscriptionsProtocol';
 import * as esips from '@/constants/esips';
 
-import { bridgeAbiL1, bridgeAddressL1, chain, marketAbiL1, marketAddressL1, pointsAbiL1, pointsAddressL1 } from '@/constants/ethereum';
+import { bridgeAbiL1, chain, marketAbiL1, marketAddressL1, pointsAbiL1, pointsAddressL1 } from '@/constants/ethereum';
 
 import { AttributeItem, Ethscription, Event } from '@/models/db';
 
@@ -19,18 +19,17 @@ import { DecodeEventLogReturnType, Log, Transaction, TransactionReceipt, decodeE
 import { mkdir, writeFile } from 'fs/promises';
 import { createHash } from 'crypto';
 
-const SEGMENT_SIZE = 64;
 
 @Injectable()
 export class EthscriptionsService {
 
   constructor(
+    @Optional() private readonly bridgeQueue: BridgeProcessingQueue,
     @Inject('WEB3_SERVICE_L1') private readonly web3SvcL1: Web3Service,
     @Inject('WEB3_SERVICE_L2') private readonly web3SvcL2: Web3Service,
     private readonly sbSvc: SupabaseService,
-    private readonly notifsSvc: NotifsService,
-    @Optional() private readonly bridgeQueue: BridgeProcessingQueue,
-    private readonly dataSvc: DataService
+    private readonly dataSvc: DataService,
+    private readonly utilitySvc: UtilityService
   ) {}
 
   async addEthscription(body: { hash: string, attributes: AttributeItem }): Promise<any> {
@@ -92,10 +91,6 @@ export class EthscriptionsService {
     createdAt: Date
   ) {
     const { input } = transaction;
-
-    // Skip any transaction that failed
-    if (receipt.status !== 'success') return;
-
     const events: Event[] = [];
 
     // Get the data from the transaction
@@ -133,7 +128,7 @@ export class EthscriptionsService {
     }
 
     // Check if possible transfer
-    const possibleTransfer = input.substring(2).length === SEGMENT_SIZE;
+    const possibleTransfer = this.utilitySvc.possibleTransfer(input);
     if (possibleTransfer) {
       const event = await this.processTransferEvent(
         input,
@@ -144,7 +139,7 @@ export class EthscriptionsService {
     }
 
     // Check if possible batch transfer
-    const possibleBatchTransfer = input.substring(2).length % SEGMENT_SIZE === 0;
+    const possibleBatchTransfer = this.utilitySvc.possibleBatchTransfer(input);
     if (!possibleTransfer && possibleBatchTransfer) {
       // console.log({ possibleBatchTransfer });
       const eventArr = await this.processEsip5(
@@ -583,7 +578,7 @@ export class EthscriptionsService {
 
     const { input } = txn;
     const data = input.substring(2);
-    if (data.length % SEGMENT_SIZE !== 0) return [];
+    if (!this.utilitySvc.possibleBatchTransfer(input)) return [];
 
     const allHashes = data.match(/.{1,64}/g).map((hash) => '0x' + hash);
     // console.log(allHashes.length);

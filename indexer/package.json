@@ -26,6 +26,7 @@
     "@nestjs/event-emitter": "^3.0.0",
     "@nestjs/platform-express": "^10.2.8",
     "@nestjs/platform-socket.io": "^10.3.8",
+    "@nestjs/throttler": "^6.4.0",
     "@nestjs/websockets": "^10.3.8",
     "@openzeppelin/merkle-tree": "^1.0.5",
     "@supabase/supabase-js": "^2.32.0",

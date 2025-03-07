@@ -40,6 +40,7 @@ export class DiscordService {
    */
   async postMessage(data: NotificationMessage): Promise<void> {
     if (Number(process.env.DISCORD)) await this.initializeBot();
+    else return;
 
     // Get appropriate channel based on chain ID
     const chainId = Number(process.env.CHAIN_ID);

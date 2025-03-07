@@ -1,23 +1,22 @@
 import { Module, forwardRef } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
 import { HttpModule } from '@nestjs/axios';
 import { BullModule } from '@nestjs/bull';
 
+import { NftModule } from '@/modules/nft/nft.module';
 import { SharedModule } from '@/modules/shared/shared.module';
+import { CommentsModule } from '@/modules/comments/comments.module';
 import { BridgeL1Module } from '@/modules/bridge-l1/bridge-l1.module';
-
-import { BlockProcessingQueue } from '@/modules/queue/queues/block-processing.queue';
 import { BlockQueueService } from '@/modules/queue/services/block-queue.service';
-
-import { BridgeProcessingQueue } from '@/modules/queue/queues/bridge-processing.queue';
+import { EthscriptionsModule } from '@/modules/ethscriptions/ethscriptions.module';
 import { BridgeQueueService } from '@/modules/queue/services/bridge-queue.service';
+import { BlockProcessingQueue } from '@/modules/queue/queues/block-processing.queue';
+import { BridgeProcessingQueue } from '@/modules/queue/queues/bridge-processing.queue';
 
 import { ProcessingService } from '@/services/processing.service';
+import { SupabaseService } from '@/services/supabase.service';
 
 import { chain } from '@/constants/ethereum';
-import { SupabaseService } from '@/services/supabase.service';
-import { EthscriptionsModule } from '../ethscriptions/ethscriptions.module';
-import { NftModule } from '../nft/nft.module';
-import { ConfigModule } from '@nestjs/config';
 
 // import { EthscriptionsService } from '../ethscriptions/services/ethscriptions.service';
 // import { DiscordService } from '../notifs/services/discord.service';
@@ -48,6 +47,7 @@ import { ConfigModule } from '@nestjs/config';
     NftModule,
 
     forwardRef(() => EthscriptionsModule),
+    forwardRef(() => CommentsModule),
   ],
   providers: [
     ...(Number(process.env.QUEUE) ? [

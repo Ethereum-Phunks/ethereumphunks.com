@@ -6,7 +6,7 @@ import { SupabaseService } from '@/services/supabase.service';
 import { UtilityService } from '@/modules/shared/services/utility.service';
 import { TimeService } from '@/modules/shared/services/time.service';
 import { EthscriptionsService } from '@/modules/ethscriptions/ethscriptions.service';
-import { NftService } from '@/modules/nft/nft.service';
+import { CommentsService } from '@/modules/comments/comments.service';
 
 import { chain } from '@/constants/ethereum';
 
@@ -34,7 +34,8 @@ export class ProcessingService {
     private readonly sbSvc: SupabaseService,
     private readonly utilSvc: UtilityService,
     private readonly timeSvc: TimeService,
-    private readonly ethsSvc: EthscriptionsService
+    private readonly ethsSvc: EthscriptionsService,
+    private readonly commentsSvc: CommentsService
   ) {}
 
   /**
@@ -111,7 +112,8 @@ export class ProcessingService {
       const { timestamp, transactions } = await this.web3SvcL1.getBlock({ blockNumber, includeTransactions: true });
       const createdAt = new Date(Number(timestamp) * 1000);
 
-      await this.processTransactions(transactions, createdAt);
+      const events = await this.processTransactions(transactions, createdAt);
+      if (events.length) await this.sbSvc.addEvents(events);
     } catch (error) {
       console.log(error);
       // Pause for 5 seconds
@@ -170,13 +172,12 @@ export class ProcessingService {
     createdAt: Date
   ): Promise<Event[]> {
 
-    // console.log({ transaction, receipt });
-
     // Skip any transaction that failed
-    if (receipt.status !== 'success') return;
+    if (receipt.status !== 'success') return [];
 
     const events: Event[] = [];
 
+    // Process ethscriptions
     const ethscriptionsEvents = await this.ethsSvc.processEthscriptionsEvents(
       transaction,
       receipt,
@@ -184,6 +185,14 @@ export class ProcessingService {
     );
     if (ethscriptionsEvents?.length) events.push(...ethscriptionsEvents);
 
+    // Process comments
+    await this.commentsSvc.processComments(
+      transaction,
+      receipt,
+      createdAt
+    );
+
+    // Process nft events
     // const nftEvents = await this.nftSvc.processNftEvents(
     //   transaction,
     //   receipt,

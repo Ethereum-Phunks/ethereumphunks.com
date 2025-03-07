@@ -10,6 +10,11 @@ export interface EventResponse {
   error: PostgrestError | null;
 }
 
+export interface CommentResponse {
+  data: DBComment[];
+  error: PostgrestError | null;
+}
+
 export interface AttributesResponse {
   data: AttributeItem[];
   error: PostgrestError | null;
@@ -80,6 +85,19 @@ export interface Event {
   blockTimestamp: Date | null;
   value: string | null;
   l2?: boolean;
+}
+
+export interface DBComment {
+  id: string;
+  topic: string;
+  topicType: string;
+  content: string;
+  version: string;
+  createdAt: Date;
+  from: string;
+  deleted?: boolean;
+  encoding?: string;
+  type?: string;
 }
 
 export interface AttributeItem {

@@ -1,5 +1,7 @@
 import { Injectable } from '@nestjs/common';
 
+const SEGMENT_SIZE = 64;
+
 @Injectable()
 export class UtilityService {
 
@@ -37,5 +39,27 @@ export class UtilityService {
     length: number = 6
   ): string {
     return `${addressOrHashId.slice(0, length + 2)}...${addressOrHashId.slice(-length)}`;
+  }
+
+  /**
+   * Checks if the input string represents a possible single transfer transaction.
+   * A single transfer has an input length (minus 0x prefix) equal to SEGMENT_SIZE.
+   * @param input - The transaction input string to check
+   * @returns True if the input matches single transfer format, false otherwise
+   */
+  possibleTransfer(input: string) {
+    const possibleTransfer = input.substring(2).length === SEGMENT_SIZE;
+    return possibleTransfer;
+  }
+
+  /**
+   * Checks if the input string represents a possible batch transfer transaction.
+   * A batch transfer has an input length (minus 0x prefix) that is evenly divisible by SEGMENT_SIZE.
+   * @param input - The transaction input string to check
+   * @returns True if the input matches batch transfer format, false otherwise
+   */
+  possibleBatchTransfer(input: string) {
+    const possibleTransfer = input.substring(2).length % SEGMENT_SIZE === 0;
+    return possibleTransfer;
   }
 }

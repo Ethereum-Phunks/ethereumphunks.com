@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { ThrottlerModule, seconds } from '@nestjs/throttler';
 
 import { MintService } from './mint.service';
 import { MintController } from './mint.controller';
@@ -11,6 +12,11 @@ import { SharedModule } from '../shared/shared.module';
     MintController,
   ],
   imports: [
+    ThrottlerModule.forRoot([{
+      name: 'address',
+      ttl: seconds(60),
+      limit: 5,
+    }]),
     SharedModule,
   ],
   providers: [

@@ -1,5 +1,6 @@
 import { MiddlewareConsumer, Module, RequestMethod } from '@nestjs/common';
 import { HttpModule } from '@nestjs/axios';
+import { ConfigModule } from '@nestjs/config';
 
 import { SharedModule } from '@/modules/shared/shared.module';
 import { QueueModule } from '@/modules/queue/queue.module';
@@ -21,8 +22,7 @@ import { SupabaseService } from '@/services/supabase.service';
 import { ProcessingService } from '@/services/processing.service';
 
 import { ApiKeyMiddleware } from '@/middleware/api-key.middleware';
-import { ConfigModule } from '@nestjs/config';
-
+import { CommentsModule } from '@/modules/comments/comments.module';
 @Module({
   imports: [
     // ConfigModule.forRoot({
@@ -42,6 +42,8 @@ import { ConfigModule } from '@nestjs/config';
     SharedModule,
     TxpoolModule,
     MintModule,
+
+    CommentsModule
   ],
   controllers: [AppController],
   providers: [

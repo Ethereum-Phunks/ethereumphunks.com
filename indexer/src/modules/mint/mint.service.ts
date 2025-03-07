@@ -54,7 +54,7 @@ export class MintService implements OnModuleInit {
   async getRandomId(
     slug: string,
     address: string,
-    range: { min: number; max: number } = { min: 1, max: 9838 },
+    range: { min: number; max: number } = { min: 9800, max: 9939 },
   ): Promise<number> {
 
     const min = range.min ?? 0;
