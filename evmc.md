@@ -130,7 +130,7 @@ await transferEthscription({
 4. `topic` must be a valid hex string
 5. `content` must be properly encoded according to the specified encoding type
 6. If `type` is present, it must be one of the specified CommentType values
-7. A comment should be considered deleted if its Ethscription has been transferred to either the zero address or dead address
+7. A comment should be considered deleted if its Ethscription has been transferred to the zero address
 
 ## Notes
 - Comments are immutable once inscribed
