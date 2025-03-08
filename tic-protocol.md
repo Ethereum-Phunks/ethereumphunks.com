@@ -1,6 +1,6 @@
 # TIC (Transaction Inscribed Comments) Protocol Specification (alpha)
 
-###Note:
+### Note:
 TIC is currently in early alpha development. The specification and implementation are subject to change as we refine the protocol based on community feedback and testing.
 
 ## Overview
