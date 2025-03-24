@@ -84,7 +84,7 @@ export class NotifsService {
    */
   async handleNotification(phunkBoughtEvent: Event): Promise<void> {
     const ethscriptionData = await this.getEthscriptionWithCollectionAndAttributes(phunkBoughtEvent.hashId);
-    if (!ethscriptionData.collection.notifications) return;
+    if (!ethscriptionData) return;
 
     const message = await this.createMessage(phunkBoughtEvent, ethscriptionData);
     if (!message) return;
@@ -159,14 +159,18 @@ export class NotifsService {
 
     const { data } = await response;
 
+    if (!data || !data.attributes || !data[`collections${suffix}`]?.notifications) return null;
+
+    console.log(data);
+
     const result = {
       ethscription: data,
       collection: data[`collections${suffix}`],
       attributes: Object.keys(data.attributes.values)?.map((key: string) => {
         const k = key.replace(/_/g, ' ').replace(/\b\w/g, char => char.toUpperCase());
-        const v = Array.isArray(data.attributes.values[key])
-          ? data.attributes.values[key].map(val => val?.replaceAll('-', ' ').replace(/_/g, ' ').replace(/\b\w/g, char => char.toUpperCase())).join(', ')
-          : data.attributes.values[key]?.replaceAll('-', ' ').replace(/_/g, ' ').replace(/\b\w/g, char => char.toUpperCase());
+        const v = Array.isArray(data.attributes?.values[key])
+          ? data.attributes?.values[key].map(val => val?.replaceAll('-', ' ').replace(/_/g, ' ').replace(/\b\w/g, char => char.toUpperCase())).join(', ')
+          : data.attributes?.values[key]?.replaceAll('-', ' ')?.replace(/_/g, ' ')?.replace(/\b\w/g, char => char?.toUpperCase());
         return {
           k,
           v,

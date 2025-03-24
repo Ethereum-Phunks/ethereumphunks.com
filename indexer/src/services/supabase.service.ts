@@ -731,7 +731,7 @@ export class SupabaseService {
 
   async addComment(txn: Transaction, createdAt: Date): Promise<void> {
 
-    const jsonPart = fromHex(txn.input, 'string').replace('data:message/vnd.evmc+json,', '');
+    const jsonPart = fromHex(txn.input, 'string').replace('data:message/vnd.tic+json,', '');
     const commentData = JSON.parse(jsonPart);
 
     const topicType =
