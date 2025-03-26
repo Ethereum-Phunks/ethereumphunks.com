@@ -4,6 +4,16 @@ import { MarketState, MarketType } from '@/models/market.state';
 import { Phunk } from '@/models/db';
 import { TraitFilter } from '@/models/global-state';
 
+export const setMarketSlug = createAction(
+  '[Market State] Set Market slug',
+  props<{ marketSlug: MarketState['marketSlug'] }>()
+);
+
+export const setMarketType = createAction(
+  '[Market State] Set Market Type',
+  props<{ marketType: MarketType }>()
+);
+
 export const setActiveSort = createAction(
   '[Market State] Set Active Sort',
   props<{ activeSort: MarketState['activeSort'] }>()
@@ -21,16 +31,6 @@ export const setSelectedPhunks = createAction(
 
 export const resetMarketState = createAction(
   '[Market State] Reset Market State',
-);
-
-export const setMarketType = createAction(
-  '[Market State] Set Market Type',
-  props<{ marketType: MarketType }>()
-);
-
-export const setMarketSlug = createAction(
-  '[Market State] Set Market slug',
-  props<{ marketSlug: MarketState['marketSlug'] }>()
 );
 
 export const fetchMarketData = createAction(
@@ -75,7 +75,7 @@ export const clearActiveMarketRouteData = createAction(
 );
 
 export const triggerDataRefresh = createAction(
-  '[Data State] Trigger Data Refresh'
+  '[Market State] Trigger Data Refresh'
 );
 
 export const setPagination = createAction(

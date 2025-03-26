@@ -1,3 +1,4 @@
+import { Collection } from './data.state';
 import { EventType } from './global-state';
 
 export interface Account {
@@ -39,9 +40,7 @@ export interface Phunk {
 
   auction?: Auction | null
 
-  singleName?: string | null
-  collectionName?: string | null
-  supply?: number | null
+  collection?: Partial<Collection>;
 
   isSupported?: boolean
   consensus?: boolean

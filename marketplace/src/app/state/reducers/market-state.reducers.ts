@@ -59,8 +59,8 @@ export const marketStateReducer: ActionReducer<MarketState, Action> = createRedu
     const setMarketData = {
       ...state,
       marketData,
-      listings: marketData.filter((item: Phunk) => item.listing && item.listing.minValue !== '0'),
-      bids: marketData.filter((item: Phunk) => item.bid && item.bid.value !== '0'),
+      listings: marketData?.filter((item: Phunk) => item.listing && item.listing.minValue !== '0'),
+      bids: marketData?.filter((item: Phunk) => item.bid && item.bid.value !== '0'),
     };
     return setMarketData
   }),

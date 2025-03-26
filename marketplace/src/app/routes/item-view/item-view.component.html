@@ -23,7 +23,7 @@
       <div class="details-wrapper">
         @if (phunk.owner) {
           <div class="title-wrapper">
-            <h1 i18n>{{ phunk.singleName }} {{ phunk.tokenId }}</h1>
+            <h1 i18n>{{ phunk.collection?.singleName }} {{ phunk.tokenId }}</h1>
 
             <div class="hash-id">
               <span>Provenance Hash: </span>
@@ -40,7 +40,7 @@
                   [queryParams]="phunk.attributes[0] | queryParams">
 
                   {{ phunk.attributes[0].v }}
-                </a> {{ phunk.collectionName }}.
+                </a> {{ phunk.collection?.name }}.
               </h2>
             }
           </div>
@@ -55,39 +55,39 @@
                 @if (phunk.isEscrowed) {
                   <!-- Owner -->
                   @if (phunk.prevOwner; as owner) {
-                    <p i18n>This {{ phunk.singleName }} is held in <a [routerLink]="['/', 'curated', phunk.slug, 'market', 'owned']" [queryParams]="{ address: escrowAddress }">escrow</a> for <a [routerLink]="['/', 'curated', phunk.slug, 'market', 'owned']" [queryParams]="{ address: owner }"><app-address [address]="owner" /></a>.</p>
+                    <p i18n>This {{ phunk.collection?.singleName }} is held in <a [routerLink]="['/', 'curated', phunk.slug, 'market', 'owned']" [queryParams]="{ address: escrowAddress }">escrow</a> for <a [routerLink]="['/', 'curated', phunk.slug, 'market', 'owned']" [queryParams]="{ address: owner }"><app-address [address]="owner" /></a>.</p>
                   }
                 } @else if (phunk.isBridged) {
                   <!-- Owner -->
                   @if (phunk.prevOwner; as owner) {
-                    <p i18n>This {{ phunk.singleName }} has been <a [routerLink]="['/', 'curated', phunk.slug, 'market', 'owned']" [queryParams]="{ address: bridgeAddress }">bridged</a> to L2.</p>
+                    <p i18n>This {{ phunk.collection?.singleName }} has been <a [routerLink]="['/', 'curated', phunk.slug, 'market', 'owned']" [queryParams]="{ address: bridgeAddress }">bridged</a> to L2.</p>
                   }
 
                   <!-- NFT info -->
                   @if (phunk.nft; as nft) {
-                    <p i18n>This {{ phunk.singleName }} is owned by <a [routerLink]="['/', 'curated', phunk.slug, 'market', 'owned']" [queryParams]="{ address: nft.owner}"><app-address [address]="nft.owner" /></a>.</p>
+                    <p i18n>This {{ phunk.collection?.singleName }} is owned by <a [routerLink]="['/', 'curated', phunk.slug, 'market', 'owned']" [queryParams]="{ address: nft.owner}"><app-address [address]="nft.owner" /></a>.</p>
                   }
                 } @else {
                   <!-- Owner -->
                   @if (phunk.owner; as owner) {
-                    <p i18n>This {{ phunk.singleName }} is owned by <a [routerLink]="['/', 'curated', phunk.slug, 'market', 'owned']" [queryParams]="{ address: owner }"><app-address [address]="owner" /></a>.</p>
+                    <p i18n>This {{ phunk.collection?.singleName }} is owned by <a [routerLink]="['/', 'curated', phunk.slug, 'market', 'owned']" [queryParams]="{ address: owner }"><app-address [address]="owner" /></a>.</p>
                   }
                 }
 
                 <!-- Value (Listing) -->
                 @if (phunk.listing?.minValue; as value) {
-                  <p i18n>This {{ phunk.singleName }} is for sale for <span class="highlight">{{ (value | weiToEth) }} ETH</span><span class="bold"> (${{ ((value | weiToEth) * ((usd$ | async) || 0)) | formatCash }})</span>.</p>
+                  <p i18n>This {{ phunk.collection?.singleName }} is for sale for <span class="highlight">{{ (value | weiToEth) }} ETH</span><span class="bold"> (${{ ((value | weiToEth) * ((usd$ | async) || 0)) | formatCash }})</span>.</p>
                 } @else if (!phunk.isSupported) {
-                  <p i18n>This {{ phunk.singleName }} is not supported by the marketplace.</p>
+                  <p i18n>This {{ phunk.collection?.singleName }} is not supported by the marketplace.</p>
                 } @else {
-                  <p i18n>This {{ phunk.singleName }} is not for sale.</p>
+                  <p i18n>This {{ phunk.collection?.singleName }} is not for sale.</p>
                 }
               </div>
 
               <!-- Actions -->
               <div
                 class="actions-wrapper"
-                [class.disabled]="(blocksBehind$ | async) || phunk.loading">
+                [class.disabled]="(blocksBehind$ | async)">
 
                   @if ((walletAddress$ | async); as address) {
                     @if (phunk.owner; as owner) {
@@ -181,7 +181,7 @@
                         } @else {
                           @if (!(isCooling$ | async)) {
                             <div class="notice">
-                              <div class="consensus">This {{ phunk.singleName }} does not have consensus with one or more indexers. <a (click)="setChat()">Contact support</a> to resolve this issue.</div>
+                              <div class="consensus">This {{ phunk.collection?.singleName }} does not have consensus with one or more indexers. <a (click)="setChat()">Contact support</a> to resolve this issue.</div>
                             </div>
                           }
                         }
@@ -212,10 +212,10 @@
                   @if (!phunk.isSupported) {
                     <a
                       class="button external"
-                      [href]="'https://memescribe.app/ethscription/' + phunk.hashId"
+                      [href]="externalMarketUrl + '/ethscriptions/' + phunk.hashId"
                       target="_blank">
 
-                      View on MemeScribe
+                      View on ethscriptions.com
                     </a>
                   }
               </div>
@@ -251,13 +251,13 @@
                               <span>{{ item.v }}</span>
                               @if (item.v | traitCount : phunk.slug) {
                                 <span class="percent">
-                                  ({{ (+(item.v | traitCount : phunk.slug) / (phunk.supply || 10000)) | percent : '1.1-1' }})
+                                  ({{ (+(item.v | traitCount : phunk.slug) / (phunk.collection?.supply || 0)) | percent : '1.1-1' }})
                                 </span>
                               }
                             </a>
 
                             <span class="trait-count">
-                              <span>{{ (item.v | traitCount : phunk.slug) && (item.v | traitCount : phunk.slug) + ' ' + phunk.collectionName + ' have this.' }}</span>
+                              <span>{{ (item.v | traitCount : phunk.slug) && (item.v | traitCount : phunk.slug) + ' ' + phunk.collection?.name + ' have this.' }}</span>
                             </span>
                           }
                         </div>
@@ -270,7 +270,7 @@
           </div>
         } @else {
           <div class="title-wrapper">
-            <h1 i18n>{{ phunk.singleName }} doesn't exist. 👎</h1>
+            <h1 i18n>{{ phunk.collection?.singleName }} doesn't exist. 👎</h1>
             <div class="hash-id">
               <span>Provenance Hash: </span>
               <a [href]="explorerUrl + '/tx/' + phunk.hashId" target="_blank">

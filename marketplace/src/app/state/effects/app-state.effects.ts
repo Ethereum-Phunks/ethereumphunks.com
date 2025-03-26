@@ -24,6 +24,26 @@ import { DataService } from '@/services/data.service';
 @Injectable()
 export class AppStateEffects {
 
+  globalConfig$ = createEffect(() => this.actions$.pipe(
+    ofType(appStateActions.initGlobalConfig),
+    switchMap(() => {
+      return this.dataSvc.fetchGlobalConfig().pipe(
+        switchMap((config) => {
+          return from(this.web3Svc.checkContractPaused()).pipe(
+            map((paused) => {
+              const newConfig = {
+                ...config,
+                maintenance: paused || config.maintenance,
+              };
+              console.table(newConfig);
+              return appStateActions.setGlobalConfig({ config: newConfig });
+            })
+          )
+        })
+      )
+    })
+  ));
+
   routerNavigation$ = createEffect(() => this.actions$.pipe(
     ofType(ROUTER_NAVIGATION),
     mergeMap(() => [
@@ -210,26 +230,6 @@ export class AppStateEffects {
     // tap(([action, modalActive]) => console.log({ action, modalActive })),
     // map(([action, modalActive]) => appStateActions.setModalActive({ modalActive: !modalActive })),
   ), { dispatch: false });
-
-  globalConfig$ = createEffect(() => this.actions$.pipe(
-    ofType(appStateActions.initGlobalConfig),
-    switchMap(() => {
-      return this.dataSvc.listenGlobalConfig().pipe(
-        switchMap((config) => {
-          return from(this.web3Svc.checkContractPaused()).pipe(
-            map((paused) => {
-              const newConfig = {
-                ...config,
-                maintenance: paused || config.maintenance,
-              };
-              console.log({ newConfig });
-              return appStateActions.setGlobalConfig({ config: newConfig });
-            })
-          )
-        })
-      )
-    })
-  ));
 
   constructor(
     private store: Store<GlobalState>,

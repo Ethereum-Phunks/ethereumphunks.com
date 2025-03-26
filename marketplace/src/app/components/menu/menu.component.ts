@@ -79,9 +79,9 @@ export class MenuComponent {
     map((owned) => owned?.filter((phunk: Phunk) => !!phunk.listing)),
   );
 
-  userOpenBids$ = this.store.select(dataStateSelectors.selectUserOpenBids).pipe(
-    tap((bids: Phunk[] | null) => this.createBidStats(bids))
-  );
+  // userOpenBids$ = this.store.select(dataStateSelectors.selectUserOpenBids).pipe(
+  //   tap((bids: Phunk[] | null) => this.createBidStats(bids))
+  // );
 
   notifications$ = this.store.select(notificationSelectors.selectNotifications).pipe(
     map((txns: Notification[]) => [...txns].sort((a, b) => b.timestamp - a.timestamp))

@@ -19,6 +19,7 @@ import { Event } from '@/models/db';
 
 import * as dataStateSelectors from '@/state/selectors/data-state.selectors';
 import * as appStateActions from '@/state/actions/app-state.actions';
+import { Collection } from '@/models/data.state';
 
 @Component({
   standalone: true,
@@ -40,7 +41,8 @@ import * as appStateActions from '@/state/actions/app-state.actions';
 })
 export class RecentActivityComponent {
 
-  public events = input.required<Event[] | null>();
+  events = input.required<Event[] | null>();
+  collection = input.required<Collection | null>();
 
   txFilters: TxFilterItem[] = [
     { label: 'All', value: 'All' },

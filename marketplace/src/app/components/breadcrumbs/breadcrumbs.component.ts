@@ -150,7 +150,7 @@ export class BreadcrumbsComponent {
   downloadCanvas(): void {
     if (!this.phunk()) return;
 
-    const name = this.phunk()!.singleName?.replace(' ', '-') + '#' + this.phunk()!.tokenId;
+    const name = this.phunk()!.collection?.singleName?.replace(' ', '-') + '#' + this.phunk()!.tokenId;
     const link = document.createElement('a');
     if (window.innerWidth > 800) link.download = name + '.png';
 

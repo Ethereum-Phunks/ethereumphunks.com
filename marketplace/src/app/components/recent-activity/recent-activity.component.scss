@@ -117,65 +117,34 @@ section {
       }
     }
 
-    &.created {
-      .image-wrapper {
-        background-color: rgba(var(--base-color), 1);
+    $event-color-groups: (
+      (created sale phunkbought): var(--base-color),
+      (transfer): var(--transferred-color),
+      (offered phunkoffered phunkofferwithdrawn phunknolongerforsale): var(--listed-color),
+      (phunkbidentered phunkbidwithdrawn): var(--bid-color),
+      (bridgein bridgeout): var(--magma)
+    );
+
+    @each $events, $color in $event-color-groups {
+      $selectors: ();
+      @each $event in $events {
+        $selectors: append($selectors, "&.#{$event}", "comma");
+      }
+
+      #{$selectors} {
+        .image-wrapper {
+          background-color: rgba(#{$color}, 1);
+        }
+
+        &.background {
+          .labels-wrapper {
+            .token-id {
+              color: rgba(#{$color}, 1);
+            }
+          }
+        }
       }
     }
-
-    &.transfer {
-      .image-wrapper {
-        background-color: rgba(var(--transferred-color), 1);
-      }
-    }
-
-    &.sale,
-    &.phunkbought {
-      .image-wrapper {
-        background-color: rgba(var(--base-color), 1);
-      }
-    }
-
-    &.offered,
-    &.phunkoffered {
-      .image-wrapper {
-        background-color: rgba(var(--listed-color), 1);
-      }
-    }
-
-    &.phunkofferwithdrawn,
-    &.phunknolongerforsale {
-      .image-wrapper {
-        background-color: rgba(var(--listed-color), 1);
-      }
-    }
-
-    &.phunkbidentered,
-    &.phunkbidwithdrawn {
-      .image-wrapper {
-        background-color: rgba(var(--bid-color), 1);
-      }
-    }
-
-    &.bridgein,
-    &.bridgeout {
-      .image-wrapper {
-        background-color: rgba(var(--magma), 1);
-      }
-    }
-
-    // &.escrow {
-    //   .image-wrapper {
-    //     background-color: rgba(var(--escrow-color), 1);
-    //   }
-    // }
-
-    // &.auctionstarted,
-    // &.auctionended {
-    //   .image-wrapper {
-    //     background-color: #03B8FF;
-    //   }
-    // }
   }
 
   @media (max-width: $mobile) {

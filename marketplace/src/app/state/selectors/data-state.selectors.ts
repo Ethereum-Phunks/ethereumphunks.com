@@ -9,20 +9,15 @@ export const selectUsd = createSelector(
   (appState: DataState) => appState.usd
 );
 
-export const selectSinglePhunk = createSelector(
-  selectDataState,
-  (appState: DataState) => appState.singlePhunk
-);
-
 export const selectEvents = createSelector(
   selectDataState,
   (appState: DataState) => appState.events
 );
 
-export const selectUserOpenBids = createSelector(
-  selectDataState,
-  (appState: DataState) => appState.userOpenBids
-);
+// export const selectUserOpenBids = createSelector(
+//   selectDataState,
+//   (appState: DataState) => appState.userOpenBids
+// );
 
 export const selectLeaderboard = createSelector(
   selectDataState,

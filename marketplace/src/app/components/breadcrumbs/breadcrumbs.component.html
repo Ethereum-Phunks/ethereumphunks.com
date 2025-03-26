@@ -28,7 +28,7 @@
         <div class="crumbs-wrapper">
           <div class="crumbs">
             <button [routerLink]="['/', 'curated', phunk.slug]">
-              {{ phunk.collectionName }}
+              {{ phunk.collection?.name }}
             </button>
             <span class="divider">/</span>
             <span class="number">{{ phunk.tokenId }}</span>

@@ -56,7 +56,7 @@
   @if (address$ | async; as address) {
     @if (activeCollection$ | async; as activeCollection) {
       <div class="stats-wrapper" waIntersectionObserver waIntersectionThreshold="0.5">
-        @if ((userOpenBids$ | async); as bids) {
+        <!-- @if ((userOpenBids$ | async); as bids) {
           @if (bids.length) {
             <a
               class="stat-item bids"
@@ -79,7 +79,7 @@
               </div>
             </a>
           }
-        }
+        } -->
 
         <!-- <div class="stat">
           <span class="label">Owned</span>

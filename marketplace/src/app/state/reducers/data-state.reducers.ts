@@ -6,7 +6,6 @@ import * as actions from '../actions/data-state.actions';
 export const initialState: DataState = {
   usd: null,
   events: null,
-  singlePhunk: null,
   userOpenBids: [],
   txHistory: null,
   leaderboard: null,
@@ -31,27 +30,13 @@ export const dataStateReducer: ActionReducer<DataState, Action> = createReducer(
     };
     return setEvents
   }),
-  on(actions.setSinglePhunk, (state, { phunk }) => {
-    const setSinglePhunk = {
-      ...state,
-      singlePhunk: phunk,
-    };
-    return setSinglePhunk
-  }),
-  on(actions.clearSinglePhunk, (state) => {
-    const clearSinglePhunk = {
-      ...state,
-      singlePhunk: null,
-    };
-    return clearSinglePhunk
-  }),
-  on(actions.setUserOpenBids, (state, { userOpenBids }) => {
-    const setUserOpenBids = {
-      ...state,
-      userOpenBids
-    };
-    return setUserOpenBids
-  }),
+  // on(actions.setUserOpenBids, (state, { userOpenBids }) => {
+  //   const setUserOpenBids = {
+  //     ...state,
+  //     userOpenBids
+  //   };
+  //   return setUserOpenBids
+  // }),
   on(actions.setLeaderboard, (state, { leaderboard }) => {
     const setLeaderboard = {
       ...state,

@@ -16,11 +16,17 @@
   </div>
 
   <div class="events-items">
-    @for (event of events(); track (event.hashId + '-' + event.type + '-' + event.from + '-' + event.tokenId + '-' + idx); let idx = $index) {
+    @for (
+      event of events();
+      track (event.hashId + '-' + event.type + '-' + event.from + '-' + event.tokenId + '-' + idx);
+      let idx = $index
+    ) {
       <a
         [routerLink]="['/', 'details', event.hashId]"
         class="event-item"
-        [class]="event.type | lowercase">
+        [class]="event.type | lowercase"
+        [class.background]="collection()?.hasBackgrounds">
+
         <div class="image-wrapper">
           <img
             [lazyLoad]="dataSvc.staticUrl + '/static/images/' + event.sha"
@@ -32,7 +38,9 @@
 
         <div class="labels-wrapper">
 
-          <div class="token-id">#{{ event.tokenId }}</div>
+          <div class="token-id">
+            #{{ event.tokenId }}
+          </div>
 
           <div class="label">
             @if (event.type) {

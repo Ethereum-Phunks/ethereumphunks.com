@@ -29,7 +29,7 @@ import { UtilService } from '@/services/util.service';
 import { Phunk } from '@/models/db';
 import { GlobalState, Notification } from '@/models/global-state';
 
-import { Subject, filter, firstValueFrom, fromEvent, map, switchMap, takeUntil, tap } from 'rxjs';
+import { Subject, distinctUntilChanged, filter, firstValueFrom, fromEvent, map, shareReplay, switchMap, tap } from 'rxjs';
 
 import { environment } from 'src/environments/environment';
 
@@ -69,13 +69,14 @@ import { setChat } from '@/state/actions/chat.actions';
   templateUrl: './item-view.component.html',
   styleUrls: ['./item-view.component.scss']
 })
-export class ItemViewComponent implements AfterViewInit, OnDestroy {
+export class ItemViewComponent {
 
   @ViewChild('sellPriceInput') sellPriceInput!: ElementRef<HTMLInputElement>;
   // @ViewChild('revShareInput') revShareInput!: ElementRef<HTMLInputElement>;
   @ViewChild('transferAddressInput') transferAddressInput!: ElementRef<HTMLInputElement>;
 
-  explorerUrl = environment.explorerUrl
+  explorerUrl = environment.explorerUrl;
+  externalMarketUrl = environment.externalMarketUrl;
   escrowAddress = environment.marketAddress;
   bridgeAddress = environment.bridgeAddress;
 
@@ -92,7 +93,13 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
 
   objectValues = Object.values;
 
-  singlePhunk$ = this.store.select(dataStateSelectors.selectSinglePhunk);
+  singlePhunk$ = this.route.params.pipe(
+    filter((params: any) => !!params.hashId),
+    distinctUntilChanged((prev, curr) => prev.hashId === curr.hashId),
+    tap((params: any) => console.log('singlePhunk$', params)),
+    switchMap((params: any) => this.dataSvc.fetchSinglePhunk(params.hashId)),
+    shareReplay(1),
+  );
 
   pendingTx$ = this.store.select(selectNotifications).pipe(
     filter((transactions) => !!transactions),
@@ -140,27 +147,6 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
     public themeSvc: ThemeService,
     private utilSvc: UtilService,
   ) {}
-
-  ngAfterViewInit(): void {
-    this.route.params.pipe(
-      tap((params: any) => this.store.dispatch(dataStateActions.fetchSinglePhunk({ phunkId: params.tokenId }))),
-      takeUntil(this.destroy$),
-    ).subscribe();
-
-    // RevShare input validation
-    // this.revShare.valueChanges.pipe(
-    //   tap((value) => {
-    //     if (value && value > 100) this.revShare.setValue(100);
-    //     if (value && value < 0) this.revShare.setValue(0);
-    //   })
-    // ).subscribe();
-  }
-
-  ngOnDestroy(): void {
-    this.store.dispatch(dataStateActions.clearSinglePhunk());
-    this.destroy$.next();
-    this.destroy$.complete();
-  }
 
   sellPhunk(): void {
     this.closeAll();

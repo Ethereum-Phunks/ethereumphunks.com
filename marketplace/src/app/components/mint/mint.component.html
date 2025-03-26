@@ -1,9 +1,13 @@
 <div class="collection-info-wrapper">
   <img [src]="'/assets/collections/' + collection()?.slug + '/logo.png'" alt="">
 
-  <!-- <small style="font-size: .8rem">
-    {{ pendingInscriptionShas$ | async | json }}
-  </small> -->
+  <div class="x-link">
+    <a href="https://x.com/nomorelabs" target="_blank">
+      <svg width="1200" height="1227" viewBox="0 0 1200 1227" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M714.163 519.284L1160.89 0H1055.03L667.137 450.887L357.328 0H0L468.492 681.821L0 1226.37H105.866L515.491 750.218L842.672 1226.37H1200L714.137 519.284H714.163ZM569.165 687.828L521.697 619.934L144.011 79.6944H306.615L611.412 515.685L658.88 583.579L1055.08 1150.3H892.476L569.165 687.854V687.828Z" fill="currentColor"/></svg>
+
+      &#64;nomorelabs
+    </a>
+  </div>
 </div>
 
 <div class="actions-wrapper">
@@ -25,9 +29,20 @@
   </div>
 
   <div class="actions-buttons-wrapper">
+
+    @if (!collection()?.mintEnabled) {
+      <div class="coming-soon">
+        <button>Coming Soon</button>
+      </div>
+    }
+
     <button
       (click)="randomMintItem()"
-      [class.disabled]="state().inscribing || !(connected$ | async)">
+      [class.disabled]="
+        !(connected$ | async) ||
+        state().inscribing ||
+        !collection()?.mintEnabled
+      ">
 
       @if (state().loadingMint) {
         <ng-container *ngTemplateOutlet="loading" />
@@ -41,7 +56,12 @@
         (click)="inscribe()"
         class="inscribe"
         [class.inscribed]="state().activeMint?.exists"
-        [class.disabled]="state().inscribing || !state().activeMint?.imageUrl || state().activeMint?.exists">
+        [class.disabled]="
+          state().inscribing ||
+          !state().activeMint?.imageUrl ||
+          state().activeMint?.exists ||
+          !collection()?.mintEnabled
+        ">
 
         @if (state().inscribing) {
           <ng-container *ngTemplateOutlet="loading" />
@@ -52,7 +72,9 @@
     } @else {
       <button
         (click)="connect()"
-        class="connect">
+        class="connect"
+        [class.disabled]="!collection()?.mintEnabled">
+
         Connect
       </button>
     }
@@ -62,26 +84,7 @@
     <pre class="pink">{{ error() }}</pre>
   } -->
 
-  <!-- @if (state().transaction.status; as status) {
-    <p>
-      @if (status === 'wallet') {
-        Please submit the transaction using your connected Ethereum wallet.
-      } @else {
-        Your transaction is {{ status }}.
-      }
-
-      @if (state().transaction.hash; as hash) {
-        <a
-          [href]="'https://sepolia.etherscan.io/tx/' + hash"
-          target="_blank">
-
-          View it on Etherscan <ng-container [ngTemplateOutlet]="externalIcon" />
-        </a>
-      }
-    </p>
-  } -->
-
-  <div class="legal">
+  <div class="legal" [class.disabled]="!collection()?.mintEnabled">
     <p>By clicking the "inscribe" button, you agree to our <a href="https://bafybeie75bq3qinz2t2rqkoew5ypxu5zgoecqsnhfq45kwsubcrwpi7heu.ipfs.dweb.link/" target="_blank">terms</a>.</p>
     <p>Network fees apply</p>
   </div>

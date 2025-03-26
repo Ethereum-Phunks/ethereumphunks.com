@@ -3,7 +3,7 @@ import { Routes } from '@angular/router';
 export const routes: Routes = [
   {
     path: '',
-    redirectTo: 'ethereum-phunks',
+    redirectTo: 'call-data-comrades',
     pathMatch: 'full',
   },
   {
@@ -22,7 +22,7 @@ export const routes: Routes = [
     pathMatch: 'full'
   },
   {
-    path: 'details/:tokenId',
+    path: 'details/:hashId',
     loadComponent: () => import('@/routes/item-view/item-view.component').then(mod => mod.ItemViewComponent)
   },
   {

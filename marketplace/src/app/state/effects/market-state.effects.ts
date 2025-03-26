@@ -4,7 +4,7 @@ import { Actions, createEffect, ofType } from '@ngrx/effects';
 import { ROUTER_NAVIGATION, getRouterSelectors } from '@ngrx/router-store';
 import { Store } from '@ngrx/store';
 
-import { filter, from, map, mergeMap, of, switchMap, tap, withLatestFrom } from 'rxjs';
+import { distinctUntilChanged, filter, from, map, mergeMap, of, switchMap, tap, withLatestFrom } from 'rxjs';
 
 import * as marketStateActions from '../actions/market-state.actions';
 import * as marketStateSelectors from '../selectors/market-state.selectors';
@@ -51,14 +51,6 @@ export class MarketStateEffects {
     })
   ));
 
-  // fetchMarketStats$ = createEffect(() => this.actions$.pipe(
-  //   ofType(marketStateActions.setMarketSlug),
-  //   switchMap((action) => this.dataSvc.fetchStats(action.marketSlug).pipe(
-  //     tap((stats) => console.log('fetchMarketStats$', action, stats)),
-  //   )),
-  // ), { dispatch: false });
-
-  // Set active market data based on market type
   onMarketTypeChanged$ = createEffect(() => this.actions$.pipe(
     ofType(marketStateActions.setMarketType),
     withLatestFrom(
@@ -70,19 +62,18 @@ export class MarketStateEffects {
     switchMap(([action, marketType, marketSlug, queryAddress]) => {
       // Likely exited market route so we clear some state
 
-      // console.log({ action, marketType, marketSlug, queryAddress });
+      console.log({ action, marketType, marketSlug, queryAddress });
 
-      if (!marketType) {
+      if (!marketType || !marketSlug) {
         this.store.dispatch(marketStateActions.clearActiveMarketRouteData());
         return from([]);
       }
 
       if (queryAddress) {
-        // console.log('onMarketTypeChanged$', action);
         return this.store.select(appStateSelectors.selectWalletAddress).pipe(
           switchMap((res) => {
             if (res && res === queryAddress?.toLowerCase()) {
-              if (marketType === 'bids') return this.store.select(dataStateSelectors.selectUserOpenBids);
+              // if (marketType === 'bids') return this.store.select(dataStateSelectors.selectUserOpenBids);
               return this.store.select(marketStateSelectors.selectOwned);
             } else {
               return this.dataSvc.fetchOwned(queryAddress, marketSlug);
@@ -103,32 +94,49 @@ export class MarketStateEffects {
   ));
 
   fetchMarketData$ = createEffect(() => this.actions$.pipe(
-    ofType(
-      marketStateActions.fetchMarketData,
-      marketStateActions.triggerDataRefresh
-    ),
-    switchMap(() => {
-      return this.store.select(marketStateSelectors.selectMarketSlug).pipe(
-        filter((slug) => !!slug),
-        switchMap((slug) => this.dataSvc.fetchMarketData(slug)),
-        map((marketData) => marketStateActions.setMarketData({ marketData }))
+    ofType(marketStateActions.setMarketSlug),
+    distinctUntilChanged((a, b) => a.marketSlug === b.marketSlug),
+    switchMap(({ marketSlug }) => this.dataSvc.fetchMarketData(marketSlug)),
+    // tap((marketData) => console.log('fetchMarketData$', marketData)),
+    map((marketData) => marketStateActions.setMarketData({ marketData }))
+  ));
+
+  fetchEvents$ = createEffect(() => this.actions$.pipe(
+    ofType(marketStateActions.setMarketSlug),
+    distinctUntilChanged((a, b) => a.marketSlug === b.marketSlug),
+    switchMap(({ marketSlug }) => {
+      return this.store.select(appStateSelectors.selectEventTypeFilter).pipe(
+        switchMap((eventTypeFilter) => this.dataSvc.fetchEvents(24, eventTypeFilter, marketSlug)),
       )
-    })
+    }),
+    // tap((events) => console.log('fetchEvents$', events)),
+    map((events) => dataStateActions.setEvents({ events })),
   ));
 
   fetchAll$ = createEffect(() => this.actions$.pipe(
-    ofType(marketStateActions.setMarketData),
-    withLatestFrom(
-      this.store.select(marketStateSelectors.selectMarketSlug),
-      this.store.select(marketStateSelectors.selectAll)
-    ),
-    switchMap(([action, marketSlug]) => {
+    ofType(marketStateActions.setMarketSlug),
+    distinctUntilChanged((a, b) => a.marketSlug === b.marketSlug),
+    switchMap(({ marketSlug }) => {
       return this.dataSvc.fetchAllWithPagination(marketSlug, 0, 110, {}).pipe(
-        map((data: MarketState['activeMarketRouteData']) => data.data),
-        // tap((data) => console.log('fetchAll$', data))
+        map((data: MarketState['activeMarketRouteData']) => data.data)
       );
     }),
-    map((phunks: Phunk[]) => marketStateActions.setAll({ all: phunks }))
+    // tap((data) => console.log('fetchAll$', data)),
+    map((all: Phunk[]) => marketStateActions.setAll({ all })),
+  ));
+
+  fetchOwned$ = createEffect(() => this.actions$.pipe(
+    ofType(appStateActions.setWalletAddress),
+    distinctUntilChanged((a, b) => a.walletAddress === b.walletAddress),
+    switchMap(({ walletAddress }) => {
+      if (!walletAddress) return of([]);
+      return this.store.select(marketStateSelectors.selectMarketSlug).pipe(
+        distinctUntilChanged(),
+        switchMap((slug) => this.dataSvc.fetchOwned(walletAddress, slug)),
+      );
+    }),
+    // tap((phunks) => console.log('fetchOwned$', phunks)),
+    map((phunks) => marketStateActions.setOwned({ owned: phunks })),
   ));
 
   paginateAll$ = createEffect(() => this.actions$.pipe(
@@ -164,34 +172,6 @@ export class MarketStateEffects {
     ),
   ));
 
-  fetchOwned$ = createEffect(() => this.actions$.pipe(
-    ofType(
-      appStateActions.setWalletAddress,
-      marketStateActions.triggerDataRefresh
-    ),
-    withLatestFrom(this.store.select(appStateSelectors.selectWalletAddress)),
-    filter(([action, address]) => !!address),
-    switchMap(([_, address]) => {
-      return this.store.select(marketStateSelectors.selectMarketSlug).pipe(
-        switchMap((slug) => this.dataSvc.fetchOwned(address!, slug)),
-      );
-    }),
-    map((phunks) => marketStateActions.setOwned({ owned: phunks })),
-  ));
-
-  setUserOpenBids$ = createEffect(() => this.actions$.pipe(
-    ofType(marketStateActions.setMarketData),
-    switchMap((action) => {
-      return this.store.select(appStateSelectors.selectWalletAddress).pipe(
-        map((address) => {
-          return dataStateActions.setUserOpenBids({
-            userOpenBids: action.marketData?.filter((item) => item.bid && item.bid?.fromAddress === address) || []
-          });
-        })
-      );
-    })
-  ));
-
   setTraitFilter$ = createEffect(() => this.actions$.pipe(
     ofType(marketStateActions.setActiveTraitFilters),
     withLatestFrom(
@@ -208,6 +188,26 @@ export class MarketStateEffects {
       );
     })
   ));
+
+  // setUserOpenBids$ = createEffect(() => this.actions$.pipe(
+  //   ofType(marketStateActions.setMarketData),
+  //   switchMap((action) => {
+  //     return this.store.select(appStateSelectors.selectWalletAddress).pipe(
+  //       map((address) => {
+  //         return dataStateActions.setUserOpenBids({
+  //           userOpenBids: action.marketData?.filter((item) => item.bid && item.bid?.fromAddress === address) || []
+  //         });
+  //       })
+  //     );
+  //   })
+  // ));
+
+  // fetchMarketStats$ = createEffect(() => this.actions$.pipe(
+  //   ofType(marketStateActions.setMarketSlug),
+  //   switchMap((action) => this.dataSvc.fetchStats(action.marketSlug).pipe(
+  //     tap((stats) => console.log('fetchMarketStats$', action, stats)),
+  //   )),
+  // ), { dispatch: false });
 
   constructor(
     private store: Store<GlobalState>,

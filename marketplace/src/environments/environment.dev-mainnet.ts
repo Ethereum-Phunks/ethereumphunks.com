@@ -7,6 +7,7 @@ export const environment = {
   rpcHttpProvider: 'http://reth.dappnode:8545',
   // rpcHttpProvider: 'https://eth-mainnet.g.alchemy.com/v2/19IQKn99eagaaRKD-uSOCE1aYEHLSnmL',
   explorerUrl: 'https://etherscan.io',
+  externalMarketUrl: 'https://ethscriptions.com',
 
   magmaRpcHttpProvider: 'https://turbo.magma-rpc.com',
 

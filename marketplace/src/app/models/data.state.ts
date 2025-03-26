@@ -3,23 +3,25 @@ import { Event, Phunk } from './db';
 export interface Collection {
   id: number;
   slug: string;
+  name: string;
   singleName: string;
+  description: string;
   supply: number;
-  name?: string;
-  description?: string;
+  isMinting: boolean;
+  mintEnabled: boolean;
+  hasBackgrounds: boolean;
+
   image?: string;
-  stats: {
+  previews?: Phunk[];
+  stats?: {
     sales: number;
     volume: number;
   };
-  previews: Phunk[];
-  isMinting: boolean;
 }
 
 export interface DataState {
   usd: number | null;
   events: Event[] | null;
-  singlePhunk: Phunk | null;
   userOpenBids: Phunk[];
 
   txHistory: any[] | null;

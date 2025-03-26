@@ -5,6 +5,7 @@ export const environment = {
 
   rpcHttpProvider: 'http://geth.sepolia-geth.dappnode:8545',
   explorerUrl: 'https://sepolia.etherscan.io',
+  externalMarketUrl: 'https://sepolia.ethscriptions.com',
 
   magmaRpcHttpProvider: 'https://turbo.magma-rpc.com',
 

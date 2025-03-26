@@ -5,6 +5,7 @@ export const environment = {
 
   rpcHttpProvider: 'https://eth-sepolia.g.alchemy.com/v2/19IQKn99eagaaRKD-uSOCE1aYEHLSnmL',
   explorerUrl: 'https://sepolia.etherscan.io',
+  externalMarketUrl: 'https://sepolia.ethscriptions.com',
 
   magmaRpcHttpProvider: 'https://turbo.magma-rpc.com',
 

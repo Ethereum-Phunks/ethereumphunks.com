@@ -40,7 +40,9 @@ export const initialState: AppState = {
   config: {
     maintenance: false,
     chat: false,
-    comments: false
+    comments: false,
+    network: null,
+    defaultCollection: null
   }
 };
 

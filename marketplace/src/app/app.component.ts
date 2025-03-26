@@ -20,21 +20,19 @@ import { OrdexWithdrawalComponent } from '@/components/ordex-withdrawal/ordex-wi
 import { Web3Service } from '@/services/web3.service';
 import { DataService } from '@/services/data.service';
 import { ThemeService } from '@/services/theme.service';
-import { SocketService } from '@/services/socket.service';
-import { GasService } from '@/services/gas.service';
 import { PwaUpdateService } from '@/services/pwa-update.service';
 
 import { selectChatActive } from '@/state/selectors/chat.selectors';
-import { selectIsMobile, selectWalletAddress } from '@/state/selectors/app-state.selectors';
+import { selectIsMobile } from '@/state/selectors/app-state.selectors';
 
 import * as appStateActions from '@/state/actions/app-state.actions';
 import * as dataStateActions from '@/state/actions/data-state.actions';
 import * as marketStateActions from '@/state/actions/market-state.actions';
 
-import { debounceTime, filter, map, observeOn, scan, switchMap, tap, withLatestFrom } from 'rxjs/operators';
-import { asyncScheduler, fromEvent } from 'rxjs';
+import { asyncScheduler, fromEvent, debounceTime, filter, map, observeOn, scan, tap, withLatestFrom } from 'rxjs';
 
 import { environment } from 'src/environments/environment';
+
 @Component({
   standalone: true,
   imports: [
@@ -72,17 +70,14 @@ export class AppComponent implements OnInit {
     public web3Svc: Web3Service,
     public themeSvc: ThemeService,
     private router: Router,
-    private socketSvc: SocketService,
-    private gasSvc: GasService,
     private pwaUpdateSvc: PwaUpdateService,
   ) {}
 
   ngOnInit(): void {
 
-    this.store.dispatch(appStateActions.initGlobalConfig());
     this.store.dispatch(appStateActions.setTheme({ theme: 'initial' }));
+    this.store.dispatch(appStateActions.initGlobalConfig());
     this.store.dispatch(dataStateActions.fetchCollections());
-    this.store.dispatch(marketStateActions.fetchMarketData());
     this.store.dispatch(appStateActions.fetchActiveMultiplier());
 
     this.router.events.pipe(

@@ -59,16 +59,37 @@ button {
 .collection-info-wrapper {
   display: flex;
   flex-direction: column;
+  justify-content: space-between;
 
   img {
     max-width: 34rem;
   }
 
+  .x-link {
+    margin-top: 1rem;
+
+    svg {
+      width: 1rem;
+      height: 1rem;
+    }
+
+    a {
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+
+      color: rgba(var(--black), 1);
+      text-decoration: underline;
+      font-size: 1.2rem;
+    }
+  }
+
   @media (max-width: $mobile) {
     align-items: center;
+    padding-bottom: 2rem;
 
     img {
-      max-width: 26rem;
+      max-width: calc(100% - 4rem);
     }
   }
 }
@@ -133,9 +154,37 @@ button {
   }
 
   .actions-buttons-wrapper {
+    position: relative;
+
     display: flex;
     flex-direction: column;
     gap: 1rem;
+
+    .coming-soon {
+      position: absolute;
+      z-index: 1;
+      top: 0;
+      left: 0;
+
+      width: 100%;
+      height: 100%;
+
+      display: flex;
+      justify-content: center;
+      align-items: center;
+
+      button {
+        background-color: rgba(var(--bid-color), 1);
+        box-shadow: -.3rem .3rem 0 rgba(var(--black), 1);
+        transform: rotate(5deg);
+
+        font-size: 1.8rem;
+        padding: 1rem 2rem;
+
+        pointer-events: none;
+        cursor: default;
+      }
+    }
 
     button {
       text-align: center;
@@ -152,7 +201,7 @@ button {
       }
 
       &.disabled {
-        opacity: 0.5;
+        opacity: 0.25;
         pointer-events: none;
       }
     }
@@ -161,6 +210,10 @@ button {
   .legal {
     p {
       font-size: 1rem;
+    }
+
+    &.disabled {
+      opacity: 0.25;
     }
   }
 }

@@ -326,13 +326,10 @@ app-phunk-billboard {
       }
 
       .accessories {
-        grid-template-columns: repeat(2, calc(50% - 1rem));
-        column-gap: 2rem;
+        grid-template-columns: 100%;
 
         .accessory {
           font-size: 1.6rem;
-          margin-bottom: 2rem;
-
           .trait-count {
             padding-top: .5rem;
           }

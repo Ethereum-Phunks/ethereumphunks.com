@@ -3,7 +3,7 @@ import { createAction, props } from '@ngrx/store';
 
 import { Phunk } from '@/models/db';
 
-import { RealtimePostgresChangesPayload } from '@supabase/supabase-js';
+// import { RealtimePostgresChangesPayload } from '@supabase/supabase-js';
 import { Collection } from '@/models/data.state';
 
 export const resetDataState = createAction(
@@ -25,33 +25,15 @@ export const setEvents = createAction(
   props<{ events: any[] }>()
 );
 
-export const fetchSinglePhunk = createAction(
-  '[Data State] Fetch Single Phunk',
-  props<{ phunkId: string }>()
-);
+// export const dbEventTriggered = createAction(
+//   '[Data State] DB Event Triggered',
+//   props<{ payload: RealtimePostgresChangesPayload<{ [key: string]: any; }> }>()
+// );
 
-export const setSinglePhunk = createAction(
-  '[Data State] Set Single Phunk',
-  props<{ phunk: GlobalState['dataState']['singlePhunk'] }>()
-);
-
-export const refreshSinglePhunk = createAction(
-  '[Data State] Refresh Phunk',
-);
-
-export const clearSinglePhunk = createAction(
-  '[Data State] Reset Single Phunk',
-);
-
-export const dbEventTriggered = createAction(
-  '[Data State] DB Event Triggered',
-  props<{ payload: RealtimePostgresChangesPayload<{ [key: string]: any; }> }>()
-);
-
-export const setUserOpenBids = createAction(
-  '[Data State] Set User Open Bids',
-  props<{ userOpenBids: Phunk[] }>()
-);
+// export const setUserOpenBids = createAction(
+//   '[Data State] Set User Open Bids',
+//   props<{ userOpenBids: Phunk[] }>()
+// );
 
 export const fetchLeaderboard = createAction(
   '[Data State] Fetch Leaderboard'

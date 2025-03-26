@@ -52,6 +52,8 @@ export class SplashComponent {
       if (!collection) return of(this.defaultImages);
       const shas = collection.previews?.map(({ sha }) => sha);
 
+      if (!shas?.length) return of(this.defaultImages);
+
       return from(this.createImageArray(shas)).pipe(
         switchMap((images) => {
           return this.mintImage$.pipe(
