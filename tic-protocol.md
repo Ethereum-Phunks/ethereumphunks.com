@@ -1,4 +1,7 @@
-# TIC (Transaction Inscribed Comments) Protocol Specification
+# TIC (Transaction Inscribed Comments) Protocol Specification (alpha)
+
+### Note:
+TIC is currently in early alpha development. The specification and implementation are subject to change as we refine the protocol based on community feedback and testing.
 
 ## Overview
 TIC is a child protocol built on top of [Ethscriptions](https://docs.ethscriptions.com/) that enables on-chain commenting capabilities through Ethereum transaction calldata. It provides a standardized way to associate comments with blockchain entities such as addresses, transaction hashes, or other on-chain identifiers. Comments can be nested and replied to by setting the topic to the hash of the parent comment.
@@ -133,6 +136,7 @@ await transferEthscription({
 7. A comment should be considered deleted if its Ethscription has been transferred to the zero address
 
 ## Notes
+- TIC is in early alpha, and the specification may evolve as the protocol matures.
 - Comments are immutable once inscribed
 - Comments inherit all security and decentralization properties of the Ethscriptions protocol
 - Comments can be nested by using the parent comment's hash as the topic
