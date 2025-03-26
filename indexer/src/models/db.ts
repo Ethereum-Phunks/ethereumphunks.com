@@ -5,6 +5,11 @@ export interface EthscriptionResponse {
   error: PostgrestError | null;
 }
 
+export interface CollectionResponse {
+  data: Collection[];
+  error: PostgrestError | null;
+}
+
 export interface EventResponse {
   data: Event[];
   error: PostgrestError | null;
@@ -70,6 +75,8 @@ export interface Collection {
   singleName: string;
   id: number;
   notifications: boolean;
+  isMinting: boolean;
+  mintEnabled: boolean;
 }
 
 export interface Event {

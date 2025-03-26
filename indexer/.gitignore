@@ -5,6 +5,8 @@ failed
 node_modules
 .env
 
+src/modules/mint
+
 lastBlock-*.txt
 twitter-cookies.json
 ca-certificate.crt

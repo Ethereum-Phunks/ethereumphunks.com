@@ -41,7 +41,7 @@ import { CommentsModule } from '@/modules/comments/comments.module';
     CardModule,
     SharedModule,
     TxpoolModule,
-    MintModule,
+    ...(Number(process.env.MINT) ? [MintModule] : []),
 
     CommentsModule
   ],

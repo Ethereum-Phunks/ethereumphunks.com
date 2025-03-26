@@ -20,6 +20,7 @@ import {
   AttributesResponse,
   CommentResponse,
   DBComment,
+  CollectionResponse,
 } from '@/models/db';
 
 const supabaseUrl = process.env.SUPABASE_URL;
@@ -30,6 +31,11 @@ const supabase = createClient(supabaseUrl, serviceRole);
 export class SupabaseService {
   suffix = process.env.CHAIN_ID === '1' ? '' : '_sepolia';
 
+  /**
+   * Updates the last processed block number
+   * @param blockNumber - The block number to update to
+   * @param createdAt - Timestamp of when this block was processed
+   */
   async updateLastBlock(blockNumber: number, createdAt: Date): Promise<void> {
     const response = await supabase
       .from('blocks')
@@ -43,6 +49,11 @@ export class SupabaseService {
     if (error) throw error;
   }
 
+  /**
+   * Gets the last processed block number for a network
+   * @param network - The network ID to get the last block for
+   * @returns The last processed block number minus 10 blocks for safety, or null if no blocks processed
+   */
   async getLastBlock(network: number): Promise<any> {
     const response = await supabase
       .from('blocks')
@@ -55,6 +66,10 @@ export class SupabaseService {
     return null;
   }
 
+  /**
+   * Removes a bid from the database
+   * @param hashId - The hash ID of the bid to remove
+   */
   async removeBid(hashId: string): Promise<void> {
     const response: ListingResponse = await supabase
       .from('bids' + this.suffix)
@@ -65,6 +80,14 @@ export class SupabaseService {
     Logger.log('Removed bid', hashId);
   }
 
+  /**
+   * Creates a new bid in the database
+   * @param txn - The transaction containing the bid
+   * @param createdAt - Timestamp when bid was created
+   * @param hashId - Hash ID of the bid
+   * @param fromAddress - Address that placed the bid
+   * @param value - Bid amount in wei
+   */
   async createBid(
     txn: Transaction,
     createdAt: Date,
@@ -87,6 +110,11 @@ export class SupabaseService {
     Logger.log('Created bid', hashId);
   }
 
+  /**
+   * Gets a bid by its hash ID
+   * @param hashId - The hash ID of the bid to get
+   * @returns The bid if found, null otherwise
+   */
   async getBid(hashId: string): Promise<Bid> {
     const response: BidResponse = await supabase
       .from('bids' + this.suffix)
@@ -100,6 +128,15 @@ export class SupabaseService {
     return null;
   }
 
+  /**
+   * Creates a new listing in the database
+   * @param txn - The transaction containing the listing
+   * @param createdAt - Timestamp when listing was created
+   * @param hashId - Hash ID of the listing
+   * @param toAddress - Address that can purchase the listing
+   * @param minValue - Minimum price in wei
+   * @param l2 - Whether this is an L2 listing
+   */
   async createListing(
     txn: Transaction,
     createdAt: Date,
@@ -129,6 +166,11 @@ export class SupabaseService {
     );
   }
 
+  /**
+   * Removes a listing from the database
+   * @param hashId - The hash ID of the listing to remove
+   * @returns True if listing was found and removed, false if not found
+   */
   async removeListing(hashId: string): Promise<boolean> {
 
     const listing = await this.getListing(hashId);
@@ -149,12 +191,20 @@ export class SupabaseService {
     return true;
   }
 
+  /**
+   * Updates a listing in the database
+   */
   async updateListing() {}
 
   ////////////////////////////////////////////////////////////////////////////////
   // Checks //////////////////////////////////////////////////////////////////////
   ////////////////////////////////////////////////////////////////////////////////
 
+  /**
+   * Checks if a SHA matches an EthPhunk
+   * @param sha - The SHA to check
+   * @returns The attribute data if it's an EthPhunk, null otherwise
+   */
   async checkIsEthPhunk(sha: string): Promise<AttributeItem | null> {
     const response: AttributesResponse = await supabase
       .from('attributes')
@@ -168,6 +218,11 @@ export class SupabaseService {
     return null;
   }
 
+  /**
+   * Checks if an ethscription exists by its SHA
+   * @param sha - The SHA to check
+   * @returns True if ethscription exists, false otherwise
+   */
   async checkEthscriptionExistsBySha(sha: string): Promise<boolean> {
     const response: EthscriptionResponse = await supabase
       .from('ethscriptions' + this.suffix)
@@ -181,6 +236,11 @@ export class SupabaseService {
     return true;
   }
 
+  /**
+   * Checks if an ethscription exists by its hash ID
+   * @param hash - The hash ID to check
+   * @returns The ethscription if found, null otherwise
+   */
   async checkEthscriptionExistsByHashId(hash: string): Promise<Ethscription> {
     const response: EthscriptionResponse = await supabase
       .from('ethscriptions' + this.suffix)
@@ -194,6 +254,11 @@ export class SupabaseService {
     return null;
   }
 
+  /**
+   * Checks if multiple ethscriptions exist by their hash IDs
+   * @param hashes - Array of hash IDs to check
+   * @returns Array of found ethscriptions, null if none found
+   */
   async checkEthscriptionsExistsByHashIds(hashes: string[]): Promise<Ethscription[]> {
     if (!hashes.length) return null;
 
@@ -219,6 +284,12 @@ export class SupabaseService {
     return results.length ? results : null;
   }
 
+  /**
+   * Fetches an ethscription by its collection slug and token ID
+   * @param slug - The collection slug
+   * @param id - The token ID
+   * @returns The ethscription if found, null otherwise
+   */
   async fetchEthscriptionBySlugAndTokenId(slug: string, id: number): Promise<Ethscription> {
     const response: EthscriptionResponse = await supabase
       .from('ethscriptions' + this.suffix)
@@ -232,25 +303,17 @@ export class SupabaseService {
     return null;
   }
 
-  // async checkEthscriptionsExistsByHashIds(hashes: string[]): Promise<Ethscription[]> {
-  //   if (!hashes.length) return null;
-
-  //   const response: EthscriptionResponse = await supabase
-  //     .from('ethscriptions' + this.suffix)
-  //     .select('*')
-  //     .in('hashId', hashes.map((hash) => hash.toLowerCase()));
-
-  //   const { data, error } = response;
-
-  //   if (error) throw error;
-  //   if (data?.length) return data;
-  //   return null;
-  // }
-
   ////////////////////////////////////////////////////////////////////////////////
   // Storage /////////////////////////////////////////////////////////////////////
   ////////////////////////////////////////////////////////////////////////////////
 
+  /**
+   * Uploads an image to storage
+   * @param sha - The SHA of the image
+   * @param imageBuffer - The image data buffer
+   * @param contentType - The content type of the image
+   * @returns Object containing the storage path
+   */
   async uploadImage(
     sha: string,
     imageBuffer: Buffer,
@@ -266,10 +329,34 @@ export class SupabaseService {
     return data;
   }
 
+  /**
+   * Checks if a collection is minting and minting is enabled
+   * @param slug - The slug of the collection
+   * @returns True if the collection is minting and minting is enabled, false otherwise
+   */
+  async isMinting(slug: string): Promise<boolean> {
+    const response: CollectionResponse = await supabase
+      .from('collections' + this.suffix)
+      .select('*')
+      .eq('slug', slug);
+
+    const { data, error } = response;
+    // console.log({ data, error });
+    if (error) throw error;
+    if (data?.length) return data[0].isMinting && data[0].mintEnabled;
+    return false;
+  }
+
   ////////////////////////////////////////////////////////////////////////////////
   // Adds ////////////////////////////////////////////////////////////////////////
   ////////////////////////////////////////////////////////////////////////////////
 
+  /**
+   * Adds a new ethscription to the database
+   * @param txn - The transaction containing the ethscription
+   * @param createdAt - Timestamp when ethscription was created
+   * @param attributesData - The attributes data for the ethscription
+   */
   async addEthscription(
     txn: Transaction,
     createdAt: Date,
@@ -303,14 +390,19 @@ export class SupabaseService {
 
     if (error) throw error.message;
     Logger.log('Ethscription created', txn.hash.toLowerCase());
-
-    // const { error: attributesError }: AttributesResponse = await supabase
-    //   .from('attributes')
-    //   .insert([attributesData]);
-    // if (attributesError) console.log(attributesError.message);
-    // Logger.log('Attributes created', txn.hash.toLowerCase());
   }
 
+  /**
+   * Adds a new event to the database
+   * @param txn - The transaction containing the event
+   * @param from - Address event is from
+   * @param to - Address event is to
+   * @param hashId - Hash ID of the event
+   * @param type - Type of event
+   * @param createdAt - Timestamp when event was created
+   * @param value - Value associated with event in wei
+   * @param logIndex - Index of the event log
+   */
   async addEvent(
     txn: Transaction,
     from: string,
@@ -355,6 +447,10 @@ export class SupabaseService {
     Logger.log('Event created', txn.hash.toLowerCase());
   }
 
+  /**
+   * Adds multiple events to the database
+   * @param events - Array of events to add
+   */
   async addEvents(events: Event[]): Promise<void> {
 
     events = events.map((event, i) => {
@@ -380,6 +476,12 @@ export class SupabaseService {
     );
   }
 
+  /**
+   * Gets or creates a user in the database
+   * @param address - The user's address
+   * @param createdAt - Optional timestamp for when user was created
+   * @returns The user object
+   */
   async getOrCreateUser(address: string, createdAt?: Date): Promise<User> {
     if (!address) return null;
 
@@ -410,6 +512,11 @@ export class SupabaseService {
     if (newUser?.length) return newUser[0];
   }
 
+  /**
+   * Gets a collection by its slug
+   * @param slug - The collection slug
+   * @returns The collection if found, null otherwise
+   */
   async getCollectionBySlug(slug: string): Promise<any> {
     const response = await supabase
       .from('collections' + this.suffix)
@@ -422,6 +529,11 @@ export class SupabaseService {
     return null;
   }
 
+  /**
+   * Gets attributes data by SHA
+   * @param sha - The SHA to look up
+   * @returns The attributes if found, null otherwise
+   */
   async getAttributesFromSha(sha: string): Promise<any> {
     const response = await supabase
       .from('attributes')
@@ -438,6 +550,12 @@ export class SupabaseService {
   // Updates /////////////////////////////////////////////////////////////////////
   ////////////////////////////////////////////////////////////////////////////////
 
+  /**
+   * Updates the owner of an ethscription
+   * @param hashId - The hash ID of the ethscription
+   * @param prevOwner - The previous owner's address
+   * @param newOwner - The new owner's address
+   */
   async updateEthscriptionOwner(
     hashId: string,
     prevOwner: string,
@@ -459,6 +577,11 @@ export class SupabaseService {
     if (error) throw error;
   }
 
+  /**
+   * Updates an event in the database
+   * @param eventId - The ID of the event to update
+   * @param data - The data to update
+   */
   async updateEvent(eventId: number, data: any): Promise<void> {
     const response: EventResponse = await supabase
       .from('events' + this.suffix)
@@ -469,6 +592,11 @@ export class SupabaseService {
     if (error) throw error;
   }
 
+  /**
+   * Updates a user's points
+   * @param address - The user's address
+   * @param points - The new points value
+   */
   async updateUserPoints(address: string, points: number): Promise<void> {
     const response: UserResponse = await supabase
       .from('users' + this.suffix)
@@ -483,6 +611,11 @@ export class SupabaseService {
   // Auction House ///////////////////////////////////////////////////////////////
   ////////////////////////////////////////////////////////////////////////////////
 
+  /**
+   * Creates a new auction in the database
+   * @param args - Object containing auction details
+   * @param createdAt - Timestamp when auction was created
+   */
   async createAuction(
     args: {
       hashId: string,
@@ -513,6 +646,12 @@ export class SupabaseService {
     return data;
   }
 
+  /**
+   * Creates a new auction bid in the database
+   * @param args - Object containing bid details
+   * @param txn - The transaction containing the bid
+   * @param createdAt - Timestamp when bid was created
+   */
   async createAuctionBid(
     args: {
       hashId: string,
@@ -548,6 +687,10 @@ export class SupabaseService {
     Logger.log(`Bid created`, args.hashId);
   }
 
+  /**
+   * Settles an auction in the database
+   * @param args - Object containing settlement details
+   */
   async settleAuction(
     args: {
       hashId: string,
@@ -567,6 +710,10 @@ export class SupabaseService {
     Logger.log(`Auction settled`, args.hashId);
   }
 
+  /**
+   * Extends an auction's end time
+   * @param args - Object containing extension details
+   */
   async extendAuction(
     args: {
       hashId: string,
@@ -589,6 +736,11 @@ export class SupabaseService {
   // Gets ////////////////////////////////////////////////////////////////////////
   ////////////////////////////////////////////////////////////////////////////////
 
+  /**
+   * Gets an ethscription by its token ID
+   * @param tokenId - The token ID to look up
+   * @returns The ethscription if found, undefined otherwise
+   */
   async getEthscriptionByTokenId(tokenId: string): Promise<Ethscription> {
     const response: EthscriptionResponse = await supabase
       .from('ethscriptions' + this.suffix)
@@ -601,6 +753,11 @@ export class SupabaseService {
     if (data?.length) return data[0];
   }
 
+  /**
+   * Gets a listing by its hash ID
+   * @param hashId - The hash ID to look up
+   * @returns The listing if found, null otherwise
+   */
   async getListing(hashId: string): Promise<any> {
     const response = await supabase
       .from('listings' + this.suffix)
@@ -613,6 +770,10 @@ export class SupabaseService {
     return null;
   }
 
+  /**
+   * Gets all transfer events
+   * @returns Array of transfer events
+   */
   async getAllTransfers(): Promise<Event[]> {
     const response: EventResponse = await supabase
       .from('events' + this.suffix)
@@ -625,6 +786,9 @@ export class SupabaseService {
     if (data?.length) return data;
   }
 
+  /**
+   * Gets all EthPhunks and writes them to a file
+   */
   async getAllEthPhunks(): Promise<void> {
     let allPhunks: any[] = [];
     const pageSize = 1000; // Max rows per request
@@ -654,12 +818,12 @@ export class SupabaseService {
 
     const cleanPhunks = allPhunks.map((phunk) => phunk.hashId);
 
-    // const tree = StandardMerkleTree.of(cleanPhunks, ["bytes32"]);
-    // console.log('Merkle Root:', tree.root);
-
     await writeFile('tree.json', JSON.stringify(cleanPhunks));
   }
 
+  /**
+   * Gets unminted token IDs and writes them to a file
+   */
   async getUnminted(): Promise<void> {
     let allPhunks: any[] = [];
     const pageSize = 1000; // Max rows per request
@@ -669,7 +833,6 @@ export class SupabaseService {
     while (hasMore) {
       const { data, error } = await supabase
         .from('phunks_sepolia')
-        // .select('hashId')
         .select('phunkId')
         .order('phunkId', { ascending: true })
         .range(page * pageSize, (page + 1) * pageSize - 1);
@@ -703,15 +866,13 @@ export class SupabaseService {
 
     console.log(JSON.stringify(sorted));
     console.log(JSON.stringify(unminted));
-
-    // const cleanPhunks = allPhunks.map((phunk) => phunk.hashId);
-
-    // const tree = StandardMerkleTree.of(cleanPhunks, ["bytes32"]);
-    // console.log('Merkle Root:', tree.root);
-
-    // await writeFile('tree.json', JSON.stringify(cleanPhunks));
   }
 
+  /**
+   * Gets an event by its hash ID
+   * @param hashId - The hash ID to look up
+   * @returns The event if found, undefined otherwise
+   */
   async getEventByHashId(hashId: string): Promise<Event> {
     const response: EventResponse = await supabase
       .from('events' + this.suffix)
@@ -729,6 +890,11 @@ export class SupabaseService {
   // Comments ////////////////////////////////////////////////////////////////////
   ////////////////////////////////////////////////////////////////////////////////
 
+  /**
+   * Adds a new comment to the database
+   * @param txn - The transaction containing the comment
+   * @param createdAt - Timestamp when comment was created
+   */
   async addComment(txn: Transaction, createdAt: Date): Promise<void> {
 
     const jsonPart = fromHex(txn.input, 'string').replace('data:message/vnd.tic+json,', '');
@@ -759,6 +925,11 @@ export class SupabaseService {
     if (error) throw error;
   }
 
+  /**
+   * Gets a comment by its hash ID
+   * @param hashId - The hash ID to look up
+   * @returns The comment if found
+   */
   async getCommentByHashId(hashId: string): Promise<DBComment> {
     const response: CommentResponse = await supabase
       .from('comments' + this.suffix)
@@ -770,6 +941,10 @@ export class SupabaseService {
     return data[0];
   }
 
+  /**
+   * Marks a comment as deleted
+   * @param hashId - The hash ID of the comment to delete
+   */
   async deleteComment(hashId: string): Promise<void> {
     const response: CommentResponse = await supabase
       .from('comments' + this.suffix)
@@ -784,6 +959,11 @@ export class SupabaseService {
   // Bridge //////////////////////////////////////////////////////////////////////
   ////////////////////////////////////////////////////////////////////////////////
 
+  /**
+   * Locks an ethscription
+   * @param hashId - The hash ID of the ethscription to lock
+   * @returns True if the ethscription was locked, false otherwise
+   */
   async lockEthscription(hashId: string): Promise<boolean> {
     const response: EthscriptionResponse = await supabase
       .from('ethscriptions' + this.suffix)

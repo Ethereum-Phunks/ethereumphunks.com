@@ -99,7 +99,9 @@ export class EthscriptionsService {
     const cleanedString = stringData.replace(/\x00/g, '');
 
     // DISABLED: All 10,000 have been ethscribed
-    // if (cleanedString.startsWith('data:')) return [];
+    if (cleanedString.startsWith('data:')) {
+      // console.log({ cleanedString });
+    }
 
     // Check if possible ethPhunk creation
     const possibleEthPhunk =
@@ -108,12 +110,13 @@ export class EthscriptionsService {
 
     if (possibleEthPhunk) {
       const sha = createHash('sha256').update(cleanedString).digest('hex');
-      // console.log({ sha });
+      console.log({ sha });
 
       // Check if the sha exists in the phunks sha table
       const phunkSha = await this.sbSvc.checkIsEthPhunk(sha);
-      // console.log({ phunkSha });
+      console.log({ phunkSha });
       if (!phunkSha) return;
+
 
       // Check if its a duplicate (already been inscribed)
       const isDuplicate = await this.sbSvc.checkEthscriptionExistsBySha(sha);
