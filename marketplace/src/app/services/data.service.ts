@@ -165,11 +165,12 @@ export class DataService {
    * @param slug Collection slug
    */
   getAttributes(slug: string): Observable<any> {
-    return from(this.ngForage.getItem(`${slug}__attributes`)).pipe(
+    const version = environment.version;
+    return from(this.ngForage.getItem(`${slug}__attributes::${version}`)).pipe(
       switchMap((res: any) => {
         if (res) return of(res);
         return this.http.get(`${environment.staticUrl}/data/${slug}_attributes.json`).pipe(
-          tap((res: any) => this.ngForage.setItem(`${slug}__attributes`, res)),
+          tap((res: any) => this.ngForage.setItem(`${slug}__attributes::${version}`, res)),
         );
       }),
     );

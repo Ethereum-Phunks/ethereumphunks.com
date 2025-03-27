@@ -37,7 +37,7 @@
     }
 
     <button
-      (click)="randomMintItem()"
+      (click)="getRandomMintItem()"
       [class.disabled]="
         !(connected$ | async) ||
         state().inscribing ||

@@ -2,6 +2,7 @@ export const environment = {
   env: 'mainnet',
   production: true,
   chainId: 1,
+  version: '1.5.0',
 
   rpcHttpProvider: 'https://eth-mainnet.g.alchemy.com/v2/19IQKn99eagaaRKD-uSOCE1aYEHLSnmL',
   explorerUrl: 'https://etherscan.io',

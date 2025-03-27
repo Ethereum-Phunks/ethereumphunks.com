@@ -2,6 +2,7 @@ export const environment = {
   env: 'dev-mainnet',
   production: false,
   chainId: 1,
+  version: '1.5.0',
 
   // rpcHttpProvider: 'https://eth-mainnet.g.alchemy.com/v2/19IQKn99eagaaRKD-uSOCE1aYEHLSnmL',
   rpcHttpProvider: 'http://reth.dappnode:8545',

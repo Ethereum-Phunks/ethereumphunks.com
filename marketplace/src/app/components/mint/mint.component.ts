@@ -23,6 +23,7 @@ import { UtilService } from '@/services/util.service';
 import { toObservable } from '@angular/core/rxjs-interop';
 import { TippyDirective } from '@/directives/tippy.directive';
 import { setConnected } from '@/state/actions/app-state.actions';
+import { fromHex } from 'viem';
 
 type MintItem = {
   slug: string;
@@ -101,32 +102,32 @@ export class MintComponent {
    * Fetches a random mint item from the collection
    * Updates state with the fetched item and its image
    */
-  async randomMintItem(): Promise<any> {
-    try {
-      this.updateState({ loadingMint: true });
+  async getRandomMintItem(): Promise<any> {
+    // try {
+    //   this.updateState({ loadingMint: true });
 
-      const address = await firstValueFrom(this.connectedAddress$);
-      const url = `${environment.relayUrl}/mint/random`;
-      const params = new URLSearchParams();
-      params.set('slug', this.collection()?.slug ?? '');
-      params.set('address', address ?? '');
+    //   const address = await firstValueFrom(this.connectedAddress$);
+    //   const url = `${environment.relayUrl}/mint/random`;
+    //   const params = new URLSearchParams();
+    //   params.set('slug', this.collection()?.slug ?? '');
+    //   params.set('address', address ?? '');
 
-      const response = await fetch(url + '?' + params.toString());
-      const data = await response.json();
+    //   const response = await fetch(url + '?' + params.toString());
+    //   const data = await response.json();
 
-      console.log(data);
+    //   console.log(data);
 
-      if (data.error) throw data;
+    //   if (data.error) throw data;
 
-      data.imageUrl = await this.fetchImage(data.metadata.sha);
-      this.mintImage.emit(data.imageUrl);
+    //   // const dataUri = fromHex(data.metadata.imageData, 'string');
+    //   // this.mintImage.emit(dataUri);
 
-      this.updateState({ activeMint: data });
-      this.updateState({ loadingMint: false });
+    //   this.updateState({ activeMint: data });
+    //   this.updateState({ loadingMint: false });
 
-    } catch (error) {
-      console.log(error);
-    }
+    // } catch (error) {
+    //   console.log(error);
+    // }
   }
 
   /**

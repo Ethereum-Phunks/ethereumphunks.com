@@ -15,9 +15,9 @@ export class PwaUpdateService {
       swUpdate.versionUpdates.subscribe(event => {
         if (event.type === 'VERSION_READY') {
           // Prompt user to update
-          if (confirm('A new version is available. Would you like to update?')) {
-            window.location.reload();
-          }
+          // if (confirm('A new version is available. Would you like to update?')) {
+          //   window.location.reload();
+          // }
         }
       });
 

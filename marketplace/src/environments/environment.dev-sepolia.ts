@@ -2,6 +2,7 @@ export const environment = {
   env: 'dev-sepolia',
   production: false,
   chainId: 11155111,
+  version: '1.5.0',
 
   // rpcHttpProvider: 'http://geth.sepolia-geth.dappnode:8545',
   rpcHttpProvider: 'https://eth-sepolia.g.alchemy.com/v2/0FN3yRRyJYmfFlfvjco_d9Y8HaVBIH45',
