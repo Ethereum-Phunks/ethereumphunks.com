@@ -307,6 +307,20 @@ export class SupabaseService {
   // Storage /////////////////////////////////////////////////////////////////////
   ////////////////////////////////////////////////////////////////////////////////
 
+  async getMintImageBySha(sha: string): Promise<{ buffer: Buffer; mimeType: string }> {
+    const { data, error } = await supabase.storage
+      .from('mint-images')
+      .download(`${sha}`);
+
+    if (error) throw error;
+
+    // Get mime type from the blob
+    const mimeType = data.type;
+    const buffer = Buffer.from(await data.arrayBuffer());
+
+    return { buffer, mimeType };
+  }
+
   /**
    * Uploads an image to storage
    * @param sha - The SHA of the image
@@ -345,6 +359,19 @@ export class SupabaseService {
     if (error) throw error;
     if (data?.length) return data[0].isMinting && data[0].mintEnabled;
     return false;
+  }
+
+  // test = 0;
+  async fetchMintProgress(slug: string): Promise<number> {
+    const query = supabase
+      .from('ethscriptions' + this.suffix)
+      .select('*', { count: 'exact', head: true })
+      .eq('slug', slug);
+
+    const { count, error } = await query;
+    if (error) throw error;
+    // this.test = this.test + 100;
+    return count;
   }
 
   ////////////////////////////////////////////////////////////////////////////////
