@@ -4,8 +4,7 @@ temp
 failed
 node_modules
 .env
-
-src/modules/mint
+_mint-data
 
 lastBlock-*.txt
 twitter-cookies.json
