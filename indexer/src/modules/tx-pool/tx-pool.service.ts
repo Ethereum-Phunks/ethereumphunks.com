@@ -15,14 +15,14 @@ export interface TxPoolState {
   queuedInscriptionShas: Map<`0x${string}`, string>;
 };
 
-const POLL_INTERVAL = 10000;
+const POLL_INTERVAL = 1000;
 
 /**
  * Service for monitoring and processing transactions in the mempool
  * Specifically focused on tracking inscriptions (data: URIs embedded in transaction data)
  */
 @Injectable()
-export class TxpoolService implements OnModuleInit {
+export class TxPoolService implements OnModuleInit {
 
   /** All pending transactions in the mempool */
   pendingTransactions: Transaction[] = [];
@@ -45,7 +45,7 @@ export class TxpoolService implements OnModuleInit {
   queuedInscriptionShas: Map<`0x${string}`, string> = new Map();
 
   constructor(
-    private readonly eventEmitter: EventEmitter2,
+    public readonly eventEmitter: EventEmitter2
   ) {}
 
   /**
@@ -96,7 +96,6 @@ export class TxpoolService implements OnModuleInit {
       queuedInscriptionShas: this.queuedInscriptionShas,
     };
     this.eventEmitter.emit('txpool.update', state);
-    // console.log('Emitting state', state);
   }
 
   /**

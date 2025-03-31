@@ -3,13 +3,13 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
 
 import { Web3Service } from '@/modules/shared/services/web3.service';
 
-import { TxpoolService } from './txpool.service';
-import { TxPoolGateway } from './txpool.gateway';
+import { TxPoolService } from './tx-pool.service';
+import { TxPoolGateway } from './tx-pool.gateway';
 
 @Module({
   imports: [EventEmitterModule.forRoot()],
   providers: [
-    TxpoolService,
+    TxPoolService,
     TxPoolGateway,
     {
       provide: 'WEB3_SERVICE_L1',
@@ -17,7 +17,7 @@ import { TxPoolGateway } from './txpool.gateway';
     },
   ],
   exports: [
-    TxpoolService,
+    TxPoolService,
   ],
 })
-export class TxpoolModule {}
+export class TxPoolModule {}

@@ -5,11 +5,12 @@ import { OnEvent } from '@nestjs/event-emitter';
 
 import { Server } from 'socket.io';
 
-import { TxpoolService, TxPoolState } from './txpool.service';
+import { TxPoolService, TxPoolState } from './tx-pool.service';
 
 @WebSocketGateway({
   cors: {
-    origin: '*',
+    origin: process.env.ALLOWED_ORIGINS,
+    methods: ['GET']
   },
 })
 export class TxPoolGateway implements OnModuleInit {
@@ -17,7 +18,7 @@ export class TxPoolGateway implements OnModuleInit {
   server: Server;
 
   constructor(
-    private readonly txPoolService: TxpoolService,
+    private readonly txPoolService: TxPoolService,
   ) {}
 
   onModuleInit() {
