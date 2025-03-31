@@ -6,11 +6,10 @@ import { SharedModule } from '@/modules/shared/shared.module';
 import { QueueModule } from '@/modules/queue/queue.module';
 import { NotifsModule } from '@/modules/notifs/notifs.module';
 import { BridgeL1Module } from '@/modules/bridge-l1/bridge-l1.module';
-import { CardModule } from '@/modules/card/card.module';
 import { NftModule } from '@/modules/nft/nft.module';
 import { BridgeL2Module } from '@/modules/bridge-l2/bridge-l2.module';
 import { EthscriptionsModule } from '@/modules/ethscriptions/ethscriptions.module';
-import { TxpoolModule } from '@/modules/txpool/txpool.module';
+import { TxPoolModule } from '@/modules/tx-pool/tx-pool.module';
 import { MintModule } from '@/modules/mint/mint.module';
 
 import { AppService } from '@/app.service';
@@ -38,9 +37,8 @@ import { CommentsModule } from '@/modules/comments/comments.module';
     BridgeL1Module,
 
     NotifsModule,
-    CardModule,
     SharedModule,
-    TxpoolModule,
+    TxPoolModule,
     ...(Number(process.env.MINT) ? [MintModule] : []),
 
     CommentsModule
@@ -62,8 +60,17 @@ export class AppModule {
       .forRoutes({
         path: '/admin/*',
         method: RequestMethod.ALL
-      }, {
+      },
+      {
         path: '/ethscriptions/*',
+        method: RequestMethod.POST
+      },
+      {
+        path: '/notifications/*',
+        method: RequestMethod.POST
+      },
+      {
+        path: '/bridge-l1/*',
         method: RequestMethod.POST
       });
   }

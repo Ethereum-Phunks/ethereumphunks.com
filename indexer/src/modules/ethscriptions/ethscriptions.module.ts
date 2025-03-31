@@ -11,7 +11,6 @@ import { DataService } from '@/services/data.service';
 import { EthscriptionsController } from './ethscriptions.controller';
 import { EthscriptionsService } from './ethscriptions.service';
 
-
 @Module({
   imports: [
     HttpModule,

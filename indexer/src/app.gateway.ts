@@ -7,10 +7,12 @@ import { CustomLogger } from '@/modules/shared/services/logger.service';
 
 import { chain } from '@/constants/ethereum';
 
-@WebSocketGateway({cors: {
-  origin: '*',
-  methods: ['GET'],
-}})
+@WebSocketGateway({
+  cors: {
+    origin: process.env.ALLOWED_ORIGINS,
+    methods: ['GET']
+  }
+})
 export class AppGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect {
 
   @WebSocketServer() server: Server;

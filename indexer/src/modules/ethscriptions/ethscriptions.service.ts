@@ -114,12 +114,13 @@ export class EthscriptionsService {
 
       // Check if the sha exists in the phunks sha table
       const phunkSha = await this.sbSvc.checkIsEthPhunk(sha);
-      console.log({ phunkSha });
+      // console.log({ phunkSha });
       if (!phunkSha) return;
 
 
       // Check if its a duplicate (already been inscribed)
       const isDuplicate = await this.sbSvc.checkEthscriptionExistsBySha(sha);
+      // console.log({ isDuplicate });
       if (isDuplicate) return
 
       Logger.debug(

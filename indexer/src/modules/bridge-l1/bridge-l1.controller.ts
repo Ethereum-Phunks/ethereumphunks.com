@@ -4,7 +4,7 @@ import { NonceService } from '@/modules/bridge-l1/services/nonce.service';
 import { VerificationService } from '@/modules/bridge-l1/services/verification.service';
 import { SignatureBody } from '@/modules/bridge-l1/models/bridge.model';
 
-@Controller()
+@Controller('bridge-l1')
 export class BridgeController {
 
   constructor(
