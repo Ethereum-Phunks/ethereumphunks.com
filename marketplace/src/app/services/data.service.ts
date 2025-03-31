@@ -7,10 +7,13 @@ import { Web3Service } from '@/services/web3.service';
 
 import { EventType, GlobalConfig, GlobalState } from '@/models/global-state';
 import { Attribute, Event, Listing, Phunk } from '@/models/db';
+import { MarketState } from '@/models/market.state';
+import { CommentWithReplies } from '@/models/comment';
+import { Collection } from '@/models/data.state';
 
 import { createClient, RealtimePostgresUpdatePayload, RealtimePostgresInsertPayload } from '@supabase/supabase-js'
 
-import { Observable, of, BehaviorSubject, from, forkJoin, firstValueFrom, EMPTY, timer, merge, filter, share, catchError, debounceTime, expand, map, reduce, switchMap, takeWhile, tap } from 'rxjs';
+import { Observable, of, from, forkJoin, firstValueFrom, EMPTY, timer, merge, filter, share, catchError, debounceTime, expand, map, reduce, switchMap, takeWhile, tap } from 'rxjs';
 
 import { NgForage } from 'ngforage';
 
@@ -19,10 +22,6 @@ import { environment } from 'src/environments/environment';
 import * as dataStateActions from '@/state/actions/data-state.actions';
 import * as appStateActions from '@/state/actions/app-state.actions';
 
-import { MarketState } from '@/models/market.state';
-import { DBComment, CommentWithReplies } from '@/models/comment';
-import { Collection } from '@/models/data.state';
-
 const supabaseUrl = environment.supabaseUrl;
 const supabaseKey = environment.supabaseKey;
 const supabase = createClient(supabaseUrl, supabaseKey);
@@ -30,19 +29,11 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 @Injectable({
   providedIn: 'root'
 })
-
 export class DataService {
 
-  public prefix: string = environment.chainId === 1 ? '' : '_sepolia';
-
+  public suffix: string = environment.chainId === 1 ? '' : '_sepolia';
   staticUrl = environment.staticUrl;
   escrowAddress = environment.marketAddress;
-
-  private eventsData = new BehaviorSubject<Event[]>([]);
-  eventsData$ = this.eventsData.asObservable();
-
-  private currentFloor = new BehaviorSubject<number>(0);
-  currentFloor$ = this.currentFloor.asObservable();
 
   walletAddress$ = this.store.select(state => state.appState.walletAddress);
 
@@ -52,31 +43,18 @@ export class DataService {
     private http: HttpClient,
     private ngForage: NgForage,
   ) {
-    // Initialize listeners and data fetching
-    // this.listenEvents();
-    this.listenForBlocks();
-    this.fetchUSDPrice();
-  }
+    // Listen for blocks and set indexer block
+    this.listenForBlocks().pipe(
+      tap((blockNumber) => {
+        this.store.dispatch(appStateActions.setIndexerBlock({ indexerBlock: blockNumber }));
+      }),
+    ).subscribe();
 
-  /**
-   * Sets up real-time listener for events from Supabase
-   */
-  // listenEvents() {
-  //   supabase
-  //     .channel('events')
-  //     .on(
-  //       'postgres_changes',
-  //       {
-  //         event: '*',
-  //         schema: 'public',
-  //         table: 'events' + this.prefix
-  //       },
-  //       (payload) => {
-  //         if (!payload) return;
-  //         this.store.dispatch(dataStateActions.dbEventTriggered({ payload }));
-  //       },
-  //     ).subscribe();
-  // }
+    // Fetch current ETH/USD price and store it
+    this.fetchUSDPrice().pipe(
+      tap((res) => this.store.dispatch(dataStateActions.setUsd({ usd: res }))),
+    ).subscribe();
+  }
 
   /**
    * Sets up real-time listener for global config changes
@@ -118,46 +96,41 @@ export class DataService {
   /**
    * Sets up real-time listener for new blocks
    */
-  listenForBlocks() {
+  listenForBlocks(): Observable<number> {
     const blockQuery = supabase
       .from('blocks')
       .select('blockNumber')
       .eq('network', environment.chainId);
 
-    blockQuery.then((res: any) => {
-      const blockNumber = res.data[0]?.blockNumber || 0;
-      this.store.dispatch(appStateActions.setIndexerBlock({ indexerBlock: blockNumber }));
+    // Initial fetch
+    const initial$ = from(blockQuery).pipe(
+      map((res: any) => res.data[0]?.blockNumber || 0)
+    );
+
+    // Realtime changes
+    const changes$ = new Observable<number>(subscriber => {
+      const channel = supabase
+        .channel('blocks')
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'blocks'
+          },
+          (payload: any) => {
+            if (payload.new.network !== environment.chainId) return;
+            subscriber.next(payload.new.blockNumber);
+          }
+        )
+        .subscribe();
+
+      return () => channel.unsubscribe();
     });
 
-    // Temporary solution to stale app state. Supabase sucks at this.
-    setInterval(() => {
-      blockQuery.then((res: any) => {
-        const blockNumber = res.data[0]?.blockNumber || 0;
-        this.store.dispatch(appStateActions.setIndexerBlock({ indexerBlock: blockNumber }));
-      });
-    }, 20000);
-
-    supabase
-      .channel('blocks')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'blocks'
-        },
-        (payload: any) => {
-          if (payload.new.network !== environment.chainId) return;
-          this.store.dispatch(appStateActions.setIndexerBlock({ indexerBlock: payload.new.blockNumber }));
-        },
-      ).subscribe();
-  }
-
-  /**
-   * Gets current floor price
-   */
-  getFloor(): number {
-    return this.currentFloor.getValue();
+    return merge(initial$, changes$).pipe(
+      share()
+    );
   }
 
   /**
@@ -217,7 +190,7 @@ export class DataService {
     address = address.toLowerCase();
 
     const query = supabase.rpc(
-      'fetch_ethscriptions_owned_with_listings_and_bids' + this.prefix,
+      'fetch_ethscriptions_owned_with_listings_and_bids' + this.suffix,
       { address, collection_slug: slug }
     );
 
@@ -258,10 +231,10 @@ export class DataService {
     address = address.toLowerCase();
 
     const request = supabase
-      .from('events' + this.prefix)
+      .from('events' + this.suffix)
       .select(`
         *,
-        ethscriptions${this.prefix}(tokenId,slug)
+        ethscriptions${this.suffix}(tokenId,slug)
       `)
       .gte('blockNumber', fromBlock)
       .or(`from.eq.${address},to.eq.${address}`)
@@ -270,8 +243,8 @@ export class DataService {
     return from(request).pipe(
       map(res => res.data as any[]),
       map((res: any[]) => res.map((item: any) => {
-        const collection = item[`ethscriptions${this.prefix}`];
-        delete item[`ethscriptions${this.prefix}`];
+        const collection = item[`ethscriptions${this.suffix}`];
+        delete item[`ethscriptions${this.suffix}`];
         return {
           ...item,
           ...collection,
@@ -293,7 +266,7 @@ export class DataService {
 
     const rpcFetch$ = from(
       supabase.rpc(
-        'fetch_ethscriptions_with_listings_and_bids' + this.prefix,
+        'fetch_ethscriptions_with_listings_and_bids' + this.suffix,
         { collection_slug: slug }
       )
     ).pipe(
@@ -331,7 +304,7 @@ export class DataService {
             {
               event: '*',
               schema: 'public',
-              table: 'ethscriptions' + this.prefix,
+              table: 'ethscriptions' + this.suffix,
               filter: `slug=eq.${slug}`
             },
             (payload: any) => {
@@ -370,7 +343,7 @@ export class DataService {
     slug: string,
   ): Observable<Event[]> {
     const query = supabase.rpc(
-      'fetch_events' + this.prefix,
+      'fetch_events' + this.suffix,
       {
         p_limit: limit,
         p_type: type && type !== 'All' ? type : null,
@@ -406,10 +379,10 @@ export class DataService {
    */
   fetchSingleTokenEvents(hashId: string): Observable<(Event & { [key: string]: string })[]> {
     const response = supabase
-      .from('events' + this.prefix)
+      .from('events' + this.suffix)
       .select(`
         *,
-        ethscriptions${this.prefix}(tokenId,slug)
+        ethscriptions${this.suffix}(tokenId,slug)
       `)
       .eq('hashId', hashId)
       .order('blockTimestamp', { ascending: false });
@@ -431,7 +404,7 @@ export class DataService {
 
           return {
             ...tx,
-            ...tx[`ethscriptions${this.prefix}`],
+            ...tx[`ethscriptions${this.suffix}`],
             type,
           };
         }) as (Event & { [key: string]: string })[];
@@ -444,7 +417,7 @@ export class DataService {
    * @param hashId Token hash ID
    */
   fetchUnsupportedTokenEvents(hashId: string): Observable<(Event & { [key: string]: string })[]> {
-    const prefix = this.prefix.replace('_', '');
+    const prefix = this.suffix.replace('_', '');
 
     // api-v2.ethscriptions.com
     // sepolia-api.ethscriptions.com
@@ -535,7 +508,7 @@ export class DataService {
    */
   async getHashIdFromTokenId(tokenId: string): Promise<string | null> {
     const query = supabase
-      .from('ethscriptions' + this.prefix)
+      .from('ethscriptions' + this.suffix)
       .select('hashId')
       .eq('tokenId', tokenId);
 
@@ -570,11 +543,11 @@ export class DataService {
     }
 
     let query = supabase
-      .from('ethscriptions' + this.prefix)
+      .from('ethscriptions' + this.suffix)
       .select(`
         *,
-        collections${this.prefix}(singleName,slug,name,supply),
-        nfts${this.prefix}(hashId,tokenId,owner)
+        collections${this.suffix}(singleName,slug,name,supply),
+        nfts${this.suffix}(hashId,tokenId,owner)
       `)
       .eq('hashId', hashId)
       .limit(1);
@@ -583,7 +556,7 @@ export class DataService {
       switchMap(({ data }: any) => {
         const phunk = data[0];
         if (!phunk) return this.fetchUnsupportedItem(hashId);
-        return of(formatPhunkFromResponse(phunk, this.prefix));
+        return of(formatPhunkFromResponse(phunk, this.suffix));
       }),
       switchMap((phunk: Phunk) => forkJoin([
         this.addAttributes(phunk.slug, [phunk]),
@@ -611,6 +584,10 @@ export class DataService {
     );
   }
 
+  /**
+   * Watches for changes to a single Phunk
+   * @param hashId Token hash ID
+   */
   private watchSinglePhunk(hashId: string) {
     return new Observable<void>((subscriber) => {
       const channel = supabase
@@ -620,7 +597,7 @@ export class DataService {
           {
             event: '*',
             schema: 'public',
-            table: 'ethscriptions' + this.prefix,
+            table: 'ethscriptions' + this.suffix,
             filter: `hashId=eq.${hashId}`
           },
           (payload: any) => {
@@ -641,7 +618,7 @@ export class DataService {
    * @param hashId Token hash ID
    */
   fetchUnsupportedItem(hashId: string): Observable<Phunk> {
-    const prefix = this.prefix.replace('_', '');
+    const prefix = this.suffix.replace('_', '');
 
     const baseUrl = `https://ethscriptions-api${prefix ? ('-' + prefix) : ''}.flooredape.io`;
 
@@ -726,7 +703,7 @@ export class DataService {
   async checkConsensus(phunks: Phunk[]): Promise<Phunk[]> {
     if (!phunks.length) return [];
 
-    const prefix = this.prefix.replace('_', '');
+    const prefix = this.suffix.replace('_', '');
 
     const hashIds = phunks.map((item: Phunk) => item.hashId);
     let params: any = new HttpParams().set('consensus', 'true');
@@ -786,7 +763,7 @@ export class DataService {
     if (!address) return false;
 
     const { data, error } = await supabase
-      .from('buyBans' + this.prefix)
+      .from('buyBans' + this.suffix)
       .select('*')
       .eq('id', address.toLowerCase());
 
@@ -811,7 +788,7 @@ export class DataService {
     // Initial fetch
     const rpcFetch$: Observable<Collection[]> = from(
       supabase.rpc(
-        'fetch_collections_with_previews' + this.prefix,
+        'fetch_collections_with_previews' + this.suffix,
         params
       )
     ).pipe(
@@ -835,7 +812,7 @@ export class DataService {
           {
             event: '*',
             schema: 'public',
-            table: 'collections' + this.prefix
+            table: 'collections' + this.suffix
           },
           () => {
             subscriber.next();
@@ -855,9 +832,7 @@ export class DataService {
    * Fetches disabled collections
    */
   fetchDisabledCollections(): Observable<any[]> {
-    return this.fetchCollections(true).pipe(
-      // tap((collections) => console.log('fetchDisabledCollections', collections)),
-    );
+    return this.fetchCollections(true);
   }
 
   /**
@@ -872,13 +847,13 @@ export class DataService {
 
     const query = supabase
       .rpc(
-        `get_total_volume${this.prefix}`,
+        `get_total_volume${this.suffix}`,
         { start_date: startDate, end_date: endDate, slug_filter: slug }
       );
 
     const queryTopSales = supabase
       .rpc(
-        `fetch_top_sales${this.prefix}`,
+        `fetch_top_sales${this.suffix}`,
         { p_slug: slug, p_limit: 100 }
       );
 
@@ -906,7 +881,7 @@ export class DataService {
   ): Observable<MarketState['activeMarketRouteData']> {
 
     return from(
-      supabase.rpc(`fetch_all_with_pagination${this.prefix}`, {
+      supabase.rpc(`fetch_all_with_pagination${this.suffix}`, {
         p_slug: slug,
         p_from_num: fromNum,
         p_to_num: toNum,
@@ -934,43 +909,29 @@ export class DataService {
     );
   }
 
-  fetchMintProgress(slug: string): Observable<any> {
-    const subject = new BehaviorSubject<number>(0);
+  /**
+   * Fetches mint progress for a collection
+   * @param slug Collection slug
+   */
+  fetchMintProgress(slug: string): Observable<number> {
+    if (!slug) return of(0);
 
-    // Initial fetch
-    supabase
-      .from('ethscriptions' + this.prefix)
-      .select('*')
-      .eq('slug', slug)
-      .then((res: any) => {
-        subject.next(res.data.length);
-      });
+    const query = supabase
+      .from('ethscriptions' + this.suffix)
+      .select('*', { count: 'exact', head: true })
+      .eq('slug', slug);
 
-    // Subscribe to realtime changes
-    supabase
-      .channel('ethscriptions_changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'ethscriptions' + this.prefix,
-          filter: `slug=eq.${slug}`
-        },
-        () => {
-          // When change occurs, refetch count
-          supabase
-            .from('ethscriptions' + this.prefix)
-            .select('*')
-            .eq('slug', slug)
-            .then((res: any) => {
-              subject.next(res.data.length);
-            });
-        }
+    const fetch$ = from(query).pipe(
+      tap((res: any) => console.log('fetchMintProgress', res)),
+      map((res: any) => res.count || 0),
+    );
+
+    return merge(
+      fetch$,
+      this.watchEthscriptionsBySlug(slug).pipe(
+        switchMap(() => fetch$)
       )
-      .subscribe();
-
-    return subject.asObservable();
+    );
   }
 
   ////////////////////////////////////////////////////////
@@ -979,7 +940,7 @@ export class DataService {
 
   // async fetchAuctions(hashId: string): Promise<any> {
   //   let query = supabase
-  //     .from('auctions' + this.prefix)
+  //     .from('auctions' + this.suffix)
   //     .select('*')
   //     .eq('hashId', hashId)
 
@@ -997,16 +958,15 @@ export class DataService {
   /**
    * Fetches current USD price of ETH
    */
-  fetchUSDPrice() {
-    this.http.get('https://min-api.cryptocompare.com/data/price', {
+  fetchUSDPrice(): Observable<number> {
+    return this.http.get('https://min-api.cryptocompare.com/data/price', {
       params: {
         fsym: 'ETH',
         tsyms: 'USD'
       }
     }).pipe(
-      map((res: any) => res?.USD || 0),
-      tap((res) => this.store.dispatch(dataStateActions.setUsd({ usd: res }))),
-    ).subscribe();
+      map((res: any) => res?.USD || 0)
+    );
   }
 
   /**
@@ -1026,7 +986,7 @@ export class DataService {
    * Fetches leaderboard data
    */
   fetchLeaderboard(): Observable<any> {
-    return from(from(supabase.rpc('fetch_leaderboard' + this.prefix))).pipe(
+    return from(from(supabase.rpc('fetch_leaderboard' + this.suffix))).pipe(
       map((res: any) => res.data),
     );
   }
@@ -1035,13 +995,17 @@ export class DataService {
   // COMMENTS ////////////////////////////////////////////
   ////////////////////////////////////////////////////////
 
+  /**
+   * Fetches comments for a given topic
+   * @param rootTopic Topic to fetch comments for
+   */
   async fetchComments(rootTopic: string): Promise<CommentWithReplies[]> {
     if (!rootTopic) return [];
 
     // Helper function to fetch comments for a given topic
     const fetchReplies = async (topic: string): Promise<CommentWithReplies[]> => {
       const { data, error } = await supabase
-        .from('comments' + this.prefix)
+        .from('comments' + this.suffix)
         .select('*')
         .eq('topic', topic.toLowerCase())
         // .eq('deleted', false)
@@ -1073,7 +1037,7 @@ export class DataService {
    */
   getCommentChanges(topics: string[]): Observable<void> {
     // console.log('getCommentChanges', topics);
-    const table = 'comments' + this.prefix;
+    const table = 'comments' + this.suffix;
 
     const isInserted = (payload: RealtimePostgresInsertPayload<{
       [key: string]: any;
@@ -1110,9 +1074,13 @@ export class DataService {
     });
   }
 
+  /**
+   * Fetches user avatar for a given address
+   * @param address User address
+   */
   async getUserAvatar(address: string): Promise<string> {
     const { data, error } = await supabase
-      .from('ethscriptions' + this.prefix)
+      .from('ethscriptions' + this.suffix)
       .select('*')
       .eq('owner', address.toLowerCase())
       .limit(1);

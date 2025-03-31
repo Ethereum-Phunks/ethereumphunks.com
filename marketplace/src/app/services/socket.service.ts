@@ -47,7 +47,7 @@ export class SocketService extends Socket {
   logs$ = this.fromEvent<LogItem[]>(`logs_${chain}`);
 
   /** Observable stream of pending inscription SHAs */
-  pendingInscriptionShas$ = this.fromEvent<Map<string, string>>('pendingInscriptionShas');
+  // pendingInscriptionShas$ = this.fromEvent<Map<string, string>>('pendingInscriptionShas');
 
   constructor() {
     super(socketConfig);

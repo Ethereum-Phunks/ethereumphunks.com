@@ -36,12 +36,20 @@
       </div>
     }
 
+    @if (state().penaltyTimeout) {
+      <div class="penalty-timeout">
+        <img src="/assets/idiot.gif" alt="you're an idiot" />
+        <p>You've been placed in a penalty timeout for clicking too hard. Try again in <span>{{ state().retryAfter }}</span> seconds.</p>
+      </div>
+    }
+
     <button
       (click)="getRandomMintItem()"
       [class.disabled]="
         !(connected$ | async) ||
         state().inscribing ||
-        !collection()?.mintEnabled
+        !collection()?.mintEnabled ||
+        state().penaltyTimeout
       ">
 
       @if (state().loadingMint) {
@@ -58,9 +66,11 @@
         [class.inscribed]="state().activeMint?.exists"
         [class.disabled]="
           state().inscribing ||
-          !state().activeMint?.imageUrl ||
+          !state().activeMint?.metadata?.image ||
           state().activeMint?.exists ||
-          !collection()?.mintEnabled
+          !collection()?.mintEnabled ||
+          state().penaltyTimeout ||
+          state().transaction
         ">
 
         @if (state().inscribing) {

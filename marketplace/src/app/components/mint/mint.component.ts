@@ -1,53 +1,44 @@
-import { Component, effect, input, output, signal } from '@angular/core';
+import { Component, input, OnDestroy, output, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormControl, FormsModule } from '@angular/forms';
+import { FormsModule } from '@angular/forms';
 import { ReactiveFormsModule } from '@angular/forms';
+import { toObservable } from '@angular/core/rxjs-interop';
+
+import { TimeagoModule } from 'ngx-timeago';
 
 import { Store } from '@ngrx/store';
 import { firstValueFrom, switchMap, tap } from 'rxjs';
 
 import { Collection } from '@/models/data.state';
 import { GlobalState } from '@/models/global-state';
+import { Notification } from '@/models/global-state';
 
 import { Web3Service } from '@/services/web3.service';
 import { DataService } from '@/services/data.service';
 import { SocketService } from '@/services/socket.service';
+import { UtilService } from '@/services/util.service';
+
+import { TippyDirective } from '@/directives/tippy.directive';
 
 import { selectConnected, selectWalletAddress } from '@/state/selectors/app-state.selectors';
+import { upsertNotification } from '@/state/actions/notification.actions';
 
 import { environment } from 'src/environments/environment';
 
-import { upsertNotification } from '@/state/actions/notification.actions';
-import { Notification } from '@/models/global-state';
-import { UtilService } from '@/services/util.service';
-import { toObservable } from '@angular/core/rxjs-interop';
-import { TippyDirective } from '@/directives/tippy.directive';
-import { setConnected } from '@/state/actions/app-state.actions';
-import { fromHex } from 'viem';
+import { MintRequestResponse } from './models/metadata';
 
-type MintItem = {
-  slug: string;
-  tokenId: number;
-  imageUrl: string;
-  exists: boolean;
-  metadata: {
-    sha: string;
-    attributes: {
-      [key: string]: string;
-    }
-  }
-}
-
-type MintState = {
-  activeMint: MintItem | null;
+interface MintState {
+  activeMint: MintRequestResponse | null;
   mintProgress: number;
   loadingMint: boolean;
   inscribing: boolean;
   error: string | null;
+  penaltyTimeout: boolean;
+  retryAfter: number;
   transaction: {
     hash: string | null;
     status: 'wallet' | 'pending' | 'complete' | 'error' | null;
-  };
+  } | null;
 }
 
 @Component({
@@ -57,33 +48,39 @@ type MintState = {
     FormsModule,
     ReactiveFormsModule,
     TippyDirective,
+
+    TimeagoModule,
   ],
   selector: 'app-mint',
   templateUrl: './mint.component.html',
   styleUrl: './mint.component.scss'
 })
-export class MintComponent {
+export class MintComponent implements OnDestroy {
 
   baseUrl = environment.staticUrl;
 
   collection = input<Collection>();
   mintImage = output<string | null>();
 
-  defaultState = {
+  private readonly defaultState: MintState = {
     activeMint: null,
     mintProgress: 0,
     loadingMint: false,
     inscribing: false,
     error: null,
-    transaction: { hash: null, status: null },
-  }
+    penaltyTimeout: false,
+    retryAfter: 0,
+    transaction: null,
+  };
 
   state = signal<MintState>(this.defaultState);
 
   connected$ = this.store.select(selectConnected);
   connectedAddress$ = this.store.select(selectWalletAddress);
 
-  pendingInscriptionShas$ = this.socketSvc.pendingInscriptionShas$;
+  // pendingInscriptionShas$ = this.socketSvc.pendingInscriptionShas$;
+
+  private timeoutInterval?: ReturnType<typeof setInterval>;
 
   constructor(
     private store: Store<GlobalState>,
@@ -94,52 +91,50 @@ export class MintComponent {
   ) {
     toObservable(this.collection).pipe(
       switchMap((collection) => this.dataSvc.fetchMintProgress(collection!.slug)),
+      tap((progress) => console.log('progress', progress)),
       tap((progress) => this.updateState({ mintProgress: progress })),
     ).subscribe();
+  }
+
+  ngOnDestroy(): void {
+    if (this.timeoutInterval) {
+      clearInterval(this.timeoutInterval);
+    }
   }
 
   /**
    * Fetches a random mint item from the collection
    * Updates state with the fetched item and its image
    */
-  async getRandomMintItem(): Promise<any> {
-    // try {
-    //   this.updateState({ loadingMint: true });
+  async getRandomMintItem(): Promise<void> {
+    try {
+      this.updateState({ activeMint: null, loadingMint: true, transaction: null });
 
-    //   const address = await firstValueFrom(this.connectedAddress$);
-    //   const url = `${environment.relayUrl}/mint/random`;
-    //   const params = new URLSearchParams();
-    //   params.set('slug', this.collection()?.slug ?? '');
-    //   params.set('address', address ?? '');
+      const address = await firstValueFrom(this.connectedAddress$);
+      const url = `${environment.relayUrl}/mint/random`;
+      const params = new URLSearchParams();
+      params.set('slug', this.collection()?.slug ?? '');
+      params.set('address', address ?? '');
 
-    //   const response = await fetch(url + '?' + params.toString());
-    //   const data = await response.json();
+      const response = await fetch(url + '?' + params.toString());
+      const data = await response.json();
+      if (data.error) throw data;
 
-    //   console.log(data);
+      console.log(data);
 
-    //   if (data.error) throw data;
+      this.mintImage.emit(data.metadata.image);
+      this.updateState({ activeMint: data });
 
-    //   // const dataUri = fromHex(data.metadata.imageData, 'string');
-    //   // this.mintImage.emit(dataUri);
+    } catch (err: any) {
+      console.log(err);
 
-    //   this.updateState({ activeMint: data });
-    //   this.updateState({ loadingMint: false });
+      if (err.penaltyTimeout) {
+        this.setPenaltyTimeout(err.retryAfter);
+      }
 
-    // } catch (error) {
-    //   console.log(error);
-    // }
-  }
-
-  /**
-   * Fetches an image by SHA and converts it to a blob URL
-   * @param sha SHA hash of the image to fetch
-   * @returns Promise resolving to the blob URL of the image
-   */
-  async fetchImage(sha: string): Promise<string> {
-    const imageResponse = await fetch(this.baseUrl + '/static/images/' + sha);
-    const imageBlob = await imageResponse.blob();
-    const imageUrl = URL.createObjectURL(imageBlob);
-    return imageUrl;
+    } finally {
+      this.updateState({ loadingMint: false });
+    }
   }
 
   /**
@@ -151,8 +146,7 @@ export class MintComponent {
     this.updateState({ inscribing: true, error: null });
 
     const activeMint = this.state().activeMint;
-    const image = activeMint?.imageUrl;
-    if (!image) return;
+    if (!activeMint?.metadata) return;
 
     let notification: Notification = {
       id: this.utilSvc.createIdFromString('mint' + activeMint?.metadata.sha),
@@ -160,7 +154,7 @@ export class MintComponent {
       type: 'wallet',
       function: 'mint',
       slug: activeMint?.slug,
-      tokenId: activeMint?.tokenId,
+      tokenId: activeMint?.id,
       sha: activeMint?.metadata.sha,
     };
 
@@ -168,15 +162,15 @@ export class MintComponent {
     this.updateState({ transaction: { hash: null, status: 'wallet' } });
 
     try {
-      let base64Image = await this.blobUrlToBase64(image);
 
-      if (!environment.production) {
-        base64Image = `data:image/png;base64,${new Date().getTime()}`;
-      }
+      // if (!environment.production) {
+      //   dataUri = `data:image/png;base64,${new Date().getTime()}`;
+      // }
 
-      const hash = await this.web3Svc.inscribe(base64Image);
+      const hash = await this.web3Svc.inscribe(activeMint.metadata.image);
+      if (!hash) throw new Error('Failed to inscribe');
+
       this.updateState({ transaction: { hash, status: 'pending' } });
-
       this.store.dispatch(upsertNotification({ notification }));
 
       notification = {
@@ -198,7 +192,7 @@ export class MintComponent {
 
     } catch (error) {
       console.log(error);
-      this.updateState({ error: error as string, transaction: { hash: null, status: null } });
+      this.updateState({ error: error as string, transaction: null });
 
       notification = {
         ...notification,
@@ -230,8 +224,36 @@ export class MintComponent {
       loadingMint: false,
       inscribing: false,
       error: null,
+      penaltyTimeout: false,
+      retryAfter: 0,
       transaction: { hash: null, status: null },
     });
+  }
+
+  /**
+   * Sets a penalty timeout for the user
+   * @param retryAfter - The number of seconds to wait before allowing the user to mint again
+   */
+  setPenaltyTimeout(retryAfter: number): void {
+    // Clear any existing timeout
+    if (this.timeoutInterval) {
+      clearInterval(this.timeoutInterval);
+    }
+
+    this.updateState({
+      penaltyTimeout: true,
+      retryAfter: Math.max(0, retryAfter)
+    });
+
+    this.timeoutInterval = setInterval(() => {
+      const currentRetry = this.state().retryAfter;
+      if (currentRetry <= 0) {
+        clearInterval(this.timeoutInterval);
+        this.updateState({ penaltyTimeout: false, retryAfter: 0 });
+        return;
+      }
+      this.updateState({ retryAfter: currentRetry - 1 });
+    }, 1000);
   }
 
   /**

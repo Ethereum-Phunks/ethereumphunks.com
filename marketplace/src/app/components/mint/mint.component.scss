@@ -186,6 +186,42 @@ button {
       }
     }
 
+    .penalty-timeout {
+      position: absolute;
+      z-index: 1;
+      top: 0;
+      left: 0;
+
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 1rem;
+      align-items: start;
+
+      width: 100%;
+      height: 100%;
+
+      padding: 1rem;
+
+      background-color: rgba(var(--bid-color), 1);
+      box-shadow: -.3rem .3rem 0 rgba(var(--black), 1);
+
+      user-select: none;
+
+      p {
+        color: rgba(var(--base-color), 1);
+        font-size: 1.2rem;
+
+        span {
+          color: rgba(var(--transferred-color), 1);
+        }
+      }
+
+      img {
+        display: block;
+        max-width: 3rem;
+      }
+    }
+
     button {
       text-align: center;
       justify-content: center;
@@ -202,6 +238,10 @@ button {
 
       &.disabled {
         opacity: 0.25;
+        pointer-events: none;
+      }
+
+      &.processing {
         pointer-events: none;
       }
     }

@@ -11,26 +11,23 @@ import { GlobalState, Notification } from '@/models/global-state';
 import { Web3Service } from '@/services/web3.service';
 
 import { PhunkGridComponent } from '@/components/phunk-grid/phunk-grid.component';
-import { NotificationsComponent } from '@/components/notifications/notifications.component';
 import { NotificationComponent } from '@/components/notifications/notif/notification.component';
 import { LeaderboardComponent } from '@/components/leaderboard/leaderboard.component';
 import { CollectionsComponent } from '@/components/collections/collections.component';
 
 import { WalletAddressDirective } from '@/directives/wallet-address.directive';
 
+import * as appStateActions from '@/state/actions/app-state.actions';
+import * as dataStateActions from '@/state/actions/data-state.actions';
+
 import * as appStateSelectors from '@/state/selectors/app-state.selectors';
 import * as notificationSelectors from '@/state/selectors/notification.selectors';
-import * as appStateActions from '@/state/actions/app-state.actions';
-
-import * as dataStateActions from '@/state/actions/data-state.actions';
 import * as dataStateSelectors from '@/state/selectors/data-state.selectors';
-
 import * as marketStateSelectors from '@/state/selectors/market-state.selectors';
 
-import { WeiToEthPipe } from '@/pipes/wei-to-eth.pipe';
 import { FormatCashPipe } from '@/pipes/format-cash.pipe';
 
-import { filter, map, switchMap, tap } from 'rxjs';
+import { map, switchMap, tap } from 'rxjs';
 
 import anime from 'animejs';
 
@@ -44,10 +41,8 @@ import anime from 'animejs';
 
     PhunkGridComponent,
     NotificationComponent,
-    NotificationsComponent,
     LeaderboardComponent,
     CollectionsComponent,
-    WeiToEthPipe,
     FormatCashPipe,
 
     WalletAddressDirective
