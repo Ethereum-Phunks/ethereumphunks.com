@@ -224,12 +224,12 @@ export class AppStateEffects {
     switchMap(([action, address]) => from(this.chatSvc.reconnectXmtp(address!))),
   ), { dispatch: false });
 
-  closeModal$ = createEffect(() => this.actions$.pipe(
-    ofType(appStateActions.mouseDown),
-    withLatestFrom(this.store.select(appStateSelectors.selectModalActive)),
-    // tap(([action, modalActive]) => console.log({ action, modalActive })),
-    // map(([action, modalActive]) => appStateActions.setModalActive({ modalActive: !modalActive })),
-  ), { dispatch: false });
+  // closeModal$ = createEffect(() => this.actions$.pipe(
+  //   ofType(appStateActions.mouseDown),
+  //   withLatestFrom(this.store.select(appStateSelectors.selectModalActive)),
+  //   // tap(([action, modalActive]) => console.log({ action, modalActive })),
+  //   // map(([action, modalActive]) => appStateActions.setModalActive({ modalActive: !modalActive })),
+  // ), { dispatch: false });
 
   constructor(
     private store: Store<GlobalState>,

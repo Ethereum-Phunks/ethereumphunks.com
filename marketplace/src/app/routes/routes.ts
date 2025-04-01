@@ -9,8 +9,18 @@ export const routes: Routes = [
     component: InitialCollectionGuard
   },
   {
+    path: 'market/:marketType',
+    redirectTo: 'ethereum-phunks/market/:marketType',
+    pathMatch: 'full'
+  },
+  {
     path: 'curated/:slug',
     redirectTo: ':slug',
+    pathMatch: 'full'
+  },
+  {
+    path: 'curated/:slug/market/:marketType',
+    redirectTo: ':slug/market/:marketType',
     pathMatch: 'full'
   },
   {

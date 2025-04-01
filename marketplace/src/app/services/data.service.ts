@@ -68,7 +68,7 @@ export class DataService {
         .limit(1)
     ).pipe(
       map(({ data }) => data?.[0]),
-      tap((config) => console.log('fetchGlobalConfig', config)),
+      // tap((config) => console.log('fetchGlobalConfig', config)),
     );
 
     const changes$ = new Observable(subscriber => {
@@ -309,7 +309,7 @@ export class DataService {
               filter: `slug=eq.${slug}`
             },
             (payload: any) => {
-              console.log('watchEthscriptionsBySlug', payload);
+              // console.log('watchEthscriptionsBySlug', payload);
               subscriber.next();
             }
           )
@@ -570,7 +570,7 @@ export class DataService {
         listing: listing?.listedBy.toLowerCase() === phunk.prevOwner?.toLowerCase() ? listing : null,
       })),
       tap((phunk) => {
-        console.log('fetchSinglePhunk', phunk);
+        // console.log('fetchSinglePhunk', phunk);
       }),
     );
 
@@ -602,7 +602,7 @@ export class DataService {
             filter: `hashId=eq.${hashId}`
           },
           (payload: any) => {
-            console.log('watchSinglePhunk', payload);
+            // console.log('watchSinglePhunk', payload);
             subscriber.next();
           }
         )
@@ -923,7 +923,7 @@ export class DataService {
       .eq('slug', slug);
 
     const fetch$ = from(query).pipe(
-      tap((res: any) => console.log('fetchMintProgress', res)),
+      // tap((res: any) => console.log('fetchMintProgress', res)),
       map((res: any) => res.count || 0),
     );
 

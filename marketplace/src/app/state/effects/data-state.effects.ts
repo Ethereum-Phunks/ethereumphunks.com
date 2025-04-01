@@ -4,20 +4,17 @@ import { Store } from '@ngrx/store';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
 
 import { GlobalState } from '@/models/global-state';
-import { Event, Phunk } from '@/models/db';
 
 import { DataService } from '@/services/data.service';
 
 import * as appStateActions from '@/state/actions/app-state.actions';
-import * as appStateSelectors from '@/state/selectors/app-state.selectors';
 
 import * as dataStateActions from '@/state/actions/data-state.actions';
 import * as dataStateSelectors from '@/state/selectors/data-state.selectors';
 
-import * as marketStateActions from '@/state/actions/market-state.actions';
 import * as marketStateSelectors from '@/state/selectors/market-state.selectors';
 
-import { asyncScheduler, distinctUntilChanged, filter, forkJoin, from, map, mergeMap, of, switchMap, take, tap, throttleTime, withLatestFrom } from 'rxjs';
+import { filter, map, switchMap, take, tap } from 'rxjs';
 import { environment } from 'src/environments/environment';
 
 @Injectable()
@@ -62,13 +59,11 @@ export class DataStateEffects {
     ofType(dataStateActions.setCollections),
     switchMap((action) => {
       return this.store.select(marketStateSelectors.selectMarketSlug).pipe(
-        filter((slug) => !!action.collections),
-        map((slug) => {
-          const coll = action.collections.find((c) => c.slug === slug);
-          const activeCollection = { ...coll! };
-          // console.log({ slug, coll, activeCollection });
-          return dataStateActions.setActiveCollection({ activeCollection });
-        })
+        filter(() => !!action.collections),
+        // tap((slug) => console.log('setActiveCollection$', { slug })),
+        map((slug) => action.collections.find((c) => c.slug === slug)),
+        filter((activeCollection) => !!activeCollection),
+        map((activeCollection) => dataStateActions.setActiveCollection({ activeCollection: { ...activeCollection! } }))
       );
     }),
   ));

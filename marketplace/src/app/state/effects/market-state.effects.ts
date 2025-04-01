@@ -1,7 +1,7 @@
 import { GlobalState } from '@/models/global-state';
 import { Injectable } from '@angular/core';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
-import { ROUTER_NAVIGATION, getRouterSelectors } from '@ngrx/router-store';
+import { ROUTER_NAVIGATION, RouterNavigationPayload, getRouterSelectors } from '@ngrx/router-store';
 import { Store } from '@ngrx/store';
 
 import { distinctUntilChanged, filter, from, map, mergeMap, of, switchMap, tap, withLatestFrom } from 'rxjs';
@@ -29,19 +29,22 @@ export class MarketStateEffects {
     withLatestFrom(
       this.store.select(getRouterSelectors().selectQueryParams),
       this.store.select(getRouterSelectors().selectRouteParams),
+      this.store.select(appStateSelectors.selectConfig),
     ),
-    mergeMap(([action, queryParams, routeParams]) => {
+    mergeMap(([{ payload }, queryParams, routeParams, config]) => {
       const actions: any[] = [
         marketStateActions.setMarketType({ marketType: routeParams['marketType'] }),
       ];
+
+      // console.log({ payload, queryParams, routeParams });
 
       // Use route params if available
       let marketSlug = routeParams['slug'];
 
       // Use default slug if no slug is available
-      const { event } = (action as any).payload;
-      if (event.urlAfterRedirects === '/') marketSlug = 'ethereum-phunks';
-      if (routeParams['marketType'] === 'user') marketSlug = 'user';
+      const { event } = payload as RouterNavigationPayload;
+      if (event.urlAfterRedirects === '/') marketSlug = config.defaultCollection;
+      // if (routeParams['marketType'] === 'user') marketSlug = 'user';
 
       // Set market slug if available
       if (marketSlug) actions.push(marketStateActions.setMarketSlug({ marketSlug }));
@@ -62,7 +65,7 @@ export class MarketStateEffects {
     switchMap(([action, marketType, marketSlug, queryAddress]) => {
       // Likely exited market route so we clear some state
 
-      console.log({ action, marketType, marketSlug, queryAddress });
+      // console.log({ action, marketType, marketSlug, queryAddress });
 
       if (!marketType || !marketSlug) {
         this.store.dispatch(marketStateActions.clearActiveMarketRouteData());

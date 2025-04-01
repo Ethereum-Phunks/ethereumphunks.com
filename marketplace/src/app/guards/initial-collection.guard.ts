@@ -1,7 +1,7 @@
 import { Component, Injectable } from '@angular/core';
 import { CanActivate, Router } from '@angular/router';
 
-import { Observable, filter, map, take, tap } from 'rxjs';
+import { Observable, filter, map, take } from 'rxjs';
 import { Store } from '@ngrx/store';
 
 import { selectConfig } from '@/state/selectors/app-state.selectors';
@@ -23,12 +23,11 @@ export class InitialCollectionGuard implements CanActivate {
 
   canActivate(): Observable<boolean> {
     return this.store.select(selectConfig).pipe(
-      tap(config => console.log('config', config)),
-      filter(config => !!config.network),
+      filter(config => !!config.defaultCollection),
       take(1),
       map(config => {
         const defaultSlug = config.defaultCollection;
-        if (defaultSlug) this.router.navigate([`/${defaultSlug}`]);
+        this.router.navigate([`/${defaultSlug}`]);
         return false;
       })
     );
