@@ -16,6 +16,7 @@ export class FooterComponent implements OnInit {
 
   explorerUrl = environment.explorerUrl;
 
+  version = environment.version;
   marketAddress = environment.marketAddress;
   points = environment.pointsAddress;
   contributions = environment.donationsAddress;

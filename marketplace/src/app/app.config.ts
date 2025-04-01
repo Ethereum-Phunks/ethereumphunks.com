@@ -3,8 +3,6 @@ import { RouteReuseStrategy, provideRouter } from '@angular/router';
 import { provideServiceWorker } from '@angular/service-worker';
 import { provideHttpClient } from '@angular/common/http';
 
-import { DEFAULT_CONFIG } from 'ngforage';
-
 import { TimeagoClock, TimeagoDefaultClock, TimeagoDefaultFormatter, TimeagoFormatter } from 'ngx-timeago';
 
 import { routes } from '@/routes/routes';
@@ -36,7 +34,6 @@ export const config = {
     { provide: TimeagoClock, useClass: TimeagoDefaultClock },
     { provide: WeiToEthPipe, useClass: WeiToEthPipe },
     { provide: TokenIdParsePipe, useClass: TokenIdParsePipe },
-    { provide: DEFAULT_CONFIG, useValue: { name: 'etherphunks' } },
     { provide: RouteReuseStrategy, useClass: CustomReuseStrategy },
     provideStore({
       appState: appStateReducer,

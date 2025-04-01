@@ -15,7 +15,7 @@ import { createClient, RealtimePostgresUpdatePayload, RealtimePostgresInsertPayl
 
 import { Observable, of, from, forkJoin, firstValueFrom, EMPTY, timer, merge, filter, share, catchError, debounceTime, expand, map, reduce, switchMap, takeWhile, tap } from 'rxjs';
 
-import { NgForage } from 'ngforage';
+import localforage from 'localforage';
 
 import { environment } from 'src/environments/environment';
 
@@ -37,12 +37,18 @@ export class DataService {
 
   walletAddress$ = this.store.select(state => state.appState.walletAddress);
 
+  private storage: LocalForage = localforage.createInstance({
+    name: 'ethereum-phunks',
+    storeName: 'attributes',
+    version: Number(environment.version.split('.').join('')),
+  });
+
   constructor(
     @Inject(Web3Service) private web3Svc: Web3Service,
     private store: Store<GlobalState>,
     private http: HttpClient,
-    private ngForage: NgForage,
   ) {
+
     // Listen for blocks and set indexer block
     this.listenForBlocks().pipe(
       tap((blockNumber) => {
@@ -139,12 +145,11 @@ export class DataService {
    * @param slug Collection slug
    */
   getAttributes(slug: string): Observable<any> {
-    const version = environment.version;
-    return from(this.ngForage.getItem(`${slug}__attributes::${version}`)).pipe(
+    return from(this.storage.getItem(`${slug}__attributes`)).pipe(
       switchMap((res: any) => {
         if (res) return of(res);
         return this.http.get(`${environment.staticUrl}/data/${slug}_attributes.json`).pipe(
-          tap((res: any) => this.ngForage.setItem(`${slug}__attributes::${version}`, res)),
+          tap((res: any) => this.storage.setItem(`${slug}__attributes`, res)),
         );
       }),
     );
