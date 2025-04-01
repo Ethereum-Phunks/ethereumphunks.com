@@ -1,24 +1,16 @@
 import { Routes } from '@angular/router';
 
+import { InitialCollectionGuard } from '@/guards/initial-collection.guard';
+
 export const routes: Routes = [
   {
     path: '',
-    redirectTo: 'call-data-comrades',
-    pathMatch: 'full',
-  },
-  {
-    path: 'market/:marketType',
-    redirectTo: 'ethereum-phunks/market/:marketType',
-    pathMatch: 'full'
+    canActivate: [InitialCollectionGuard],
+    component: InitialCollectionGuard
   },
   {
     path: 'curated/:slug',
     redirectTo: ':slug',
-    pathMatch: 'full'
-  },
-  {
-    path: 'curated/:slug/market/:marketType',
-    redirectTo: ':slug/market/:marketType',
     pathMatch: 'full'
   },
   {

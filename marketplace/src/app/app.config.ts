@@ -1,14 +1,16 @@
-import { importProvidersFrom, isDevMode } from '@angular/core';
-import { RouteReuseStrategy, provideRouter, withHashLocation } from '@angular/router';
+import { APP_INITIALIZER, isDevMode } from '@angular/core';
+import { RouteReuseStrategy, provideRouter } from '@angular/router';
 import { provideServiceWorker } from '@angular/service-worker';
 import { provideHttpClient } from '@angular/common/http';
 
-import { TimeagoClock, TimeagoDefaultClock, TimeagoDefaultFormatter, TimeagoFormatter } from 'ngx-timeago';
-
-import { CustomReuseStrategy } from '@/routes/route.strategy';
 import { DEFAULT_CONFIG } from 'ngforage';
 
-import { provideStore } from '@ngrx/store';
+import { TimeagoClock, TimeagoDefaultClock, TimeagoDefaultFormatter, TimeagoFormatter } from 'ngx-timeago';
+
+import { routes } from '@/routes/routes';
+import { CustomReuseStrategy } from '@/routes/route.strategy';
+
+import { Store, provideStore } from '@ngrx/store';
 import { provideEffects } from '@ngrx/effects';
 import { provideRouterStore, routerReducer } from '@ngrx/router-store';
 import { provideStoreDevtools } from '@ngrx/store-devtools';
@@ -27,8 +29,6 @@ import { ChatEffects } from '@/state/effects/chat.effects';
 
 import { TokenIdParsePipe } from '@/pipes/token-id-parse.pipe';
 import { WeiToEthPipe } from '@/pipes/wei-to-eth.pipe';
-
-import { routes } from '@/routes/routes';
 
 export const config = {
   providers: [

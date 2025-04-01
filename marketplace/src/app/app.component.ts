@@ -71,15 +71,14 @@ export class AppComponent implements OnInit {
     public themeSvc: ThemeService,
     private router: Router,
     private pwaUpdateSvc: PwaUpdateService,
-  ) {}
-
-  ngOnInit(): void {
-
+  ) {
     this.store.dispatch(appStateActions.setTheme({ theme: 'initial' }));
     this.store.dispatch(appStateActions.initGlobalConfig());
     this.store.dispatch(dataStateActions.fetchCollections());
     this.store.dispatch(appStateActions.fetchActiveMultiplier());
+  }
 
+  ngOnInit(): void {
     this.router.events.pipe(
       ////////////////////////
       // Scroll restoration //
@@ -136,7 +135,6 @@ export class AppComponent implements OnInit {
     ).subscribe();
 
     this.setIsMobile();
-
     this.pwaUpdateSvc.checkForUpdate();
   }
 

@@ -67,7 +67,8 @@ export class DataService {
         .eq('network', environment.chainId)
         .limit(1)
     ).pipe(
-      map(({ data }) => data?.[0])
+      map(({ data }) => data?.[0]),
+      tap((config) => console.log('fetchGlobalConfig', config)),
     );
 
     const changes$ = new Observable(subscriber => {
