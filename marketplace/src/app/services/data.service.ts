@@ -15,7 +15,7 @@ import { createClient, RealtimePostgresUpdatePayload, RealtimePostgresInsertPayl
 
 import { Observable, of, from, forkJoin, firstValueFrom, EMPTY, timer, merge, filter, share, catchError, debounceTime, expand, map, reduce, switchMap, takeWhile, tap } from 'rxjs';
 
-import localforage from 'localforage';
+import { createInstance } from 'localforage';
 
 import { environment } from 'src/environments/environment';
 
@@ -37,7 +37,7 @@ export class DataService {
 
   walletAddress$ = this.store.select(state => state.appState.walletAddress);
 
-  private storage: LocalForage = localforage.createInstance({
+  private storage: LocalForage = createInstance({
     name: 'ethereum-phunks',
     storeName: 'attributes',
     version: Number(environment.version.split('.').join('')),
