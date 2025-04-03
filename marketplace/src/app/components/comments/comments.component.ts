@@ -107,10 +107,10 @@ export class CommentsComponent {
 
     const commentString = JSON.stringify(commentObject);
     const commentUrl = `data:message/vnd.tic+json,${commentString}`;
-    console.log({commentUrl});
+    // console.log({commentUrl});
 
     const commentInscription = await this.web3Service.inscribe(commentUrl);
-    console.log({commentInscription});
+    // console.log({commentInscription});
   }
 
   /**

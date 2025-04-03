@@ -79,7 +79,7 @@ export class PhunkImageComponent {
             this.phunkText = 'Unsupported content type';
           }
         } else {
-          console.log('phunk.sha', phunk.sha);
+          // console.log('phunk.sha', phunk.sha);
           this.getPhunkImageBySha(phunk.sha);
         }
       }

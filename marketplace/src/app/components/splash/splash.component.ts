@@ -98,7 +98,7 @@ export class SplashComponent {
 
   async animateMint() {
     const children = this.imagesWrapper()?.nativeElement.children;
-    console.log({children});
+    // console.log({children});
     if (!children) return;
 
     await gsap.to(children, {

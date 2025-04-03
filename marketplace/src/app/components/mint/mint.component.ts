@@ -91,7 +91,7 @@ export class MintComponent implements OnDestroy {
   ) {
     toObservable(this.collection).pipe(
       switchMap((collection) => this.dataSvc.fetchMintProgress(collection!.slug)),
-      tap((progress) => console.log('progress', progress)),
+      // tap((progress) => console.log('progress', progress)),
       tap((progress) => this.updateState({ mintProgress: progress })),
     ).subscribe();
   }
@@ -120,7 +120,7 @@ export class MintComponent implements OnDestroy {
       const data = await response.json();
       if (data.error) throw data;
 
-      console.log(data);
+      // console.log(data);
 
       this.mintImage.emit(data.metadata.image);
       this.updateState({ activeMint: data });

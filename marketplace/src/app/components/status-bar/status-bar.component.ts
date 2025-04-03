@@ -40,7 +40,7 @@ export class StatusBarComponent {
   logs$ = this.socketSvc.logs$.pipe(
     take(1),
     switchMap((logs: LogItem[]) => {
-      console.log('logs', logs);
+      // console.log('logs', logs);
       return this.socketSvc.log$.pipe(
         startWith(...logs),
         scan((acc: LogItem[], log: LogItem) => [...acc, log], []),

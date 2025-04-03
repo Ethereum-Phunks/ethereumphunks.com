@@ -22,6 +22,7 @@ import {
   DBComment,
   CollectionResponse,
 } from '@/models/db';
+import { Observable } from 'rxjs';
 
 const supabaseUrl = process.env.SUPABASE_URL;
 const serviceRole = process.env.SUPABASE_SERVICE_ROLE;
@@ -378,6 +379,28 @@ export class SupabaseService {
     if (error) throw error;
     if (data?.length) return data[0].isMinting && data[0].mintEnabled;
     return false;
+  }
+
+  watchCollection(slug: string): Observable<any> {
+    const changes$ = new Observable(subscriber => {
+      const channel = supabase
+        .channel('collections' + this.suffix)
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'collections' + this.suffix,
+            filter: `slug=eq.${slug}`
+          },
+          payload => subscriber.next((payload as any).new)
+        )
+        .subscribe();
+
+      return () => channel.unsubscribe();
+    });
+
+    return changes$;
   }
 
   /**
