@@ -96,8 +96,8 @@ export class ItemViewComponent {
   singlePhunk$ = this.route.params.pipe(
     filter((params: any) => !!params.hashId),
     distinctUntilChanged((prev, curr) => prev.hashId === curr.hashId),
-    // tap((params: any) => console.log('singlePhunk$', params)),
     switchMap((params: any) => this.dataSvc.fetchSinglePhunk(params.hashId)),
+    tap((phunk: any) => console.log('singlePhunk$', phunk)),
     shareReplay(1),
   );
 

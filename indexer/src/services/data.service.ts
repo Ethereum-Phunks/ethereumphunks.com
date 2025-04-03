@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 
-import { catchError, firstValueFrom, map, of } from 'rxjs';
+import { catchError, firstValueFrom, map, of, tap } from 'rxjs';
 
 @Injectable()
 export class DataService {
@@ -34,6 +34,22 @@ export class DataService {
     return firstValueFrom(
       this.http.get(url).pipe(
         map(response => response.data?.result),
+        catchError(error => {
+          // console.log('getEthscriptionBySha', error);
+          return of(null);
+        }),
+      )
+    );
+  }
+
+  async getEthscriptionBySha(sha: string): Promise<any> {
+    const prefix = process.env.CHAIN_ID === '1' ? '' : 'sepolia-';
+    const url = `https://${prefix}api-v2.ethscriptions.com/api/ethscriptions?content_sha=0x${sha}`;
+
+    return firstValueFrom(
+      this.http.get(url).pipe(
+        // tap(response => console.log('getEthscriptionBySha', response.data)),
+        map(response => !!response.data?.result[0]),
         catchError(error => {
           // console.log('getEthscriptionBySha', error);
           return of(null);
