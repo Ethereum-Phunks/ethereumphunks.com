@@ -27,7 +27,6 @@ import { selectIsMobile } from '@/state/selectors/app-state.selectors';
 
 import * as appStateActions from '@/state/actions/app-state.actions';
 import * as dataStateActions from '@/state/actions/data-state.actions';
-import * as marketStateActions from '@/state/actions/market-state.actions';
 
 import { asyncScheduler, fromEvent, debounceTime, filter, map, observeOn, scan, tap, withLatestFrom } from 'rxjs';
 
@@ -61,7 +60,7 @@ export class AppComponent implements OnInit {
 
   chatActive$ = this.store.select(selectChatActive).pipe(map(({ active }) => active));
 
-  statusBarVisible = signal(false);
+  statusBarVisible = signal(true);
 
   constructor(
     @Inject(DOCUMENT) private document: Document,
@@ -76,6 +75,8 @@ export class AppComponent implements OnInit {
     this.store.dispatch(appStateActions.initGlobalConfig());
     this.store.dispatch(dataStateActions.fetchCollections());
     this.store.dispatch(appStateActions.fetchActiveMultiplier());
+
+    this.setStatusBarVisible();
   }
 
   ngOnInit(): void {
@@ -121,17 +122,17 @@ export class AppComponent implements OnInit {
 
     fromEvent(window, 'resize').pipe(
       debounceTime(100),
-      tap(() => this.setIsMobile())
+      tap(() => {
+        this.setIsMobile();
+        this.setStatusBarVisible();
+      })
     ).subscribe();
 
     // scroll event
     fromEvent(window, 'scroll').pipe(
       withLatestFrom(this.store.select(selectIsMobile)),
       filter(([_, isMobile]) => !!isMobile),
-      tap(([$event, isMobile]) => {
-        const scrollY = window.scrollY;
-        this.statusBarVisible.set(scrollY > 100);
-      })
+      tap(([$event, isMobile]) => this.setStatusBarVisible())
     ).subscribe();
 
     this.setIsMobile();
@@ -140,5 +141,14 @@ export class AppComponent implements OnInit {
 
   setIsMobile(): void {
     this.store.dispatch(appStateActions.setIsMobile({ isMobile: window.innerWidth < 801 }))
+  }
+
+  setStatusBarVisible() {
+    if (window.innerWidth > 800) {
+      this.statusBarVisible.set(true);
+    } else {
+      const scrollY = window.scrollY;
+      this.statusBarVisible.set(scrollY > 100);
+    }
   }
 }
