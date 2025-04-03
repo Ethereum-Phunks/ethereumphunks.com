@@ -160,6 +160,8 @@ button {
     flex-direction: column;
     gap: 1rem;
 
+    user-select: none;
+
     .coming-soon {
       position: absolute;
       z-index: 1;
@@ -204,8 +206,6 @@ button {
 
       background-color: rgba(var(--bid-color), 1);
       box-shadow: -.3rem .3rem 0 rgba(var(--black), 1);
-
-      user-select: none;
 
       p {
         color: rgba(var(--base-color), 1);
