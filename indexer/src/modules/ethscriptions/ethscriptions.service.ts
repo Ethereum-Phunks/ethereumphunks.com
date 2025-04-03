@@ -32,51 +32,6 @@ export class EthscriptionsService {
     private readonly utilitySvc: UtilityService
   ) {}
 
-  async addEthscription(body: { hash: string, attributes: AttributeItem }): Promise<any> {
-
-    let { hash, attributes } = body;
-
-    const transaction = await this.web3SvcL1.getTransaction(hash as `0x${string}`)
-    const block = await this.web3SvcL1.getBlock({ blockNumber: Number(transaction.blockNumber) });
-    const timestamp = new Date(Number(block.timestamp) * 1000);
-
-    const { input } = transaction;
-
-    // Make sure its an ethscription
-    const stringData = hexToString(input.toString() as `0x${string}`);
-    const cleanedString = stringData.replace(/\x00/g, '');
-    if (!cleanedString.startsWith('data:')) return [];
-
-    // Create sha and check if it exists
-    const sha = createHash('sha256').update(cleanedString).digest('hex');
-    const [ existsLocal, existsGlobal ] = await Promise.all([
-      this.sbSvc.checkEthscriptionExistsBySha(sha),
-      this.dataSvc.getEthscriptionByHashId(hash)
-    ]);
-
-    // Only process ones that don't already exist locally
-    if (existsLocal) return;
-
-    // Only process ones that already exist globally (ethscriptions)
-    if (!existsGlobal) return;
-
-    // Set the sha
-    attributes.sha = sha;
-
-    // Mime type
-    const base64Header = cleanedString.split(',')[0];
-    const mimeType = base64Header.match(/data:([^;]*);?/)[1];
-
-    // Create image buffer from data uri
-    const imageBuffer = Buffer.from(cleanedString.split(',')[1], 'base64');
-
-    // Upload image to storage bucket
-    await this.sbSvc.uploadImage(sha, imageBuffer, mimeType);
-
-    const event = await this.processEtherPhunkCreationEvent(transaction, timestamp, attributes);
-    if (event) await this.sbSvc.addEvents([event]);
-  }
-
   /**
    * Processes the ethscriptions for a given transaction.
    *
@@ -98,36 +53,25 @@ export class EthscriptionsService {
     const stringData = hexToString(input.toString() as `0x${string}`);
     const cleanedString = stringData.replace(/\x00/g, '');
 
-    // DISABLED: All 10,000 have been ethscribed
-    if (cleanedString.startsWith('data:')) {
-      // console.log({ cleanedString });
-    }
-
     // Check if possible ethPhunk creation
     const possibleEthPhunk =
       cleanedString.startsWith('data:image/svg+xml,') ||
-      cleanedString.startsWith('data:image/png;base64,');
+      cleanedString.startsWith('data:image/png;base64,') ||
+      cleanedString.startsWith('data:image/gif;base64,');
 
     if (possibleEthPhunk) {
       const sha = createHash('sha256').update(cleanedString).digest('hex');
-      console.log({ sha });
 
-      // Check if the sha exists in the phunks sha table
-      const phunkSha = await this.sbSvc.checkIsEthPhunk(sha);
-      // console.log({ phunkSha });
+      // Check if the sha exists
+      const phunkSha = await this.sbSvc.checkIsCuratedCollection(sha);
       if (!phunkSha) return;
-
 
       // Check if its a duplicate (already been inscribed)
       const isDuplicate = await this.sbSvc.checkEthscriptionExistsBySha(sha);
-      // console.log({ isDuplicate });
       if (isDuplicate) return
 
-      Logger.debug(
-        'Processing ethscription',
-        transaction.hash
-      );
-      const event = await this.processEtherPhunkCreationEvent(transaction as Transaction, createdAt, phunkSha);
+      Logger.debug('Processing ethscription', transaction.hash);
+      const event = await this.processEthscriptionCreationEvent(transaction as Transaction, createdAt, phunkSha);
       return [event];
     }
 
@@ -242,16 +186,16 @@ export class EthscriptionsService {
    * @param phunkShaData - The PhunkSha data.
    * @returns The processed event object.
    */
-  async processEtherPhunkCreationEvent(
+  async processEthscriptionCreationEvent(
     txn: Transaction,
     createdAt: Date,
     attributesData: AttributeItem,
   ): Promise<Event> {
     const { from, to, hash: hashId } = txn;
 
-    // Add the ethereum phunk
+    // Add the ethscription
     await this.sbSvc.addEthscription(txn, createdAt, attributesData);
-    Logger.log('Added eth phunk', `${hashId.toLowerCase()}`);
+    Logger.log('Added ethscription', `${hashId.toLowerCase()}`);
 
     return {
       txId: txn.hash.toLowerCase() + txn.transactionIndex,
@@ -766,4 +710,54 @@ export class EthscriptionsService {
       };
     }
   }
+
+  // /**
+  //  * Adds an ethscription to the database.
+  //  * @param body - The body of the ethscription.
+  //  * @returns A promise that resolves to an array of events.
+  //  */
+  // async addEthscription(body: { hash: string, attributes: AttributeItem }): Promise<any> {
+
+  //   let { hash, attributes } = body;
+
+  //   const transaction = await this.web3SvcL1.getTransaction(hash as `0x${string}`)
+  //   const block = await this.web3SvcL1.getBlock({ blockNumber: Number(transaction.blockNumber) });
+  //   const timestamp = new Date(Number(block.timestamp) * 1000);
+
+  //   const { input } = transaction;
+
+  //   // Make sure its an ethscription
+  //   const stringData = hexToString(input.toString() as `0x${string}`);
+  //   const cleanedString = stringData.replace(/\x00/g, '');
+  //   if (!cleanedString.startsWith('data:')) return [];
+
+  //   // Create sha and check if it exists
+  //   const sha = createHash('sha256').update(cleanedString).digest('hex');
+  //   const [ existsLocal, existsGlobal ] = await Promise.all([
+  //     this.sbSvc.checkEthscriptionExistsBySha(sha),
+  //     this.dataSvc.getEthscriptionByHashId(hash)
+  //   ]);
+
+  //   // Only process ones that don't already exist locally
+  //   if (existsLocal) return;
+
+  //   // Only process ones that already exist globally (ethscriptions)
+  //   if (!existsGlobal) return;
+
+  //   // Set the sha
+  //   attributes.sha = sha;
+
+  //   // Mime type
+  //   const base64Header = cleanedString.split(',')[0];
+  //   const mimeType = base64Header.match(/data:([^;]*);?/)[1];
+
+  //   // Create image buffer from data uri
+  //   const imageBuffer = Buffer.from(cleanedString.split(',')[1], 'base64');
+
+  //   // Upload image to storage bucket
+  //   await this.sbSvc.uploadImage(sha, imageBuffer, mimeType);
+
+  //   const event = await this.processEthscriptionCreationEvent(transaction, timestamp, attributes);
+  //   if (event) await this.sbSvc.addEvents([event]);
+  // }
 }

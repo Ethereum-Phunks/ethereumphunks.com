@@ -1,6 +1,5 @@
 import { MiddlewareConsumer, Module, RequestMethod } from '@nestjs/common';
 import { HttpModule } from '@nestjs/axios';
-import { ConfigModule } from '@nestjs/config';
 
 import { SharedModule } from '@/modules/shared/shared.module';
 import { QueueModule } from '@/modules/queue/queue.module';
@@ -22,11 +21,9 @@ import { ProcessingService } from '@/services/processing.service';
 
 import { ApiKeyMiddleware } from '@/middleware/api-key.middleware';
 import { CommentsModule } from '@/modules/comments/comments.module';
+
 @Module({
   imports: [
-    // ConfigModule.forRoot({
-    //   isGlobal: true,
-    // }),
     HttpModule,
 
     NftModule,
@@ -38,7 +35,7 @@ import { CommentsModule } from '@/modules/comments/comments.module';
 
     NotifsModule,
     SharedModule,
-    TxPoolModule,
+    ...(Number(process.env.TX_POOL) ? [TxPoolModule] : []),
     ...(Number(process.env.MINT) ? [MintModule] : []),
 
     CommentsModule

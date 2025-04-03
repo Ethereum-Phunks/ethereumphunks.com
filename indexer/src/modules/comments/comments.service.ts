@@ -14,6 +14,13 @@ export class CommentsService {
     private readonly utilitySvc: UtilityService
   ) {}
 
+  /**
+   * Processes the comments for a given transaction.
+   * @param transaction - The transaction object.
+   * @param receipt - The transaction receipt object.
+   * @param createdAt - The creation date of the transaction.
+   * @returns A promise that resolves to void.
+   */
   async processComments(
     transaction: Transaction,
     receipt: TransactionReceipt,

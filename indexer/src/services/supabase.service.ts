@@ -205,7 +205,7 @@ export class SupabaseService {
    * @param sha - The SHA to check
    * @returns The attribute data if it's an EthPhunk, null otherwise
    */
-  async checkIsEthPhunk(sha: string): Promise<AttributeItem | null> {
+  async checkIsCuratedCollection(sha: string): Promise<AttributeItem | null> {
     const response: AttributesResponse = await supabase
       .from('attributes')
       .select('*')
@@ -307,6 +307,25 @@ export class SupabaseService {
   // Storage /////////////////////////////////////////////////////////////////////
   ////////////////////////////////////////////////////////////////////////////////
 
+  /**
+   * Fetches collection data from storage
+   * @param slug - The slug of the collection
+   * @returns The collection data
+   */
+  async getCollectionData(slug: string): Promise<any> {
+    const { data, error } = await supabase.storage
+      .from('mint-data')
+      .download(`${slug}.json`);
+
+    if (error) throw error;
+    return JSON.parse(await data.text());
+  }
+
+  /**
+   * Fetches a mint image by its SHA
+   * @param sha - The SHA of the image
+   * @returns The image data
+   */
   async getMintImageBySha(sha: string): Promise<{ buffer: Buffer; mimeType: string }> {
     const { data, error } = await supabase.storage
       .from('mint-images')
@@ -361,8 +380,12 @@ export class SupabaseService {
     return false;
   }
 
-  // test = 0;
-  async fetchMintProgress(slug: string): Promise<number> {
+  /**
+   * Fetches the mint progress for a collection
+   * @param slug - The slug of the collection
+   * @returns The mint progress and total supply
+   */
+  async fetchMintProgress(slug: string): Promise<{ progress: number, total: number }> {
     const query = supabase
       .from('ethscriptions' + this.suffix)
       .select('*', { count: 'exact', head: true })
@@ -370,8 +393,9 @@ export class SupabaseService {
 
     const { count, error } = await query;
     if (error) throw error;
-    // this.test = this.test + 100;
-    return count;
+
+    const totalSupply = await this.getCollectionBySlug(slug);
+    return { progress: count, total: totalSupply.supply };
   }
 
   ////////////////////////////////////////////////////////////////////////////////
@@ -1005,6 +1029,11 @@ export class SupabaseService {
     return data[0].locked;
   }
 
+  /**
+   * Unlocks an ethscription
+   * @param hashId - The hash ID of the ethscription to unlock
+   * @returns True if the ethscription was unlocked, false otherwise
+   */
   async unlockEthscription(hashId: string): Promise<boolean> {
     const response: EthscriptionResponse = await supabase
       .from('ethscriptions' + this.suffix)
@@ -1023,6 +1052,12 @@ export class SupabaseService {
   // L2 //////////////////////////////////////////////////////////////////////////
   ////////////////////////////////////////////////////////////////////////////////
 
+  /**
+   * Adds an NFT to the L2 database
+   * @param tokenId - The token ID of the NFT
+   * @param owner - The owner of the NFT
+   * @param hashId - The hash ID of the NFT
+   */
   async addNftL2(
     tokenId: number,
     owner: string,
@@ -1040,6 +1075,11 @@ export class SupabaseService {
     if (error) throw error;
   }
 
+  /**
+   * Updates the owner of an NFT in the L2 database
+   * @param tokenId - The token ID of the NFT
+   * @param owner - The new owner of the NFT
+   */
   async updateNftL2(tokenId: number, owner: string): Promise<void> {
     const response: EventResponse = await supabase
       .from('nfts' + this.suffix)
@@ -1050,6 +1090,11 @@ export class SupabaseService {
     if (error) throw error;
   }
 
+  /**
+   * Removes an NFT from the L2 database
+   * @param tokenId - The token ID of the NFT
+   * @param hashId - The hash ID of the NFT
+   */
   async removeNftL2(tokenId: number, hashId: string): Promise<void> {
     const response: EventResponse = await supabase
       .from('nfts' + this.suffix)
@@ -1061,6 +1106,10 @@ export class SupabaseService {
     if (error) throw error;
   }
 
+  /**
+   * Adds an event to the L2 database
+   * @param event - The event to add
+   */
   async addEventL2(event: any): Promise<void> {
     const response: EventResponse = await supabase
       .from('l2_events' + this.suffix)

@@ -52,7 +52,7 @@ export class TxPoolService implements OnModuleInit {
    * Initializes the service by starting polling
    */
   async onModuleInit() {
-    if (Number(process.env.TXPOOL)) {
+    if (Number(process.env.TX_POOL)) {
       await this.startPolling();
     }
   }
