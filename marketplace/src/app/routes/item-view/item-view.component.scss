@@ -211,6 +211,29 @@ app-phunk-billboard {
     position: relative;
     padding: 2rem 0;
 
+    .form-group {
+      &.private-sale {
+        padding: 2rem;
+        margin-bottom: 1rem;
+
+        background-color: rgba(var(--background), 1);
+        color: rgba(var(--highlight), 1);
+
+        label {
+          color: rgba(var(--highlight), 1);
+        }
+
+        input {
+          color: rgba(var(--highlight), 1);
+          background-color: rgba(var(--dark-grey), 1);
+
+          &::placeholder {
+            color: rgba(var(--highlight), .5);
+          }
+        }
+      }
+    }
+
     button,
     .button {
       display: flex;
@@ -235,10 +258,30 @@ app-phunk-billboard {
         background-repeat: no-repeat;
       }
 
+      &.private-sale {
+        background: none;
+        border: .2rem solid rgba(var(--background), 1);
+        color: rgba(var(--background), 1);
+
+        font-size: 1.4rem;
+        font-weight: 700;
+
+        padding: .5rem 1rem;
+        margin: 0;
+
+        width: auto;
+      }
+
       &.active {
         background: none;
         color: rgba(var(--highlight), 1);
         box-shadow: 0 .2rem 0 0 rgba(var(--highlight), 1);
+
+        &.private-sale {
+          background: rgba(var(--background), 1);
+          border: .2rem solid rgba(var(--background), 1);
+          color: rgba(var(--highlight), 1);
+        }
       }
     }
 

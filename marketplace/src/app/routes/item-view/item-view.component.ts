@@ -1,7 +1,7 @@
-import { AfterViewInit, Component, ElementRef, OnDestroy, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, ActivatedRoute, RouterModule } from '@angular/router';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { ViewChild, ViewChildren, ElementRef, QueryList, Component, signal } from '@angular/core';
 
 import { signMessage, signTypedData } from '@wagmi/core';
 import { HttpClient } from '@angular/common/http';
@@ -44,6 +44,15 @@ import { upsertNotification } from '@/state/actions/notification.actions';
 
 import { setChat } from '@/state/actions/chat.actions';
 
+interface ActionsState {
+  sell: boolean;
+  withdraw: boolean;
+  transfer: boolean;
+  escrow: boolean;
+  bridge: boolean;
+  privateSale: boolean;
+};
+
 @Component({
   standalone: true,
   imports: [
@@ -71,27 +80,32 @@ import { setChat } from '@/state/actions/chat.actions';
 })
 export class ItemViewComponent {
 
+  objectValues = Object.values;
+
   @ViewChild('sellPriceInput') sellPriceInput!: ElementRef<HTMLInputElement>;
   // @ViewChild('revShareInput') revShareInput!: ElementRef<HTMLInputElement>;
   @ViewChild('transferAddressInput') transferAddressInput!: ElementRef<HTMLInputElement>;
+
+  @ViewChildren('collapsable') collapsable!: QueryList<ElementRef<HTMLDivElement>>;
 
   explorerUrl = environment.explorerUrl;
   externalMarketUrl = environment.externalMarketUrl;
   escrowAddress = environment.marketAddress;
   bridgeAddress = environment.bridgeAddress;
 
-  sellActive: boolean = false;
-  withdrawActive: boolean = false;
-  transferActive: boolean = false;
-  escrowActive: boolean = false;
-  bridgeActive: boolean = false;
+  actionsState = signal<ActionsState>({
+    sell: false,
+    withdraw: false,
+    transfer: false,
+    escrow: false,
+    bridge: false,
+    privateSale: false,
+  });
 
   transferAddress = new FormControl<string | null>('');
   listPrice = new FormControl<number | undefined>(undefined);
   // revShare = new FormControl<number | undefined>(undefined);
   listToAddress = new FormControl<string | null>('');
-
-  objectValues = Object.values;
 
   singlePhunk$ = this.route.params.pipe(
     filter((params: any) => !!params.hashId),
@@ -127,8 +141,6 @@ export class ItemViewComponent {
   theme$ = this.store.select(appStateSelectors.selectTheme);
   usd$ = this.store.select(dataStateSelectors.selectUsd);
 
-  private destroy$ = new Subject<void>();
-
   scrollY$ = fromEvent(document, 'scroll').pipe(
     map(() => (window.scrollY / 2) * -1),
   );
@@ -150,42 +162,51 @@ export class ItemViewComponent {
 
   sellPhunk(): void {
     this.closeAll();
-    this.sellActive = true;
+    this.actionsState.update((state) => ({ ...state, sell: true }));
     setTimeout(() => this.sellPriceInput?.nativeElement.focus(), 0);
   }
 
   escrowPhunk(): void {
     this.closeAll();
-    this.escrowActive = true;
+    this.actionsState.update((state) => ({ ...state, escrow: true }));
   }
 
   transferPhunkAction(): void {
     this.closeAll();
-    this.transferActive = true;
+    this.actionsState.update((state) => ({ ...state, transfer: true }));
     setTimeout(() => this.transferAddressInput?.nativeElement.focus(), 0);
   }
 
   bridgePhunkAction(): void {
     this.closeAll();
-    this.bridgeActive = true;
+    this.actionsState.update((state) => ({ ...state, bridge: true }));
+  }
+
+  privateSalePhunkAction(): void {
+    this.actionsState.update((state) => ({ ...state, privateSale: true }));
   }
 
   closeListing(): void {
-    this.sellActive = false;
+    this.actionsState.update((state) => ({ ...state, sell: false }));
+    this.closePrivateSale();
     this.clearAll();
   }
 
   closeEscrow(): void {
-    this.escrowActive = false;
+    this.actionsState.update((state) => ({ ...state, escrow: false }));
   }
 
   closeTransfer(): void {
-    this.transferActive = false;
+    this.actionsState.update((state) => ({ ...state, transfer: false }));
     this.clearAll();
   }
 
   closeBridge(): void {
-    this.bridgeActive = false;
+    this.actionsState.update((state) => ({ ...state, bridge: false }));
+  }
+
+  closePrivateSale(): void {
+    this.actionsState.update((state) => ({ ...state, privateSale: false }));
   }
 
   clearAll(): void {
