@@ -11,7 +11,9 @@ export class SortPipe implements PipeTransform {
     if (!args) return value;
 
     const sort = args[0];
-    const type = args[1];
+    const marketType = args[1];
+
+    if (marketType === 'all') return value;
 
     let sorted = [...value];
 
@@ -21,8 +23,8 @@ export class SortPipe implements PipeTransform {
     };
 
     const priceComparison = (a: Phunk, b: Phunk, isLowToHigh: boolean) => {
-      const aPrice = type === 'bids' ? Number(a.bid?.value || '0') : Number(a.listing?.minValue || '0');
-      const bPrice = type === 'bids' ? Number(b.bid?.value || '0') : Number(b.listing?.minValue || '0');
+      const aPrice = marketType === 'bids' ? Number(a.bid?.value || '0') : Number(a.listing?.minValue || '0');
+      const bPrice = marketType === 'bids' ? Number(b.bid?.value || '0') : Number(b.listing?.minValue || '0');
       const aVal = aPrice ? aPrice : Infinity;
       const bVal = bPrice ? bPrice : Infinity;
       return isLowToHigh ? aVal - bVal : bVal - aVal;

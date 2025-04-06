@@ -124,7 +124,6 @@ export class MarketStateEffects {
         map((data: MarketState['activeMarketRouteData']) => data.data)
       );
     }),
-    // tap((data) => console.log('fetchAll$', data)),
     map((all: Phunk[]) => marketStateActions.setAll({ all })),
   ));
 

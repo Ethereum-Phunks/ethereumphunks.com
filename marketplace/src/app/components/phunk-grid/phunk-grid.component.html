@@ -8,6 +8,7 @@
     let i = $index;
   ) {
     @if (i < limit) {
+      <!-- {{ phunk.listing | json }} -->
       <ng-container *ngTemplateOutlet="phunkItem; context:{ $implicit: phunk, index: i }" />
     }
   } @empty {
@@ -55,13 +56,13 @@
       [class.listing]="
         (
           marketType === 'listings' ||
-          (marketType === 'owned' && viewType === 'market')
+          ((marketType === 'owned' || marketType === 'all') && viewType === 'market')
         ) && phunk.listing
       "
       [class.bid]="
         (
           marketType === 'bids' ||
-          (marketType === 'owned' && viewType === 'market')
+          ((marketType === 'owned' || marketType === 'all') && viewType === 'market')
         ) && phunk.bid
       ">
 
@@ -101,7 +102,8 @@
 
             @if (
               marketType === 'listings' ||
-              marketType === 'owned'
+              marketType === 'owned' ||
+              marketType === 'all'
             ) {
               @if (phunk.listing; as listing) {
                 <p i18n>
@@ -112,7 +114,8 @@
             }
 
             @if (
-              marketType === 'bids'
+              marketType === 'bids' ||
+              marketType === 'all'
             ) {
               @if (phunk.bid; as bid) {
                 <p i18n>
