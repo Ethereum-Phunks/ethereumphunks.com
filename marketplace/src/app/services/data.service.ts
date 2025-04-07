@@ -167,7 +167,7 @@ export class DataService {
     return this.getAttributes(slug).pipe(
       map((res: any) => {
         return phunks.map((item: Phunk) => {
-          const attributes = item.sha ? res[item.sha].sort((a: Attribute, b: Attribute) => {
+          const attributes = item.sha ? res[item.sha]?.sort((a: Attribute, b: Attribute) => {
             if (a.k === "Sex" || a.k === "Type") return -1;
             if (b.k === "Sex" || b.k === "Type") return 1;
             return 0;

@@ -36,7 +36,7 @@ export class MarketStateEffects {
         marketStateActions.setMarketType({ marketType: routeParams['marketType'] }),
       ];
 
-      // console.log({ payload, queryParams, routeParams });
+      // console.log({ payload, queryParams, routeParams, config });
 
       // Use route params if available
       let marketSlug = routeParams['slug'];

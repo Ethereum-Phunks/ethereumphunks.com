@@ -75,65 +75,9 @@ export class DataStateEffects {
     map((leaderboard) => dataStateActions.setLeaderboard({ leaderboard })),
   ));
 
-  // When the database is updated
-  // dbEventTriggered$ = createEffect(() => this.actions$.pipe(
-  //   ofType(dataStateActions.dbEventTriggered),
-  //   withLatestFrom(this.store.select(dataStateSelectors.selectSinglePhunk)),
-  //   map(([action, singlePhunk]) => {
-  //     // Check if the event is for the active phunk
-  //     const newEvent = action.payload.new as Event;
-  //     this.checkEventIsActiveSinglePhunk(newEvent, singlePhunk);
-  //     return newEvent;
-  //   }),
-  //   // Start with the throttle
-  //   throttleTime(3000, asyncScheduler, {
-  //     leading: true, // emit the first value immediately
-  //     trailing: true // emit the last value in the window
-  //   }),
-  //   map((event) => marketStateActions.triggerDataRefresh()),
-  // ));
-
-  // fetchSingle$ = createEffect(() => this.actions$.pipe(
-  //   ofType(dataStateActions.fetchSinglePhunk),
-  //   // Reset the single phunk
-  //   withLatestFrom(this.store.select(dataStateSelectors.selectSinglePhunk)),
-  //   tap(([action, phunk]) => {
-  //     const cleanPhunk = phunk ? { ...phunk, loading: true } : null;
-  //     this.store.dispatch(dataStateActions.setSinglePhunk({ phunk: cleanPhunk }))
-  //   }),
-  //   switchMap(([action]) => this.dataSvc.fetchSinglePhunk(action.phunkId).pipe(
-  //     switchMap((phunk) => {
-  //       // console.log({phunk})
-  //       if (!phunk.isSupported) {
-  //         return this.dataSvc.fetchUnsupportedItem(action.phunkId);
-  //       }
-  //       return of(phunk);
-  //     })
-  //   )),
-  //   // tap((phunk) => console.log('fetchSingle$', phunk)),
-  //   mergeMap((phunk) => [
-  //     dataStateActions.setSinglePhunk({ phunk }),
-  //     marketStateActions.setMarketSlug({ marketSlug: phunk.slug }),
-  //   ]),
-  // ));
-
-  // refreshSingle$ = createEffect(() => this.actions$.pipe(
-  //   ofType(dataStateActions.refreshSinglePhunk),
-  //   withLatestFrom(this.store.select(dataStateSelectors.selectSinglePhunk)),
-  //   filter(([action, phunk]) => !!phunk),
-  //   map(([action, phunk]) => dataStateActions.fetchSinglePhunk({ phunkId: `${phunk!.hashId}` })),
-  // ));
-
   constructor(
     private store: Store<GlobalState>,
     private actions$: Actions,
     private dataSvc: DataService
   ) {}
-
-  // checkEventIsActiveSinglePhunk(event: Event, singlePhunk: Phunk | null) {
-  //   if (!singlePhunk) return;
-  //   if (event.hashId === singlePhunk.hashId) {
-  //     this.store.dispatch(dataStateActions.refreshSinglePhunk());
-  //   }
-  // }
 }
