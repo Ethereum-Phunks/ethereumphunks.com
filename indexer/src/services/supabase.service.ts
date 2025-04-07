@@ -314,6 +314,7 @@ export class SupabaseService {
    * @returns The collection data
    */
   async getCollectionData(slug: string): Promise<any> {
+    // Requires a service role token
     const { data, error } = await supabase.storage
       .from('mint-data')
       .download(`${slug}.json`);
@@ -328,6 +329,7 @@ export class SupabaseService {
    * @returns The image data
    */
   async getMintImageBySha(sha: string): Promise<{ buffer: Buffer; mimeType: string }> {
+    // Requires a service role token
     const { data, error } = await supabase.storage
       .from('mint-images')
       .download(`${sha}`);
