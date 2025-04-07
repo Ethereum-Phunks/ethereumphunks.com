@@ -9,10 +9,12 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
   app.enableCors({
-    origin: process.env.ALLOWED_ORIGINS,
+    origin: (origin, callback) => {
+      const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',').map(o => o.trim()) || [];
+      callback(null, allowedOrigins.includes(origin) ? origin : false);
+    },
     methods: ['GET', 'POST']
   });
-
 
   const customLogger = app.get(CustomLogger);
   app.useLogger(customLogger);

@@ -9,7 +9,10 @@ import { chain } from '@/constants/ethereum';
 
 @WebSocketGateway({
   cors: {
-    origin: process.env.ALLOWED_ORIGINS,
+    origin: (origin, callback) => {
+      const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',').map(o => o.trim()) || [];
+      callback(null, allowedOrigins.includes(origin) ? origin : false);
+    },
     methods: ['GET']
   }
 })
