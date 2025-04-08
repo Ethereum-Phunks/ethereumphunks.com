@@ -5,14 +5,11 @@ import { Store } from '@ngrx/store';
 
 import { GlobalState, Notification } from '@/models/global-state';
 
-import { PhunkImageComponent } from '@/components/phunk-image/phunk-image.component';
 import { NotificationComponent } from './notif/notification.component';
-
-import { WalletAddressDirective } from '@/directives/wallet-address.directive';
 
 import * as notificationSelectors from '@/state/selectors/notification.selectors';
 
-import { map, tap } from 'rxjs';
+import { map } from 'rxjs';
 
 export type TxFunction = 'sendToEscrow' | 'phunkNoLongerForSale' | 'offerPhunkForSale' | 'withdrawBidForPhunk' | 'acceptBidForPhunk' | 'buyPhunk' | 'enterBidForPhunk' | 'transferPhunk' | 'withdrawPhunk';
 
@@ -23,9 +20,7 @@ export type TxFunction = 'sendToEscrow' | 'phunkNoLongerForSale' | 'offerPhunkFo
     CommonModule,
     RouterModule,
 
-    PhunkImageComponent,
     NotificationComponent,
-    WalletAddressDirective
   ],
   templateUrl: './notifications.component.html',
   styleUrls: ['./notifications.component.scss']

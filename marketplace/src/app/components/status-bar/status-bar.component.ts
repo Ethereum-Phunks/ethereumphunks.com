@@ -1,5 +1,5 @@
-import { Component, effect, inject, Injector, input, signal, untracked } from '@angular/core';
-import { AsyncPipe, DecimalPipe, JsonPipe, NgTemplateOutlet } from '@angular/common';
+import { Component, effect, input, signal, untracked } from '@angular/core';
+import { AsyncPipe, DecimalPipe, NgTemplateOutlet } from '@angular/common';
 
 import { Store } from '@ngrx/store';
 import { GlobalState } from '@/models/global-state';
@@ -19,7 +19,6 @@ import { environment } from 'src/environments/environment';
   standalone: true,
   imports: [
     AsyncPipe,
-    JsonPipe,
     DecimalPipe,
     NgTemplateOutlet,
 

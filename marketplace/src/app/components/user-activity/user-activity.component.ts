@@ -4,22 +4,19 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 
 import { Store } from '@ngrx/store';
-import { LazyLoadImageModule } from 'ng-lazyload-image';
 import { TimeagoModule } from 'ngx-timeago';
+import { LazyLoadImageModule } from 'ng-lazyload-image';
+import { switchMap } from 'rxjs';
 
 import { WalletAddressDirective } from '@/directives/wallet-address.directive';
 
 import { DataService } from '@/services/data.service';
 
-import { TokenIdParsePipe } from '@/pipes/token-id-parse.pipe';
 import { WeiToEthPipe } from '@/pipes/wei-to-eth.pipe';
-import { CalcPipe } from '@/pipes/calculate.pipe';
-import { FormatCashPipe } from '@/pipes/format-cash.pipe';
 
 import { GlobalState } from '@/models/global-state';
 
 import * as dataStateSelectors from '@/state/selectors/data-state.selectors';
-import { switchMap } from 'rxjs';
 
 @Component({
   standalone: true,
@@ -31,10 +28,7 @@ import { switchMap } from 'rxjs';
 
     WalletAddressDirective,
 
-    TokenIdParsePipe,
     WeiToEthPipe,
-    CalcPipe,
-    FormatCashPipe
   ],
   selector: 'app-user-activity',
   templateUrl: './user-activity.component.html',
@@ -65,10 +59,5 @@ export class UserActivityComponent {
   constructor(
     private store: Store<GlobalState>,
     public dataSvc: DataService
-  ) {
-
-    effect(() => {
-      // console.log('UserActivityComponent: address', this.address());
-    });
-  }
+  ) {}
 }
