@@ -114,7 +114,7 @@ export type TxFunction =
   | 'mint';
 
 export interface TraitFilter {
-  [key: string]: string;
+  [key: string]: string | null;
 }
 
 export interface TxFilterItem {

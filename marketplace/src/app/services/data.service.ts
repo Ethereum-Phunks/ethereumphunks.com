@@ -6,14 +6,16 @@ import { Store } from '@ngrx/store';
 import { Web3Service } from '@/services/web3.service';
 
 import { EventType, GlobalConfig, GlobalState } from '@/models/global-state';
-import { Attribute, Event, Listing, Phunk } from '@/models/db';
+import { Event, Listing, Phunk } from '@/models/db';
+import { Attribute } from '@/models/attributes';
 import { MarketState } from '@/models/market.state';
 import { CommentWithReplies } from '@/models/comment';
 import { Collection } from '@/models/data.state';
+import { AttributeItem } from '@/models/attributes';
 
 import { createClient, RealtimePostgresUpdatePayload, RealtimePostgresInsertPayload } from '@supabase/supabase-js'
 
-import { Observable, of, from, forkJoin, firstValueFrom, EMPTY, timer, merge, filter, share, catchError, debounceTime, expand, map, reduce, switchMap, takeWhile, tap } from 'rxjs';
+import { Observable, of, from, forkJoin, firstValueFrom, EMPTY, timer, merge, filter, share, catchError, debounceTime, expand, map, reduce, switchMap, takeWhile, tap, shareReplay } from 'rxjs';
 
 import { createInstance } from 'localforage';
 
@@ -42,6 +44,8 @@ export class DataService {
     storeName: 'attributes',
     version: Number(environment.version.split('.').join('')),
   });
+
+  private attributeCache = new Map<string, Observable<AttributeItem | null>>();
 
   constructor(
     @Inject(Web3Service) private web3Svc: Web3Service,
@@ -144,16 +148,110 @@ export class DataService {
    * Fetches attributes for a collection
    * @param slug Collection slug
    */
-  getAttributes(slug: string): Observable<any> {
-    return from(this.storage.getItem(`${slug}__attributes`)).pipe(
-      switchMap((res: any) => {
-        if (res) return of(res);
-        return this.http.get(`${environment.staticUrl}/data/${slug}_attributes.json`).pipe(
-          tap((res: any) => this.storage.setItem(`${slug}__attributes`, res)),
-        );
-      }),
+  getAttributes(slug: string): Observable<AttributeItem | null> {
+    if (!this.attributeCache.has(slug)) {
+      const attributes$ = from(this.storage.getItem<AttributeItem>(`${slug}__attributes`)).pipe(
+        switchMap((res: AttributeItem | null) => {
+          if (res) return of(res);
+          return this.fetchAttributes(slug);
+        }),
+        shareReplay({ bufferSize: 1, refCount: true })
+      );
+      this.attributeCache.set(slug, attributes$);
+    }
+    return this.attributeCache.get(slug)!;
+  }
+
+  /**
+   * Fetches attributes for a collection from the static URL
+   * @param slug Collection slug
+   */
+  fetchAttributes(slug: string): Observable<AttributeItem> {
+    return this.http.get<AttributeItem>(`${environment.staticUrl}/data/${slug}_attributes.json`).pipe(
+      switchMap((res: AttributeItem) => from(this.cacheAttributes(slug, res))),
+      tap((res: AttributeItem) => this.createFilters(slug, res)),
     );
   }
+
+  /**
+   * Caches attributes for a collection
+   * @param slug Collection slug
+   * @param attributes Attributes
+   */
+  private async cacheAttributes(slug: string, attributes: AttributeItem) {
+    const stored = await this.storage.setItem<AttributeItem>(`${slug}__attributes`, attributes);
+    return stored;
+  }
+
+  /**
+   * Creates filters for a collection
+   * @param slug Collection slug
+   * @param attributes Attributes
+   */
+  private async createFilters(slug: string, attributes: AttributeItem) {
+    // Create a map to store unique attribute keys and their possible values
+    const attributeMap = new Map<string, Set<string>>();
+
+    // Iterate through all attributes for each item
+    Object.values(attributes).forEach((item: Attribute[]) => {
+      item.forEach((attribute: Attribute) => {
+        // Skip Description and Name attributes since they aren't used for filtering
+        if (attribute.k === 'Description' || attribute.k === 'Name') return;
+
+        // Initialize a new Set for this attribute key if it doesn't exist
+        if (!attributeMap.has(attribute.k)) {
+          attributeMap.set(attribute.k, new Set());
+        }
+
+        // Get the attribute values
+        const value = attribute.v;
+        // Handle both array and single string values
+        if (Array.isArray(value)) {
+          // Add each value from the array to the Set
+          value.forEach(v => attributeMap.get(attribute.k)?.add(v));
+        } else {
+          // Add the single value to the Set
+          attributeMap.get(attribute.k)?.add(value);
+        }
+      });
+    });
+
+    // Convert the Map of Sets into a plain object with arrays
+    const attributeObject: { [key: string]: string[] } = {};
+    attributeMap.forEach((values, key) => {
+      // Sort values before converting to array
+      const sortedValues = Array.from(values).sort((a, b) => {
+        // Try to convert to numbers for comparison
+        const numA = Number(a);
+        const numB = Number(b);
+
+        // If both are valid numbers, compare numerically
+        if (!isNaN(numA) && !isNaN(numB)) {
+          return numA - numB;
+        }
+
+        // Otherwise compare as strings
+        return a.localeCompare(b);
+      });
+
+      attributeObject[key] = sortedValues;
+    });
+
+    // Store the filters object in local storage and return it
+    const stored = await this.storage.setItem(`${slug}__filters`, attributeObject);
+    return stored;
+  }
+
+  /**
+   * Gets filters for a collection
+   * @param slug Collection slug
+   */
+  async getFilters(slug: string): Promise<{ [key: string]: string[] } | null> {
+    const stored = await this.storage.getItem<{ [key: string]: string[] }>(`${slug}__filters`);
+    return stored;
+  }
+
+  // private createRarity() {}
 
   /**
    * Adds attributes to an array of Phunks
@@ -167,11 +265,12 @@ export class DataService {
     return this.getAttributes(slug).pipe(
       map((res: any) => {
         return phunks.map((item: Phunk) => {
-          const attributes = item.sha ? res[item.sha]?.sort((a: Attribute, b: Attribute) => {
+          const originalAttributes = item.sha ? res[item.sha] : [];
+          const attributes = [...originalAttributes].sort((a: Attribute, b: Attribute) => {
             if (a.k === "Sex" || a.k === "Type") return -1;
             if (b.k === "Sex" || b.k === "Type") return 1;
             return 0;
-          }) : [];
+          });
 
           return { ...item, attributes };
         });
@@ -887,7 +986,7 @@ export class DataService {
   ): Observable<MarketState['activeMarketRouteData']> {
 
     return from(
-      supabase.rpc(`fetch_all_with_pagination${this.suffix}`, {
+      supabase.rpc(`fetch_all_with_pagination_new${this.suffix}`, {
         p_slug: slug,
         p_from_num: fromNum,
         p_to_num: toNum,
@@ -902,7 +1001,7 @@ export class DataService {
             return {
               data: data.data.map((item: Phunk) => ({
                 ...item,
-                attributes: attributes[item.sha],
+                attributes: attributes?.[item.sha] || [],
               } as Phunk)),
               total: data.total_count
             }

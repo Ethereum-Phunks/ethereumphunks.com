@@ -1,3 +1,4 @@
+import { Attribute } from './attributes';
 import { Collection } from './data.state';
 import { EventType } from './global-state';
 
@@ -97,9 +98,4 @@ export interface Sha {
 export interface User {
   address: string
   createdAt: Date
-}
-
-export interface Attribute {
-  k: string;
-  v: string;
 }

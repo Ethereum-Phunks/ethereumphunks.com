@@ -7,22 +7,21 @@ import { Store } from '@ngrx/store';
 import { NgSelectModule } from '@ng-select/ng-select';
 
 import { DataService } from '@/services/data.service';
+import { IsNumberPipe } from '@/pipes/is-number';
 import { GlobalState } from '@/models/global-state';
 
 import { setActiveTraitFilters } from '@/state/actions/market-state.actions';
 import { selectActiveTraitFilters } from '@/state/selectors/market-state.selectors';
 
-import { Subject, switchMap, tap } from 'rxjs';
-
-import { filterData } from '@/constants/collections';
-
+import { tap } from 'rxjs';
 @Component({
   selector: 'app-market-filters',
   standalone: true,
   imports: [
     CommonModule,
     FormsModule,
-    NgSelectModule
+    NgSelectModule,
+    IsNumberPipe
   ],
   templateUrl: './market-filters.component.html',
   styleUrls: ['./market-filters.component.scss']
@@ -32,13 +31,13 @@ export class MarketFiltersComponent {
 
   slug = input.required<string | undefined>();
 
-  filterData: any = {};
+  filterData: { [key: string]: string[] | number[] } = {};
   traitCount!: number;
   objectKeys = Object.keys;
 
-  activeFiltersModel: any = {};
+  activeTraitFilters: any = {};
   activeTraitFilters$ = this.store.select(selectActiveTraitFilters).pipe(
-    tap((filters) => this.activeFiltersModel = { ...filters }),
+    tap((filters) => this.activeTraitFilters = { ...filters }),
   );
 
   constructor(
@@ -46,14 +45,16 @@ export class MarketFiltersComponent {
     public dataSvc: DataService,
     private location: Location,
   ) {
-    effect(() => {
-      if (!this.slug()) return;
-      this.filterData = filterData[this.slug()!];
+    effect(async () => {
+      const slug = this.slug();
+      if (!slug) return;
+      const filters = await this.dataSvc.getFilters(slug);
+      this.filterData = filters || {};
     });
   }
 
-  selectFilter($event: any, key: string): void {
-    const filters = { ...this.activeFiltersModel };
+  selectFilter($event: any): void {
+    const filters = { ...this.activeTraitFilters };
     let urlParams = new HttpParams();
     Object.keys(filters).forEach((key) => {
       if (filters[key] === null) delete filters[key];

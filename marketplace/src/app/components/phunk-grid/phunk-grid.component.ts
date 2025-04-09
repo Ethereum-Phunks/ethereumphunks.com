@@ -15,17 +15,15 @@ import { Sort } from '@/models/pipes';
 
 import { DataService } from '@/services/data.service';
 
-import { TokenIdParsePipe } from '@/pipes/token-id-parse.pipe';
 import { WeiToEthPipe } from '@/pipes/wei-to-eth.pipe';
 import { FormatCashPipe } from '@/pipes/format-cash.pipe';
 import { SortPipe } from '@/pipes/sort.pipe';
-import { PropertiesPipe } from '@/pipes/properties';
+import { AttributeFilterPipe } from '@/pipes/attribute-filter';
 import { ImageUrlPipe } from '@/pipes/image-url.pipe';
 
 import { environment } from 'src/environments/environment';
 
 import * as dataStateSelectors from '@/state/selectors/data-state.selectors';
-import { selectWalletAddress } from '@/state/selectors/app-state.selectors';
 import * as marketStateActions from '@/state/actions/market-state.actions';
 
 @Component({
@@ -41,7 +39,7 @@ import * as marketStateActions from '@/state/actions/market-state.actions';
     WeiToEthPipe,
     FormatCashPipe,
     SortPipe,
-    PropertiesPipe,
+    AttributeFilterPipe,
     ImageUrlPipe,
   ],
   host:  {
