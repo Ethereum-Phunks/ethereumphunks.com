@@ -25,4 +25,13 @@
       </div>
     }
   }
+
+  @if (objectKeys(activeTraitFilters).length) {
+    <button
+      class="clear-filters"
+      (click)="clearFilters()">
+
+      Clear Filters
+    </button>
+  }
 }

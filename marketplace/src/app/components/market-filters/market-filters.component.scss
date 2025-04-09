@@ -3,11 +3,17 @@
 
 :host {
   display: grid;
-  grid-template-columns: repeat(5, calc((100% / 5) - 1.6rem));
-  column-gap: 2rem;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 2rem;
+
+  margin: 1rem 0 0;
+  padding: 2rem;
+
+  background-color: rgba(var(--dark-grey), 1);
+  border: .3rem solid rgba(var(--highlight), 1);
 
   .filter-group-wrapper {
-    padding: 0 0 1rem;
+    padding: 0;
     font-size: 1.4rem;
     font-weight: 600;
     width: 100%;
@@ -34,14 +40,15 @@
     }
   }
 
-  .clear {
-    button {
-      width: 100%;
-      height: 3.6rem;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      // border-radius: .2rem;
+  .clear-filters {
+    background: none;
+    color: rgba(var(--highlight), 1);
+    border-color: rgba(var(--background), 1);
+    font-size: 1.4rem;
+
+    &.disabled {
+      opacity: .5;
+      pointer-events: none;
     }
   }
 

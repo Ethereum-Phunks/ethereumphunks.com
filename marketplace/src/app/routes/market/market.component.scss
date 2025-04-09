@@ -78,11 +78,10 @@
 }
 
 .toolbar-wrapper {
-  margin-bottom: 2rem;
-
   button {
     height: 3.6rem;
     margin-left: 1rem;
+    border: .3rem solid rgba(var(--pink), 1);
 
     &.filters-button {
       position: relative;
@@ -112,7 +111,6 @@
     &.all-none {
       margin-left: 1rem;
       background: none;
-      border: .3rem solid rgba(var(--highlight), 1);
 
       &.all {
         background-color: rgba(var(--highlight), 1);
@@ -121,8 +119,11 @@
     }
 
     &.active {
-      background-color: rgba(var(--highlight), 1);
-      color: rgba(var(--black), 1);
+      position: relative;
+
+      background-color: rgba(var(--background), 1);
+      border-color: rgba(var(--highlight), 1);
+      color: rgba(var(--highlight), 1);
     }
 
     &.select {
@@ -136,12 +137,15 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
+    gap: 2rem;
 
     .left {}
 
     .right {
       display: flex;
       align-items: center;
+      justify-content: flex-end;
+      gap: 1rem;
     }
   }
 
@@ -207,45 +211,36 @@
     }
   }
 
+  .select-buttons {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 1rem;
+
+    button {
+      margin: 0;
+    }
+  }
+
   @media (max-width: $mobile) {
     button {
       margin: 0;
     }
 
     .toolbar {
-      flex-direction: column-reverse;
+      flex-direction: column;
       align-items: flex-start;
+      gap: 1rem;
 
       .left {
         width: 100%;
       }
 
       .right {
-        flex-direction: column;
-        align-items: stretch;
+        justify-content: space-between;
+        gap: 1rem;
+
         width: 100%;
-
-        .sort-wrapper {
-          padding: 0 0 1rem;
-
-          ng-select {
-            width: 100%;
-          }
-        }
-
-        .filters-button {
-          width: 100%;
-          margin-bottom: 1rem;
-        }
-
-        .select-buttons {
-          width: 100%;
-
-          button {
-            // width: 50%;
-            margin: 0;
-          }
-        }
       }
     }
 
@@ -292,6 +287,7 @@
 
   ng-select {
     min-width: 20rem;
+    // --height: 2.8rem;
   }
 
   &.disabled {
@@ -299,17 +295,20 @@
     opacity: .25;
     pointer-events: none;
   }
+
+  @media (max-width: $mobile) {
+    ng-select {
+      width: 100%;
+    }
+  }
 }
 
 .filter-wrapper {
   width: 100%;
-  margin-bottom: 2rem;
 }
 
 .grid-area-wrapper {
-  // display: grid;
-  // grid-template-columns: repeat(2, calc(100% / 2));
-  // grid-gap: 2rem;
+  padding-top: 1rem;
 }
 
 form {

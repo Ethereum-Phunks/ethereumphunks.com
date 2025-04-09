@@ -3,7 +3,7 @@ import { Router, ActivatedRoute, RouterModule } from '@angular/router';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { ViewChild, ViewChildren, ElementRef, QueryList, Component, signal } from '@angular/core';
 
-import { signMessage, signTypedData } from '@wagmi/core';
+import { signTypedData } from '@wagmi/core';
 import { HttpClient } from '@angular/common/http';
 
 import { Store } from '@ngrx/store';
@@ -29,14 +29,13 @@ import { UtilService } from '@/services/util.service';
 import { Phunk } from '@/models/db';
 import { GlobalState, Notification } from '@/models/global-state';
 
-import { Subject, distinctUntilChanged, filter, firstValueFrom, fromEvent, map, shareReplay, switchMap, tap } from 'rxjs';
+import { distinctUntilChanged, filter, firstValueFrom, fromEvent, map, shareReplay, switchMap, tap } from 'rxjs';
 
 import { environment } from 'src/environments/environment';
 
 import * as appStateActions from '@/state/actions/app-state.actions';
 import * as appStateSelectors from '@/state/selectors/app-state.selectors';
 
-import * as dataStateActions from '@/state/actions/data-state.actions';
 import * as dataStateSelectors from '@/state/selectors/data-state.selectors';
 
 import { selectNotifications } from '@/state/selectors/notification.selectors';

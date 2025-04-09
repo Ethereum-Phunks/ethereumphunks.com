@@ -604,6 +604,7 @@ export class MarketComponent {
       this.selected = {};
       this.deselected = [];
     }
+    this.filtersVisible = false;
   }
 
   clearSelectedAndClose() {
@@ -695,5 +696,10 @@ export class MarketComponent {
     });
 
     return [validItems, invalidItems];
+  }
+
+  toggleFilters() {
+    this.filtersVisible = !this.filtersVisible;
+    this.selectMultipleActive = false;
   }
 }

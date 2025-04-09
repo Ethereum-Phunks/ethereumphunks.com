@@ -2,7 +2,7 @@ import { Component, effect, input } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { HttpParams } from '@angular/common/http';
 import { CommonModule, Location } from '@angular/common';
-
+import { ActivatedRoute, Router } from '@angular/router';
 import { Store } from '@ngrx/store';
 import { NgSelectModule } from '@ng-select/ng-select';
 
@@ -37,13 +37,19 @@ export class MarketFiltersComponent {
 
   activeTraitFilters: any = {};
   activeTraitFilters$ = this.store.select(selectActiveTraitFilters).pipe(
-    tap((filters) => this.activeTraitFilters = { ...filters }),
+    tap((filters) => {
+      const newFilters = { ...filters };
+      delete newFilters.address;
+      this.activeTraitFilters = { ...newFilters };
+    }),
   );
 
   constructor(
     private store: Store<GlobalState>,
     public dataSvc: DataService,
     private location: Location,
+    private router: Router,
+    private route: ActivatedRoute,
   ) {
     effect(async () => {
       const slug = this.slug();
@@ -65,4 +71,9 @@ export class MarketFiltersComponent {
     this.store.dispatch(setActiveTraitFilters({ traitFilters: { ...filters } }));
   }
 
+  clearFilters() {
+    const activeParams = this.route.snapshot.queryParams;
+    const newParams = activeParams.address ? { address: activeParams.address } : {};
+    this.router.navigate([], { queryParams: newParams });
+  }
 }

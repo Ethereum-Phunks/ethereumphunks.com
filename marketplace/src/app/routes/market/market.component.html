@@ -41,13 +41,12 @@
 
       <div class="toolbar-wrapper">
         <div class="toolbar">
-          <div class="left"></div>
-
-          <div class="right">
+          <div class="left">
             @if (marketType !== 'all') {
               <div class="sort-wrapper">
                 <div class="label">Sort:</div>
                 <ng-select
+                  class="sort"
                   [(ngModel)]="activeSortModel"
                   [items]="sorts"
                   (change)="setSort($event)"
@@ -56,11 +55,13 @@
                 />
               </div>
             }
+          </div>
 
+          <div class="right">
             <button
               class="filters-button"
               [class.active]="filtersVisible"
-              (click)="filtersVisible = !filtersVisible">
+              (click)="toggleFilters()">
 
               @if ((activeTraitFilters$ | async); as filters) {
                 @if (objectKeys(filters).length) {
