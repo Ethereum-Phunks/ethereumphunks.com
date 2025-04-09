@@ -4,13 +4,17 @@ import { CommonModule } from '@angular/common';
 import { Store } from '@ngrx/store';
 import { FormControl, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 
+import { NgSelectModule } from '@ng-select/ng-select';
+import { firstValueFrom, tap, withLatestFrom } from 'rxjs';
+
 import { Web3Service } from '@/services/web3.service';
+import { DataService } from '@/services/data.service';
+
 import { GlobalState, HistoryItem } from '@/models/global-state';
 
 import * as appStateSelectors from '@/state/selectors/app-state.selectors';
 import * as appStateActions from '@/state/actions/app-state.actions';
-import { NgSelectModule } from '@ng-select/ng-select';
-import { firstValueFrom, map, of, switchMap, tap, withLatestFrom } from 'rxjs';
+import { selectMarketSlug } from '@/state/selectors/market-state.selectors';
 
 @Component({
   selector: 'app-search',
@@ -43,7 +47,8 @@ export class SearchComponent {
   constructor(
     private store: Store<GlobalState>,
     private router: Router,
-    private web3Svc: Web3Service
+    private web3Svc: Web3Service,
+    private dataSvc: DataService
   ) {
     router.events.pipe(
       withLatestFrom(this.store.select(appStateSelectors.selectIsSearchResult)),
@@ -76,8 +81,10 @@ export class SearchComponent {
       const isEns = addressInput?.includes('.eth');
       const isAddress = is0x && this.web3Svc.verifyAddress(addressInput);
       const possibleHashId = is0x && addressInput.length === 66;
+      const isNumber = !isNaN(Number(addressInput));
+      console.log({ isEns, isAddress, possibleHashId, isNumber });
 
-      if (!isEns && !isAddress && !possibleHashId) throw new Error('Invalid Search Parameters');
+      if (!isEns && !isAddress && !possibleHashId && !isNumber) throw new Error('Invalid Search Parameters');
 
       let address = addressInput;
       if (isEns) address = await this.web3Svc.getEnsOwner(addressInput);
@@ -85,6 +92,12 @@ export class SearchComponent {
 
       if (address) await this.router.navigate(['/', 'market', 'owned'], { queryParams: { address }});
       else if (possibleHashId) await this.router.navigate(['/', 'details', addressInput]);
+      else if (isNumber) {
+        const activeSlug = await firstValueFrom(this.store.select(selectMarketSlug));
+        const hashId = await this.dataSvc.getHashIdFromTokenId(activeSlug, addressInput);
+        if (hashId) await this.router.navigate(['/', 'details', hashId]);
+        else throw new Error('Invalid Search Parameters');
+      }
       else throw new Error('Invalid Search Parameters');
 
       // console.log({ isEns, isAddress, isTokenId, possibleHashId });

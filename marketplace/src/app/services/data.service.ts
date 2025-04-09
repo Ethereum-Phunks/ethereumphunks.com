@@ -611,10 +611,11 @@ export class DataService {
    * Gets hash ID from token ID
    * @param tokenId Token ID
    */
-  async getHashIdFromTokenId(tokenId: string): Promise<string | null> {
+  async getHashIdFromTokenId(slug: string, tokenId: string): Promise<string | null> {
     const query = supabase
       .from('ethscriptions' + this.suffix)
       .select('hashId')
+      .eq('slug', slug)
       .eq('tokenId', tokenId);
 
     const res = await query;
