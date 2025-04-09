@@ -110,7 +110,7 @@ export class DataService {
       changes$.pipe(switchMap(() => initial$))
     ).pipe(
       filter(config => !!config),
-      tap((config) => console.log('fetchGlobalConfig', config)),
+      // tap((config) => console.log('fetchGlobalConfig', config)),
     );
   }
 
