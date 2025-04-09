@@ -6,7 +6,9 @@
 
   <div class="search-wrapper">
     <app-search />
-    <app-collections-dropdown />
+    @if (isCuratedMarket) {
+      <app-collections-dropdown />
+    }
   </div>
 
   <div class="user-tools">

@@ -31,6 +31,8 @@ import { map, switchMap, tap } from 'rxjs';
 
 import anime from 'animejs';
 
+import { environment } from '@/../environments/environment';
+
 @Component({
   selector: 'app-menu',
   standalone: true,
@@ -93,6 +95,8 @@ export class MenuComponent {
   };
 
   menuTimeline!: anime.AnimeTimelineInstance;
+
+  isCuratedMarket = environment.curated;
 
   constructor(
     private store: Store<GlobalState>,

@@ -77,8 +77,14 @@ export class DataService {
         .eq('network', environment.chainId)
         .limit(1)
     ).pipe(
-      map(({ data }) => data?.[0]),
-      // tap((config) => console.log('fetchGlobalConfig', config)),
+      map(({ data }) => {
+        const config = data?.[0];
+        if (!config) return null;
+        if (!environment.curated) {
+          config.defaultCollection = environment.defaultCollection;
+        }
+        return config;
+      }),
     );
 
     const changes$ = new Observable(subscriber => {
@@ -99,8 +105,12 @@ export class DataService {
       return () => channel.unsubscribe();
     });
 
-    return merge(initial$, changes$).pipe(
+    return merge(
+      initial$,
+      changes$.pipe(switchMap(() => initial$))
+    ).pipe(
       filter(config => !!config),
+      tap((config) => console.log('fetchGlobalConfig', config)),
     );
   }
 
@@ -905,8 +915,15 @@ export class DataService {
             ...item.ethscription,
             previews: item.ethscription?.previews || [],
           }))
-          .sort((a: Collection, b: Collection) => a.id - b.id);
-      })
+          .sort((a: Collection, b: Collection) => a.id - b.id)
+          .filter((item: Collection) => {
+            if (!environment.curated) {
+              return item.slug === environment.defaultCollection;
+            }
+            return true;
+          });
+      }),
+      tap((res) => console.log('fetchCollections', res)),
     );
 
     // Realtime changes

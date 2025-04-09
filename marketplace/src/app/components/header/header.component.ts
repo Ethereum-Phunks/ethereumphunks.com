@@ -23,6 +23,8 @@ import * as dataStateSelectors from '@/state/selectors/data-state.selectors';
 
 import * as appStateActions from '@/state/actions/app-state.actions';
 
+import { environment } from '@/../environments/environment';
+
 @Component({
   standalone: true,
   imports: [
@@ -55,6 +57,8 @@ export class HeaderComponent {
 
   toggleTheme$ = new Subject<void>();
   toggleMenu$ = new Subject<void>();
+
+  isCuratedMarket = environment.curated;
 
   constructor(
     private store: Store<GlobalState>,

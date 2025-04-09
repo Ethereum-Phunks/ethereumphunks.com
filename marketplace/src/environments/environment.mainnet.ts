@@ -1,10 +1,13 @@
-import { version } from './version';
+import { curated, defaultCollection, version } from './app';
 
 export const environment = {
   env: 'mainnet',
   production: true,
   chainId: 1,
+
   version,
+  curated,
+  defaultCollection,
 
   rpcHttpProvider: 'https://eth-mainnet.g.alchemy.com/v2/19IQKn99eagaaRKD-uSOCE1aYEHLSnmL',
   explorerUrl: 'https://etherscan.io',

@@ -42,15 +42,19 @@
         </div>
       }
     }
-    <div
-      class="curated-button"
-      (click)="navigateMenu('curated')">
-      <span>Curated Collections</span>
 
-      <div class="arrow">
-        <ng-template [ngTemplateOutlet]="arrowIcon" />
+    @if (isCuratedMarket) {
+      <div
+        class="curated-button"
+        (click)="navigateMenu('curated')">
+
+        <span>Curated Collections</span>
+
+        <div class="arrow">
+          <ng-template [ngTemplateOutlet]="arrowIcon" />
+        </div>
       </div>
-    </div>
+    }
   </div>
 
   @if (address$ | async; as address) {

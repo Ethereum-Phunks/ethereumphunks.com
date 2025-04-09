@@ -1,10 +1,13 @@
-import { version } from './version';
+import { curated, defaultCollection, version } from './app';
 
 export const environment = {
   env: 'sepolia',
   production: true,
   chainId: 11155111,
+
   version,
+  curated,
+  defaultCollection,
 
   rpcHttpProvider: 'https://eth-sepolia.g.alchemy.com/v2/19IQKn99eagaaRKD-uSOCE1aYEHLSnmL',
   explorerUrl: 'https://sepolia.etherscan.io',
