@@ -15,6 +15,7 @@ import { GlobalState, HistoryItem } from '@/models/global-state';
 import * as appStateSelectors from '@/state/selectors/app-state.selectors';
 import * as appStateActions from '@/state/actions/app-state.actions';
 import { selectMarketSlug } from '@/state/selectors/market-state.selectors';
+import { setMarketSlug } from '@/state/actions/market-state.actions';
 
 @Component({
   selector: 'app-search',
@@ -85,14 +86,14 @@ export class SearchComponent {
 
       if (!isEns && !isAddress && !possibleHashId && !isNumber) throw new Error('Invalid Search Parameters');
 
+      const activeSlug = await firstValueFrom(this.store.select(selectMarketSlug));
       let address = addressInput;
       if (isEns) address = await this.web3Svc.getEnsOwner(addressInput);
       else address = this.web3Svc.verifyAddress(addressInput);
 
-      if (address) await this.router.navigate(['/', 'market', 'owned'], { queryParams: { address }});
+      if (address) await this.router.navigate(['/', activeSlug, 'market', 'owned'], { queryParams: { address }});
       else if (possibleHashId) await this.router.navigate(['/', 'details', addressInput]);
       else if (isNumber) {
-        const activeSlug = await firstValueFrom(this.store.select(selectMarketSlug));
         const hashId = await this.dataSvc.getHashIdFromTokenId(activeSlug, addressInput);
         if (hashId) await this.router.navigate(['/', 'details', hashId]);
         else throw new Error('Invalid Search Parameters');
