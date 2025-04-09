@@ -1,5 +1,6 @@
 @if (activeTraitFilters$ | async; as filters) {
   @for (key of objectKeys(filterData); track key; let i = $index) {
+
     @if (!(filterData[key][0] | isNumber)) {
       <div
         [id]="key"
@@ -13,9 +14,11 @@
           (change)="selectFilter($event)">
 
           @for (item of filterData[key]; track item) {
-            <ng-option [value]="item">
-              {{ item }}
-            </ng-option>
+            @if (!(item | isNumber)) {
+              <ng-option [value]="item">
+                {{ item.toString() | titlecase }}
+              </ng-option>
+            }
           }
 
           <!-- <ng-option [value]="'none'">
@@ -24,6 +27,7 @@
         </ng-select>
       </div>
     }
+
   }
 
   @if (objectKeys(activeTraitFilters).length) {

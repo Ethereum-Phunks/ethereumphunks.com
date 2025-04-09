@@ -261,7 +261,7 @@ export class DataService {
 
       // Add "none" option if the attribute isn't present in all items
       if (attributeCount.get(key) !== totalItems) {
-        sortedValues.push('none');
+        sortedValues.unshift('none');
       }
 
       attributeObject[key] = sortedValues;
@@ -294,7 +294,9 @@ export class DataService {
       map((res: any) => {
         return phunks.map((item: Phunk) => {
           const originalAttributes = item.sha ? res[item.sha] : [];
-          const attributes = [...originalAttributes].sort((a: Attribute, b: Attribute) => {
+          if (!originalAttributes) return item;
+
+          const attributes = [...originalAttributes]?.sort((a: Attribute, b: Attribute) => {
             if (a.k === "Sex" || a.k === "Type") return -1;
             if (b.k === "Sex" || b.k === "Type") return 1;
             return 0;

@@ -1,7 +1,7 @@
 import { Component, effect, input } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { HttpParams } from '@angular/common/http';
-import { CommonModule, Location } from '@angular/common';
+import { CommonModule, Location, TitleCasePipe } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Store } from '@ngrx/store';
 import { NgSelectModule } from '@ng-select/ng-select';
@@ -21,7 +21,8 @@ import { tap } from 'rxjs';
     CommonModule,
     FormsModule,
     NgSelectModule,
-    IsNumberPipe
+    IsNumberPipe,
+    TitleCasePipe,
   ],
   templateUrl: './market-filters.component.html',
   styleUrls: ['./market-filters.component.scss']
