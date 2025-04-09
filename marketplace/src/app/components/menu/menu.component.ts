@@ -96,7 +96,7 @@ export class MenuComponent {
 
   menuTimeline!: anime.AnimeTimelineInstance;
 
-  isCuratedMarket = environment.curated;
+  isStandaloneMarket = environment.standalone;
 
   constructor(
     private store: Store<GlobalState>,

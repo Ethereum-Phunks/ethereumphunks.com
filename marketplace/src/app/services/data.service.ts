@@ -80,7 +80,7 @@ export class DataService {
       map(({ data }) => {
         const config = data?.[0];
         if (!config) return null;
-        if (!environment.curated) {
+        if (environment.standalone) {
           config.defaultCollection = environment.defaultCollection;
         }
         return config;
@@ -917,13 +917,13 @@ export class DataService {
           }))
           .sort((a: Collection, b: Collection) => a.id - b.id)
           .filter((item: Collection) => {
-            if (!environment.curated) {
+            if (environment.standalone) {
               return item.slug === environment.defaultCollection;
             }
             return true;
           });
       }),
-      tap((res) => console.log('fetchCollections', res)),
+      // tap((res) => console.log('fetchCollections', res)),
     );
 
     // Realtime changes

@@ -1,13 +1,11 @@
-import { curated, defaultCollection, version } from './app';
+import { appConfig } from './app';
 
 export const environment = {
+  ...appConfig,
+
   env: 'dev-sepolia',
   production: false,
   chainId: 11155111,
-
-  version,
-  curated,
-  defaultCollection,
 
   rpcHttpProvider: 'http://geth.sepolia-geth.dappnode:8545',
   explorerUrl: 'https://sepolia.etherscan.io',

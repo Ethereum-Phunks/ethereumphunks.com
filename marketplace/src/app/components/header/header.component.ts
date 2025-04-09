@@ -58,7 +58,7 @@ export class HeaderComponent {
   toggleTheme$ = new Subject<void>();
   toggleMenu$ = new Subject<void>();
 
-  isCuratedMarket = environment.curated;
+  isStandaloneMarket = environment.standalone;
 
   constructor(
     private store: Store<GlobalState>,

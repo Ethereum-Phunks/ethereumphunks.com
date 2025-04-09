@@ -43,7 +43,7 @@
       }
     }
 
-    @if (isCuratedMarket) {
+    @if (!isStandaloneMarket) {
       <div
         class="curated-button"
         (click)="navigateMenu('curated')">
