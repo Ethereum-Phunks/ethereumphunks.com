@@ -82,7 +82,6 @@ export class SearchComponent {
       const isAddress = is0x && this.web3Svc.verifyAddress(addressInput);
       const possibleHashId = is0x && addressInput.length === 66;
       const isNumber = !isNaN(Number(addressInput));
-      console.log({ isEns, isAddress, possibleHashId, isNumber });
 
       if (!isEns && !isAddress && !possibleHashId && !isNumber) throw new Error('Invalid Search Parameters');
 
