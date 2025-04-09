@@ -236,7 +236,7 @@
                       @if (i > 0) {
                         <!-- {{ item | json }} -->
                         <div class="accessory">
-                          @if (isNumber(item.v)) {
+                          @if (item.v | isNumber) {
                             <span class="value">{{ item.k }}</span>
 
                             <span class="trait-count">

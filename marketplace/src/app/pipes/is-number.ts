@@ -6,6 +6,6 @@ import { Pipe, PipeTransform } from '@angular/core';
 })
 export class IsNumberPipe implements PipeTransform {
   transform(value: any): boolean {
-    return !isNaN(Number(value));
+    return typeof value === 'number';
   }
 }

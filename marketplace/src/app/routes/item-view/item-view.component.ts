@@ -8,6 +8,7 @@ import { HttpClient } from '@angular/common/http';
 
 import { Store } from '@ngrx/store';
 import { LazyLoadImageModule } from 'ng-lazyload-image';
+import { distinctUntilChanged, filter, firstValueFrom, fromEvent, map, shareReplay, switchMap } from 'rxjs';
 
 import { PhunkBillboardComponent } from '@/components/phunk-billboard/phunk-billboard.component';
 import { TxHistoryComponent } from '@/components/tx-history/tx-history.component';
@@ -20,6 +21,7 @@ import { TraitCountPipe } from '@/pipes/trait-count.pipe';
 import { WeiToEthPipe } from '@/pipes/wei-to-eth.pipe';
 import { FormatCashPipe } from '@/pipes/format-cash.pipe';
 import { QueryParamsPipe } from '@/pipes/query-params.pipe';
+import { IsNumberPipe } from '@/pipes/is-number';
 
 import { DataService } from '@/services/data.service';
 import { Web3Service } from '@/services/web3.service';
@@ -28,10 +30,6 @@ import { UtilService } from '@/services/util.service';
 
 import { Phunk } from '@/models/db';
 import { GlobalState, Notification } from '@/models/global-state';
-
-import { distinctUntilChanged, filter, firstValueFrom, fromEvent, map, shareReplay, switchMap, tap } from 'rxjs';
-
-import { environment } from 'src/environments/environment';
 
 import * as appStateActions from '@/state/actions/app-state.actions';
 import * as appStateSelectors from '@/state/selectors/app-state.selectors';
@@ -42,6 +40,8 @@ import { selectNotifications } from '@/state/selectors/notification.selectors';
 import { upsertNotification } from '@/state/actions/notification.actions';
 
 import { setChat } from '@/state/actions/chat.actions';
+
+import { environment } from 'src/environments/environment';
 
 interface ActionsState {
   sell: boolean;
@@ -72,6 +72,7 @@ interface ActionsState {
     WeiToEthPipe,
     FormatCashPipe,
     QueryParamsPipe,
+    IsNumberPipe,
   ],
   selector: 'app-phunk-item-view',
   templateUrl: './item-view.component.html',
@@ -110,7 +111,7 @@ export class ItemViewComponent {
     filter((params: any) => !!params.hashId),
     distinctUntilChanged((prev, curr) => prev.hashId === curr.hashId),
     switchMap((params: any) => this.dataSvc.fetchSinglePhunk(params.hashId)),
-    tap((phunk: any) => console.log('singlePhunk$', phunk)),
+    // tap((phunk: any) => console.log('singlePhunk$', phunk)),
     shareReplay(1),
   );
 
@@ -700,9 +701,5 @@ export class ItemViewComponent {
       active: true,
       toAddress: '0xf1Aa941d56041d47a9a18e99609A047707Fe96c7'
     }));
-  }
-
-  isNumber(value: any): boolean {
-    return typeof value === 'number';
   }
 }

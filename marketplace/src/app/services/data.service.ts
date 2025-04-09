@@ -160,7 +160,7 @@ export class DataService {
    */
   getAttributes(slug: string): Observable<AttributeItem | null> {
     if (!this.attributeCache.has(slug)) {
-      const attributes$ = from(this.storage.getItem<AttributeItem>(`${slug}__attributes`)).pipe(
+      const attributes$ = from(this.storage.getItem<AttributeItem>(`${slug}__attributes:${environment.version}`)).pipe(
         switchMap((res: AttributeItem | null) => {
           if (res) return of(res);
           return this.fetchAttributes(slug);
@@ -189,7 +189,7 @@ export class DataService {
    * @param attributes Attributes
    */
   private async cacheAttributes(slug: string, attributes: AttributeItem) {
-    const stored = await this.storage.setItem<AttributeItem>(`${slug}__attributes`, attributes);
+    const stored = await this.storage.setItem<AttributeItem>(`${slug}__attributes:${environment.version}`, attributes);
     return stored;
   }
 
@@ -201,9 +201,17 @@ export class DataService {
   private async createFilters(slug: string, attributes: AttributeItem) {
     // Create a map to store unique attribute keys and their possible values
     const attributeMap = new Map<string, Set<string>>();
+    // Track which attributes are present in all items
+    const attributeCount = new Map<string, number>();
+    // Track frequency of each value for each attribute
+    const valueFrequency = new Map<string, Map<string, number>>();
+    const totalItems = Object.keys(attributes).length;
 
     // Iterate through all attributes for each item
     Object.values(attributes).forEach((item: Attribute[]) => {
+      // Track which attributes are present in this item
+      const presentAttributes = new Set<string>();
+
       item.forEach((attribute: Attribute) => {
         // Skip Description and Name attributes since they aren't used for filtering
         if (attribute.k === 'Description' || attribute.k === 'Name') return;
@@ -211,6 +219,7 @@ export class DataService {
         // Initialize a new Set for this attribute key if it doesn't exist
         if (!attributeMap.has(attribute.k)) {
           attributeMap.set(attribute.k, new Set());
+          valueFrequency.set(attribute.k, new Map<string, number>());
         }
 
         // Get the attribute values
@@ -218,37 +227,48 @@ export class DataService {
         // Handle both array and single string values
         if (Array.isArray(value)) {
           // Add each value from the array to the Set
-          value.forEach(v => attributeMap.get(attribute.k)?.add(v));
+          value.forEach(v => {
+            attributeMap.get(attribute.k)?.add(v);
+            const freqMap = valueFrequency.get(attribute.k)!;
+            freqMap.set(v, (freqMap.get(v) || 0) + 1);
+          });
         } else {
           // Add the single value to the Set
           attributeMap.get(attribute.k)?.add(value);
+          const freqMap = valueFrequency.get(attribute.k)!;
+          freqMap.set(value, (freqMap.get(value) || 0) + 1);
         }
+
+        // Mark this attribute as present in this item
+        presentAttributes.add(attribute.k);
+      });
+
+      // Update count for each attribute present in this item
+      presentAttributes.forEach(attr => {
+        attributeCount.set(attr, (attributeCount.get(attr) || 0) + 1);
       });
     });
 
     // Convert the Map of Sets into a plain object with arrays
     const attributeObject: { [key: string]: string[] } = {};
     attributeMap.forEach((values, key) => {
-      // Sort values before converting to array
+      // Sort values by frequency (most common first)
       const sortedValues = Array.from(values).sort((a, b) => {
-        // Try to convert to numbers for comparison
-        const numA = Number(a);
-        const numB = Number(b);
-
-        // If both are valid numbers, compare numerically
-        if (!isNaN(numA) && !isNaN(numB)) {
-          return numA - numB;
-        }
-
-        // Otherwise compare as strings
-        return a.localeCompare(b);
+        const freqA = valueFrequency.get(key)!.get(a) || 0;
+        const freqB = valueFrequency.get(key)!.get(b) || 0;
+        return freqB - freqA; // Sort in descending order of frequency
       });
+
+      // Add "none" option if the attribute isn't present in all items
+      if (attributeCount.get(key) !== totalItems) {
+        sortedValues.push('none');
+      }
 
       attributeObject[key] = sortedValues;
     });
 
     // Store the filters object in local storage and return it
-    const stored = await this.storage.setItem(`${slug}__filters`, attributeObject);
+    const stored = await this.storage.setItem(`${slug}__filters:${environment.version}`, attributeObject);
     return stored;
   }
 
@@ -257,11 +277,9 @@ export class DataService {
    * @param slug Collection slug
    */
   async getFilters(slug: string): Promise<{ [key: string]: string[] } | null> {
-    const stored = await this.storage.getItem<{ [key: string]: string[] }>(`${slug}__filters`);
+    const stored = await this.storage.getItem<{ [key: string]: string[] }>(`${slug}__filters:${environment.version}`);
     return stored;
   }
-
-  // private createRarity() {}
 
   /**
    * Adds attributes to an array of Phunks
