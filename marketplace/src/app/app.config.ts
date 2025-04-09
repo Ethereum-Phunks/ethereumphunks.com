@@ -27,12 +27,13 @@ import { ChatEffects } from '@/state/effects/chat.effects';
 
 import { TokenIdParsePipe } from '@/pipes/token-id-parse.pipe';
 import { WeiToEthPipe } from '@/pipes/wei-to-eth.pipe';
-
+import { MinMaxPipe } from '@/pipes/min-max';
 export const config = {
   providers: [
     { provide: TimeagoFormatter, useClass: TimeagoDefaultFormatter },
     { provide: TimeagoClock, useClass: TimeagoDefaultClock },
     { provide: WeiToEthPipe, useClass: WeiToEthPipe },
+    { provide: MinMaxPipe, useClass: MinMaxPipe },
     { provide: TokenIdParsePipe, useClass: TokenIdParsePipe },
     { provide: RouteReuseStrategy, useClass: CustomReuseStrategy },
     provideStore({
