@@ -16,7 +16,7 @@
             <ng-template [ngTemplateOutlet]="prevIcon" />
             {{ collection.name }}
           </a>
-          <h1 i18n>{{ marketTitles[marketType].replace('%collectionName%', collection.singleName) }}</h1>
+          <h1 i18n>{{ marketTitles[marketType]?.replace('%collectionName%', collection.singleName) }}</h1>
 
           @if ((route.queryParams | async)?.address; as address) {
             @if (address) {

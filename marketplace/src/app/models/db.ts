@@ -38,6 +38,7 @@ export interface Phunk {
   attributes?: Attribute[]
   listing?: Listing | null
   bid?: Bid | null
+  event?: Event | null
 
   auction?: Auction | null
 

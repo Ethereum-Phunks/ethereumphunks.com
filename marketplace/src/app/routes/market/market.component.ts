@@ -84,7 +84,8 @@ export class MarketComponent {
     listings: ' %collectionName%s for Sale',
     bids: 'Current Bids',
     owned: ' %collectionName%s Owned',
-    user: 'Owned Inscriptions'
+    user: 'Owned Inscriptions',
+    activity: 'Activity',
   };
 
   sorts: { label: string, value: Sorts }[] = [

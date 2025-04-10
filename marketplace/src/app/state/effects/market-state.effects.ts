@@ -87,9 +87,22 @@ export class MarketStateEffects {
 
       if (marketType === 'listings') return this.store.select(marketStateSelectors.selectListings);
       if (marketType === 'bids') return this.store.select(marketStateSelectors.selectBids);
+      if (marketType === 'activity') return this.store.select(dataStateSelectors.selectEvents).pipe(
+        map((events) => {
+          return events?.map((event) => {
+            return {
+              hashId: event.hashId,
+              tokenId: event.tokenId,
+              sha: event.sha,
+              event: event,
+            } as Phunk;
+          }) || [];
+        })
+      );
 
       return of([]);
     }),
+    tap((data) => console.log('onMarketTypeChanged$', data)),
     map((data) => ({ data, total: data.length })),
     map((activeMarketRouteData: MarketState['activeMarketRouteData']) =>
       marketStateActions.setActiveMarketRouteData({ activeMarketRouteData })
