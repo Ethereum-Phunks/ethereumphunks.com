@@ -12,7 +12,8 @@
     "test": "ng test",
     "run-built": "http-server dist/etherphunks-market -p 8000",
     "translate": "ng extract-i18n --output-path src/locale",
-    "translate:json": "ng extract-i18n --output-path src/locale --format=json"
+    "translate:json": "ng extract-i18n --output-path src/locale --format=json",
+    "deploy:ipfs": "node deploy-ipfs.js"
   },
   "private": true,
   "dependencies": {
@@ -41,9 +42,11 @@
     "@xmtp/xmtp-js": "^11.4.1",
     "animejs": "^3.2.1",
     "apollo-angular": "^7.0.1",
+    "dotenv": "^16.4.5",
     "get-pixels": "^3.3.3",
     "graphql": "^16.7.1",
     "gsap": "^3.12.7",
+    "ipfs-http-client": "56.0.1",
     "localforage": "^1.10.0",
     "moment": "^2.30.1",
     "ng-lazyload-image": "^9.1.3",
