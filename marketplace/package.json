@@ -30,10 +30,10 @@
     "@ng-select/ng-select": "^13.2.0",
     "@ng-web-apis/common": "^3.0.6",
     "@ng-web-apis/intersection-observer": "^3.2.0",
-    "@ngrx/effects": "^17.2.0",
-    "@ngrx/router-store": "^17.2.0",
-    "@ngrx/store": "^17.2.0",
-    "@ngrx/store-devtools": "^17.0.1",
+    "@ngrx/effects": "^19.1.0",
+    "@ngrx/router-store": "^19.1.0",
+    "@ngrx/store": "^19.1.0",
+    "@ngrx/store-devtools": "^19.1.0",
     "@openzeppelin/merkle-tree": "^1.0.5",
     "@supabase/supabase-js": "^2.47.16",
     "@wagmi/connectors": "^5.1.2",
@@ -65,7 +65,8 @@
     "uuid": "^9.0.1",
     "viem": "^2.18.8",
     "webpack": "^5.47.1",
-    "zone.js": "~0.14.10"
+    "zone.js": "~0.14.10",
+    "@ngrx/operators": "^18.0.0"
   },
   "devDependencies": {
     "@angular/build": "^18.2.12",
