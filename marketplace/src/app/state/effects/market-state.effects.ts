@@ -72,7 +72,7 @@ export class MarketStateEffects {
         return from([]);
       }
 
-      if (queryAddress) {
+      if (queryAddress && typeof queryAddress === 'string') {
         return this.store.select(appStateSelectors.selectWalletAddress).pipe(
           switchMap((res) => {
             if (res && res === queryAddress?.toLowerCase()) {
