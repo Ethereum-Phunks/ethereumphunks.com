@@ -63,15 +63,15 @@ export class EthscriptionsService {
       const sha = createHash('sha256').update(cleanedString).digest('hex');
 
       // Check if the sha exists
-      const phunkSha = await this.sbSvc.checkIsCuratedCollection(sha);
-      if (!phunkSha) return;
+      const attributesData = await this.sbSvc.checkIsCuratedCollection(sha);
+      if (!attributesData) return;
 
       // Check if its a duplicate (already been inscribed)
       const isDuplicate = await this.sbSvc.checkEthscriptionExistsBySha(sha);
       if (isDuplicate) return
 
       Logger.debug('Processing ethscription', transaction.hash);
-      const event = await this.processEthscriptionCreationEvent(transaction as Transaction, createdAt, phunkSha);
+      const event = await this.processEthscriptionCreationEvent(transaction as Transaction, createdAt, attributesData);
       return [event];
     }
 

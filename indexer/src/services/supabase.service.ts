@@ -208,7 +208,7 @@ export class SupabaseService {
    */
   async checkIsCuratedCollection(sha: string): Promise<AttributeItem | null> {
     const response: AttributesResponse = await supabase
-      .from('attributes')
+      .from('attributes_new')
       .select('*')
       .eq('sha', sha);
 
@@ -612,7 +612,7 @@ export class SupabaseService {
    */
   async getAttributesFromSha(sha: string): Promise<any> {
     const response = await supabase
-      .from('attributes')
+      .from('attributes_new')
       .select('*')
       .eq('sha', sha);
 

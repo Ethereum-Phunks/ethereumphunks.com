@@ -109,7 +109,7 @@ export interface DBComment {
 
 export interface AttributeItem {
   sha: string;
-  values: {k: string, v: string}[];
+  values: {k: string, v: string | string[]}[];
   slug: string;
   tokenId: number | null;
 }
