@@ -1,8 +1,17 @@
 <div class="inner" [class.menu-active]="menuActive$ | async">
 
-  <a [routerLink]="['/']" class="logo">
-    <ng-template [ngTemplateOutlet]="logo" />
-  </a>
+  @if (isStandaloneMarket) {
+    <a [routerLink]="['/']" class="logo standalone">
+      <img
+        [lazyLoad]="(activeCollection$ | async)?.image || 'assets/loadingphunk.png'"
+        [defaultImage]="'assets/loadingphunk.png'"
+        alt="logo" />
+    </a>
+  } @else {
+    <a [routerLink]="['/']" class="logo">
+      <ng-template [ngTemplateOutlet]="logo" />
+    </a>
+  }
 
   <div class="search-wrapper">
     <app-search />

@@ -24,12 +24,14 @@ import * as dataStateSelectors from '@/state/selectors/data-state.selectors';
 import * as appStateActions from '@/state/actions/app-state.actions';
 
 import { environment } from '@/../environments/environment';
+import { LazyLoadImageModule } from 'ng-lazyload-image';
 
 @Component({
   standalone: true,
   imports: [
     CommonModule,
     RouterModule,
+    LazyLoadImageModule,
 
     SearchComponent,
     CollectionsDropdownComponent,
