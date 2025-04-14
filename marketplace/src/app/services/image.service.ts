@@ -10,10 +10,20 @@ export class ImageService {
 
   constructor(private http: HttpClient) {}
 
+  /**
+   * Fetches an image by URL and returns it as a Blob
+   * @param url URL of the image to fetch
+   * @returns Observable resolving to the Blob of the image
+   */
   public fetchImageBlob(url: string): Observable<Blob> {
     return this.http.get(url, { responseType: 'blob' });
   }
 
+  /**
+   * Fetches an image by URL and returns it as a Base64 string
+   * @param url URL of the image to fetch
+   * @returns Observable resolving to the Base64 string of the image
+   */
   public fetchImageBase64(url: string): Observable<string> {
     return this.http.get(url, { responseType: 'text' });
   }

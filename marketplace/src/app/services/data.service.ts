@@ -4,6 +4,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Store } from '@ngrx/store';
 
 import { Web3Service } from '@/services/web3.service';
+import { StorageService } from '@/services/storage.service';
 
 import { EventType, GlobalConfig, GlobalState } from '@/models/global-state';
 import { Event, Listing, Phunk } from '@/models/db';
@@ -16,8 +17,6 @@ import { AttributeItem } from '@/models/attributes';
 import { createClient, RealtimePostgresUpdatePayload, RealtimePostgresInsertPayload } from '@supabase/supabase-js'
 
 import { Observable, of, from, forkJoin, firstValueFrom, EMPTY, timer, merge, filter, share, catchError, debounceTime, expand, map, reduce, switchMap, takeWhile, tap, shareReplay } from 'rxjs';
-
-import { createInstance } from 'localforage';
 
 import { environment } from 'src/environments/environment';
 
@@ -39,18 +38,13 @@ export class DataService {
 
   walletAddress$ = this.store.select(state => state.appState.walletAddress);
 
-  private storage: LocalForage = createInstance({
-    name: 'ethereum-phunks',
-    storeName: 'attributes',
-    version: Number(environment.version.split('.').join('')),
-  });
-
   private attributeCache = new Map<string, Observable<AttributeItem | null>>();
 
   constructor(
     @Inject(Web3Service) private web3Svc: Web3Service,
     private store: Store<GlobalState>,
     private http: HttpClient,
+    private storageSvc: StorageService,
   ) {
 
     // Listen for blocks and set indexer block
@@ -160,7 +154,7 @@ export class DataService {
    */
   getAttributes(slug: string): Observable<AttributeItem | null> {
     if (!this.attributeCache.has(slug)) {
-      const attributes$ = from(this.storage.getItem<AttributeItem>(`${slug}__attributes:${environment.version}`)).pipe(
+      const attributes$ = from(this.storageSvc.getItem<AttributeItem>(`${slug}__attributes`)).pipe(
         switchMap((res: AttributeItem | null) => {
           if (res) return of(res);
           return this.fetchAttributes(slug);
@@ -189,7 +183,7 @@ export class DataService {
    * @param attributes Attributes
    */
   private async cacheAttributes(slug: string, attributes: AttributeItem) {
-    const stored = await this.storage.setItem<AttributeItem>(`${slug}__attributes:${environment.version}`, attributes);
+    const stored = await this.storageSvc.setItem<AttributeItem>(`${slug}__attributes`, attributes);
     return stored;
   }
 
@@ -268,7 +262,7 @@ export class DataService {
     });
 
     // Store the filters object in local storage and return it
-    const stored = await this.storage.setItem(`${slug}__filters:${environment.version}`, attributeObject);
+    const stored = await this.storageSvc.setItem(`${slug}__filters`, attributeObject);
     return stored;
   }
 
@@ -277,7 +271,7 @@ export class DataService {
    * @param slug Collection slug
    */
   async getFilters(slug: string): Promise<{ [key: string]: string[] } | null> {
-    const stored = await this.storage.getItem<{ [key: string]: string[] }>(`${slug}__filters:${environment.version}`);
+    const stored = await this.storageSvc.getItem<{ [key: string]: string[] }>(`${slug}__filters`);
     return stored;
   }
 

@@ -43,7 +43,9 @@ export const initialState: AppState = {
     comments: false,
     network: null,
     defaultCollection: null
-  }
+  },
+
+  linkedAccounts: []
 };
 
 export const appStateReducer: ActionReducer<AppState, Action> = createReducer(
@@ -238,5 +240,12 @@ export const appStateReducer: ActionReducer<AppState, Action> = createReducer(
       config
     };
     return setGlobalConfig
+  }),
+  on(actions.setLinkedAccounts, (state, { linkedAccounts }) => {
+    const setLinkedAccounts = {
+      ...state,
+      linkedAccounts
+    };
+    return setLinkedAccounts
   })
 );

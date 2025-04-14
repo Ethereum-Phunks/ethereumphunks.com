@@ -1,6 +1,6 @@
 import { createAction, props } from '@ngrx/store';
 
-import { AppState, Cooldowns, EventType, GlobalConfig, HistoryItem } from '@/models/global-state';
+import { AppState, Cooldowns, EventType, GlobalConfig, HistoryItem, LinkedAccount } from '@/models/global-state';
 
 export const setConnected = createAction(
   '[App State] Set Wallet Connected',
@@ -178,4 +178,14 @@ export const initGlobalConfig = createAction(
 export const setGlobalConfig = createAction(
   '[App State] Set Global Config State',
   props<{ config: GlobalConfig }>()
+);
+
+export const setLinkedAccounts = createAction(
+  '[App State] Set Linked Accounts',
+  props<{ linkedAccounts: LinkedAccount[] }>()
+);
+
+export const addLinkedAccount = createAction(
+  '[App State] Add Linked Account',
+  props<{ linkedAccount: LinkedAccount | undefined }>()
 );

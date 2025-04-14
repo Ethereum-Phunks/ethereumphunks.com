@@ -51,6 +51,10 @@ export class SocketService extends Socket {
 
   constructor() {
     super(socketConfig);
+
+    this.onMessage().subscribe(({ id, message }) => {
+      console.log('received message', { id, message });
+    });
   }
 
   /**
@@ -59,5 +63,13 @@ export class SocketService extends Socket {
    */
   connect(callback?: ((err: any) => void) | undefined) {
     super.connect(callback);
+  }
+
+  sendMessage(id: string, message: string) {
+    this.emit('message', { id, message });
+  }
+
+  onMessage() {
+    return this.fromEvent<{ id: string, message: string }>('message');
   }
 }

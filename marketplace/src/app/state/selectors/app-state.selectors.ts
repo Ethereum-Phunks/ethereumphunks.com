@@ -123,3 +123,8 @@ export const selectConfig = createSelector(
   selectAppState,
   (appState: AppState) => appState.config
 );
+
+export const selectLinkedAccounts = createSelector(
+  selectAppState,
+  (appState: AppState) => appState.linkedAccounts
+);

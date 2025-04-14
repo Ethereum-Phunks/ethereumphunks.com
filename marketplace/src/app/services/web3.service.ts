@@ -132,7 +132,7 @@ export class Web3Service {
     this.connectedState.pipe(
       tap((account: GetAccountReturnType) => {
         this.store.dispatch(appStateActions.setConnected({ connected: account.isConnected }));
-        this.store.dispatch(appStateActions.setWalletAddress({ walletAddress: account.address }));
+        this.store.dispatch(appStateActions.setWalletAddress({ walletAddress: account.address?.toLowerCase() }));
         // if (account.chainId !== environment.chainId) this.switchNetwork();
       }),
       catchError((err) => {
@@ -200,7 +200,7 @@ export class Web3Service {
   async disconnectWeb3(): Promise<void> {
     if (getAccount(this.config).isConnected) {
       await disconnect(this.config);
-      this.store.dispatch(appStateActions.setWalletAddress({ walletAddress: '' }));
+      this.store.dispatch(appStateActions.setWalletAddress({ walletAddress: undefined }));
       this.store.dispatch(appStateActions.setConnected({ connected: false }));
     }
   }

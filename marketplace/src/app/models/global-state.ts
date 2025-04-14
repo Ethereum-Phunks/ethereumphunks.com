@@ -44,6 +44,12 @@ export interface AppState {
   collectionsMenuActive: boolean;
 
   config: GlobalConfig;
+
+  linkedAccounts: LinkedAccount[];
+}
+
+export interface LinkedAccount {
+  address: string;
 }
 
 export interface GlobalConfig {

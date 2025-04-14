@@ -7,10 +7,12 @@ import { Actions, createEffect, ofType } from '@ngrx/effects';
 
 import { Web3Service } from '@/services/web3.service';
 import { ThemeService } from '@/services/theme.service';
+import { DataService } from '@/services/data.service';
+import { SocketService } from '@/services/socket.service';
 
-import { GlobalState } from '@/models/global-state';
+import { GlobalState, LinkedAccount } from '@/models/global-state';
 
-import { catchError, distinctUntilChanged, filter, from, map, mergeMap, of, switchMap, tap, withLatestFrom } from 'rxjs';
+import { catchError, EMPTY, filter, from, map, mergeMap, of, switchMap, tap, withLatestFrom } from 'rxjs';
 
 import * as appStateActions from '@/state/actions/app-state.actions';
 import * as appStateSelectors from '@/state/selectors/app-state.selectors';
@@ -19,8 +21,7 @@ import { ChatService } from '@/services/chat.service';
 
 import { environment } from 'src/environments/environment';
 import { formatEther } from 'viem';
-import { DataService } from '@/services/data.service';
-
+import { StorageService } from '@/services/storage.service';
 @Injectable()
 export class AppStateEffects {
 
@@ -56,8 +57,9 @@ export class AppStateEffects {
 
   addressChanged$ = createEffect(() => this.actions$.pipe(
     ofType(appStateActions.setWalletAddress),
-    mergeMap((action) => {
-      const address = action.walletAddress?.toLowerCase();
+    filter(({ walletAddress }) => !!walletAddress),
+    mergeMap(({ walletAddress }) => {
+      const address = walletAddress?.toLowerCase();
       return [
         appStateActions.fetchUserPoints({ address }),
         appStateActions.checkHasWithdrawal(),
@@ -224,6 +226,34 @@ export class AppStateEffects {
     switchMap(([action, address]) => from(this.chatSvc.reconnectXmtp(address!))),
   ), { dispatch: false });
 
+  onSetLinkedAccounts$ = createEffect(() => this.actions$.pipe(
+    ofType(appStateActions.setWalletAddress),
+    filter(({ walletAddress }) => !!walletAddress),
+    switchMap(({ walletAddress }) => {
+      return from(this.storageSvc.getItem<LinkedAccount[]>('accounts')).pipe(
+        map((accounts) => {
+          if (accounts?.find(account => account.address === walletAddress!)) {
+            return appStateActions.setLinkedAccounts({ linkedAccounts: accounts });
+          }
+          const newLinkedAccounts = [...(accounts || []), { address: walletAddress! }];
+          return appStateActions.setLinkedAccounts({ linkedAccounts: newLinkedAccounts });
+        }),
+        tap((action) => console.log({ action }))
+      );
+    }),
+  ));
+
+  setLinkedAccounts$ = createEffect(() => this.actions$.pipe(
+    ofType(appStateActions.setLinkedAccounts),
+    switchMap((action) => {
+      return from(this.storageSvc.setItem('accounts', action.linkedAccounts)).pipe(
+        tap(() => {
+          this.socketSvc.sendMessage('accounts', JSON.stringify(action.linkedAccounts.map(account => account.address)));
+        })
+      );
+    }),
+  ), { dispatch: false });
+
   // closeModal$ = createEffect(() => this.actions$.pipe(
   //   ofType(appStateActions.mouseDown),
   //   withLatestFrom(this.store.select(appStateSelectors.selectModalActive)),
@@ -238,5 +268,7 @@ export class AppStateEffects {
     private themeSvc: ThemeService,
     private chatSvc: ChatService,
     private dataSvc: DataService,
+    private socketSvc: SocketService,
+    private storageSvc: StorageService,
   ) {}
 }

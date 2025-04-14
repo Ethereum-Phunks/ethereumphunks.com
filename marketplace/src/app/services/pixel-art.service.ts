@@ -12,6 +12,11 @@ export class PixelArtService {
 
   constructor(private colorSvc: ColorService) {}
 
+  /**
+   * Processes a pixel art image and converts it to a 2D array of colors
+   * @param buffer ArrayBuffer of the image
+   * @returns Promise resolving to a 2D array of colors
+   */
   public async processPixelArtImage(buffer: ArrayBuffer): Promise<string[][]> {
     return new Promise((resolve, reject) => {
       const blob = new Blob([buffer], { type: 'image/png' });
@@ -37,6 +42,11 @@ export class PixelArtService {
     });
   }
 
+  /**
+   * Converts an ImageData object to a 2D array of colors
+   * @param imageData ImageData object
+   * @returns 2D array of colors
+   */
   public convertToPixelArtFormat(imageData: ImageData): string[][] {
     const { width, height, data } = imageData;
     const pixelArtData: string[][] = [];
@@ -58,6 +68,11 @@ export class PixelArtService {
     return pixelArtData;
   }
 
+  /**
+   * Strips colors from a SVG node based on predefined filters
+   * @param node SVG node to process
+   * @returns Processed SVG node with colors stripped
+   */
   stripColors(node: INode): INode {
     const colorMap: Record<string, number> = {};
 
@@ -121,6 +136,11 @@ export class PixelArtService {
     return node;
   }
 
+  /**
+   * Converts a 2D array of colors to an SVG node
+   * @param arr 2D array of colors
+   * @returns SVG node
+   */
   convertToSvg(arr: string[][]): INode {
     const width = arr[0].length;
     const height = arr.length;
@@ -165,6 +185,11 @@ export class PixelArtService {
     return svg;
   }
 
+  /**
+   * Converts an SVG node to a Base64 string
+   * @param node SVG node
+   * @returns Base64 string
+   */
   convertToBase64(node: INode): string {
     const string = stringify(node);
     const base64 = btoa(string);
