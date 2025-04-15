@@ -18,10 +18,6 @@ import { ProcessingService } from '@/services/processing.service';
 
 import { chain } from '@/constants/ethereum';
 
-// import { EthscriptionsService } from '../ethscriptions/services/ethscriptions.service';
-// import { DiscordService } from '../notifs/services/discord.service';
-// import { ImageService } from '../notifs/services/image.service';
-
 @Module({
   imports: [
     ConfigModule.forRoot(),
@@ -58,10 +54,6 @@ import { chain } from '@/constants/ethereum';
       BridgeProcessingQueue,
     ] : []),
     ProcessingService,
-
-    // EthscriptionsService,
-    // DiscordService,
-    // ImageService,
   ],
   exports: [
     ...(Number(process.env.QUEUE) ? [
