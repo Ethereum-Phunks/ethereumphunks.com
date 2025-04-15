@@ -1,20 +1,17 @@
 import { Module, forwardRef } from '@nestjs/common';
 import { NftService } from './nft.service';
-import { SupabaseService } from '@/services/supabase.service';
-import { UtilityService } from '../shared/services/utility.service';
-import { SharedModule } from '../shared/shared.module';
 
-// import { QueueModule } from '../queue/queue.module';
+import { UtilityService } from '@/modules/shared/services/utility.service';
+import { SharedModule } from '@/modules/shared/shared.module';
+import { StorageModule } from '@/modules/storage/storage.module';
 
 @Module({
   imports: [
     SharedModule,
-    // forwardRef(() => QueueModule)
+    StorageModule,
   ],
   providers: [
     NftService,
-
-    SupabaseService,
     UtilityService
   ],
   exports: [

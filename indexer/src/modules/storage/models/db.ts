@@ -119,4 +119,10 @@ export interface User {
   address: string;
 }
 
+export interface EthscriptionWithCollectionAndAttributes {
+  ethscription: Ethscription;
+  collection: Collection;
+  attributes: AttributeItem;
+}
+
 export type EventType = 'transfer' | 'sale' | 'created' | 'burned' | 'PhunkOffered' | 'PhunkBidEntered' | 'PhunkBought' | 'PhunkBidWithdrawn' | 'PhunkDeposited' | 'PhunkWithdrawn' | 'PhunkNoLongerForSale';

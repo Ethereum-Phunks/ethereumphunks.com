@@ -1,21 +1,23 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 
 import { ParseEventLogsReturnType, erc721Abi } from 'viem';
 
 import { bridgeAddressL2, l2Client } from '@/constants/ethereum';
 
-import { SupabaseService } from '@/services/supabase.service';
+import { StorageService } from '@/modules/storage/storage.service';
 
 import etherPhunksBridgeL2 from '@/abi/EtherPhunksBridgeL2.json';
 
 import { Observable, catchError, of, tap } from 'rxjs';
 
 @Injectable()
-export class ProcessingService {
+export class ProcessingService implements OnModuleInit {
 
   constructor(
-    private readonly sbSvc: SupabaseService
-  ) {
+    private readonly storageSvc: StorageService
+  ) {}
+
+  async onModuleInit() {
     new Observable<ParseEventLogsReturnType>((observer) => {
       l2Client.watchContractEvent({
         address: bridgeAddressL2 as `0x${string}`,
@@ -49,7 +51,7 @@ export class ProcessingService {
     // == Regardless, this token has been minted. =======
     // == All validity checks were done on L1 transaction
 
-    await this.sbSvc.addNftL2(Number(tokenId), sender, hashId);
+    await this.storageSvc.addNftL2(Number(tokenId), sender, hashId);
     Logger.debug(`Bridged in by ${sender}`, hashId);
   }
 
@@ -60,7 +62,7 @@ export class ProcessingService {
     // == Regardless, this token has been transferred. ===
     // == All validity checks were done on L1 transaction
 
-    await this.sbSvc.updateNftL2(Number(tokenId), to);
+    await this.storageSvc.updateNftL2(Number(tokenId), to);
     Logger.debug(`Transferred from ${from} to ${to}`, tokenId.toString());
   }
 
@@ -71,7 +73,7 @@ export class ProcessingService {
     // == Regardless, this token has been burned. ========
     // == All validity checks were done on L1 transaction
 
-    await this.sbSvc.removeNftL2(Number(tokenId), hashId);
+    await this.storageSvc.removeNftL2(Number(tokenId), hashId);
     Logger.debug(`Bridged out to ${receiver}`, hashId);
   }
 

@@ -4,8 +4,8 @@ import { HttpModule } from '@nestjs/axios';
 import { SharedModule } from '@/modules/shared/shared.module';
 import { NotifsModule } from '@/modules/notifs/notifs.module';
 import { QueueModule } from '@/modules/queue/queue.module';
+import { StorageModule } from '@/modules/storage/storage.module';
 
-import { SupabaseService } from '@/services/supabase.service';
 import { DataService } from '@/services/data.service';
 
 import { EthscriptionsController } from './ethscriptions.controller';
@@ -16,6 +16,7 @@ import { EthscriptionsService } from './ethscriptions.service';
     HttpModule,
     SharedModule,
     NotifsModule,
+    StorageModule,
 
     forwardRef(() => QueueModule)
   ],
@@ -25,7 +26,6 @@ import { EthscriptionsService } from './ethscriptions.service';
   providers: [
     EthscriptionsService,
 
-    SupabaseService,
     DataService
   ],
   exports: [

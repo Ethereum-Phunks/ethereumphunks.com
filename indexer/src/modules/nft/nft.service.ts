@@ -1,21 +1,23 @@
-import { Inject, Injectable, Logger } from '@nestjs/common';
+import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 
 import { ParseEventLogsReturnType, zeroAddress } from 'viem';
 
 import { bridgeAbiL2, bridgeAddressL2, l2Client, marketAbiL2, marketAddressL2 } from '@/constants/ethereum';
 
-import { SupabaseService } from '@/services/supabase.service';
+import { StorageService } from '@/modules/storage/storage.service';
 
 import { Observable, catchError, of, tap } from 'rxjs';
 import { Web3Service } from '../shared/services/web3.service';
 
 @Injectable()
-export class NftService {
+export class NftService implements OnModuleInit {
 
   constructor(
     @Inject('WEB3_SERVICE_L2') private readonly web3SvcL2: Web3Service,
-    private readonly sbSvc: SupabaseService,
-  ) {
+    private readonly storageSvc: StorageService,
+  ) {}
+
+  async onModuleInit() {
     new Observable<ParseEventLogsReturnType>((observer) => {
       l2Client.watchContractEvent({
         address: marketAddressL2 as `0x${string}`,
@@ -55,7 +57,7 @@ export class NftService {
     const txn = await this.web3SvcL2.getTransaction(transactionHash);
     const hashId = await this.readTokenContract('tokenToHash', [phunkIndex]);
 
-    await this.sbSvc.createListing(
+    await this.storageSvc.createListing(
       txn,
       new Date(),
       hashId,
@@ -64,7 +66,7 @@ export class NftService {
       true
     );
 
-    this.sbSvc.addEvents([{
+    this.storageSvc.addEvents([{
       txId: txn.hash + log.logIndex,
       type: eventName,
       hashId: hashId.toLowerCase(),
@@ -89,10 +91,10 @@ export class NftService {
     const txn = await this.web3SvcL2.getTransaction(transactionHash);
     const hashId = await this.readTokenContract('tokenToHash', [phunkIndex]);
 
-    const removedListing = await this.sbSvc.removeListing(hashId);
+    const removedListing = await this.storageSvc.removeListing(hashId);
     if (!removedListing) return;
 
-    this.sbSvc.addEvents([{
+    this.storageSvc.addEvents([{
       txId: txn.hash + log.logIndex,
       type: eventName,
       hashId: hashId.toLowerCase(),

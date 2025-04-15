@@ -3,7 +3,7 @@ import { BadRequestException, Inject, Injectable } from '@nestjs/common';
 import { encodePacked, formatEther, keccak256, recoverTypedDataAddress } from 'viem';
 import { privateKeyToAccount } from 'viem/accounts'
 
-import { SupabaseService } from '@/services/supabase.service';
+import { StorageService } from '@/modules/storage/storage.service';
 import { Web3Service } from '@/modules/shared/services/web3.service';
 
 import { NonceService } from '@/modules/bridge-l1/services/nonce.service';
@@ -18,7 +18,7 @@ export class VerificationService {
 
   constructor(
     @Inject('WEB3_SERVICE_L1') private readonly web3Svc: Web3Service,
-    private readonly sbSvc: SupabaseService,
+    private readonly storageSvc: StorageService,
     private readonly nonceSvc: NonceService,
     private readonly mintSvc: MintService
   ) {}
@@ -89,7 +89,7 @@ export class VerificationService {
       throw new BadRequestException('Signer does not match sender');
 
     // Check if the hashId exists
-    const item = await this.sbSvc.checkEthscriptionExistsByHashId(hashId);
+    const item = await this.storageSvc.checkEthscriptionExistsByHashId(hashId);
     if (!item)
       throw new BadRequestException(`HashId doesn't exist`);
     // Check if the owner is the same as the signer

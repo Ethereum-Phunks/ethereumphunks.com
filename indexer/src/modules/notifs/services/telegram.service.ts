@@ -14,9 +14,7 @@ export class TelegramService {
   private readonly botToken = process.env.TELEGRAM_BOT_TOKEN;
   private readonly chatId = '5445160677';
 
-  constructor(private httpSvc: HttpService) {
-    // this.sendMessage('PhunkBot started');
-  }
+  constructor(private httpSvc: HttpService) {}
 
   /**
    * Sends a text message to the configured Telegram chat

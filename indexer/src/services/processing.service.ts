@@ -1,7 +1,7 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
 
 import { Web3Service } from '@/modules/shared/services/web3.service';
-import { SupabaseService } from '@/services/supabase.service';
+import { StorageService } from '@/modules/storage/storage.service';
 
 import { UtilityService } from '@/modules/shared/services/utility.service';
 import { TimeService } from '@/modules/shared/services/time.service';
@@ -10,7 +10,7 @@ import { CommentsService } from '@/modules/comments/comments.service';
 
 import { chain } from '@/constants/ethereum';
 
-import { Event } from '@/models/db';
+import { Event } from '@/modules/storage/models/db';
 
 import { FormattedTransaction, GetBlockReturnType, Transaction, TransactionReceipt } from 'viem';
 
@@ -31,7 +31,7 @@ export class ProcessingService {
 
   constructor(
     @Inject('WEB3_SERVICE_L1') private readonly web3SvcL1: Web3Service,
-    private readonly sbSvc: SupabaseService,
+    private readonly storageSvc: StorageService,
     private readonly utilSvc: UtilityService,
     private readonly timeSvc: TimeService,
     private readonly ethsSvc: EthscriptionsService,
@@ -70,9 +70,9 @@ export class ProcessingService {
     const events = await this.processTransactions(transactions, createdAt);
 
     // Add the events to the database
-    if (events.length) await this.sbSvc.addEvents(events);
+    if (events.length) await this.storageSvc.addEvents(events);
     // Update the block in db
-    if (updateBlockDb) this.sbSvc.updateLastBlock(blockNumber, createdAt);
+    if (updateBlockDb) this.storageSvc.updateLastBlock(blockNumber, createdAt);
 
     // Add the block to the processed blocks
     this.processedBlocks.push({ number: blockNumber, hash, parentHash, confirmed: false });
@@ -93,7 +93,7 @@ export class ProcessingService {
     // Process the transactions & get the events
     const events = await this.processTransactions([{ transaction: txn, receipt }], createdAt);
     // Add the events to the database
-    if (events.length) await this.sbSvc.addEvents(events);
+    if (events.length) await this.storageSvc.addEvents(events);
   }
 
   /**
@@ -113,7 +113,7 @@ export class ProcessingService {
       const createdAt = new Date(Number(timestamp) * 1000);
 
       const events = await this.processTransactions(transactions, createdAt);
-      if (events.length) await this.sbSvc.addEvents(events);
+      if (events.length) await this.storageSvc.addEvents(events);
     } catch (error) {
       console.log(error);
       // Pause for 5 seconds

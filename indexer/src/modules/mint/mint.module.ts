@@ -9,8 +9,9 @@ import { IPThrottlerGuard } from './guards/ip-throttle.guard';
 
 import { SharedModule } from '@/modules/shared/shared.module';
 import { TxPoolModule } from '@/modules/tx-pool/tx-pool.module';
+import { StorageModule } from '@/modules/storage/storage.module';
+
 import { DataService } from '@/services/data.service';
-import { SupabaseService } from '@/services/supabase.service';
 @Module({
   controllers: [
     MintController,
@@ -24,10 +25,10 @@ import { SupabaseService } from '@/services/supabase.service';
     SharedModule,
     TxPoolModule,
     HttpModule,
+    StorageModule,
   ],
   providers: [
     MintService,
-    SupabaseService,
     DataService,
     {
       provide: APP_GUARD,

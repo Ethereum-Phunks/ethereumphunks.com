@@ -1,4 +1,4 @@
-import { Collection, Ethscription } from '@/models/db';
+import { Collection, Ethscription, AttributeItem } from '@/modules/storage/models/db';
 
 export interface NotificationMessage {
   title: string;
@@ -8,12 +8,14 @@ export interface NotificationMessage {
   filename: string;
 }
 
-export interface EthscriptionWithCollectionAndAttributes {
-  ethscription: Ethscription,
-  collection: Collection,
-  attributes: {
-    k: string,
-    v: string,
-    rarity: number,
-  }[],
+export interface NotifItemData {
+  ethscription: Ethscription;
+  collection: Collection;
+  attributes: NotifItemAttribute[];
+}
+
+export interface NotifItemAttribute {
+  k: string;
+  v: string;
+  rarity: number;
 }

@@ -1,4 +1,4 @@
-import { Event, Listing } from './db';
+import { Event, Listing } from '../modules/storage/models/db';
 
 export interface EthscriptionEventData {
   events: Event[];

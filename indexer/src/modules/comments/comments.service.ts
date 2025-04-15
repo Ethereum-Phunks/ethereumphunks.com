@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 
-import { SupabaseService } from '@/services/supabase.service';
+import { StorageService } from '@/modules/storage/storage.service';
 
 import { hexToString, Transaction, TransactionReceipt, zeroAddress } from 'viem';
 
@@ -10,7 +10,7 @@ import { UtilityService } from '@/modules/shared/services/utility.service';
 export class CommentsService {
 
   constructor(
-    private readonly sbSvc: SupabaseService,
+    private readonly storageSvc: StorageService,
     private readonly utilitySvc: UtilityService
   ) {}
 
@@ -33,21 +33,21 @@ export class CommentsService {
     const possibleComment = cleanedString.startsWith('data:message/vnd.tic+json,');
 
     if (possibleComment) {
-      await this.sbSvc.addComment(transaction, createdAt);
+      await this.storageSvc.addComment(transaction, createdAt);
       Logger.log(`Comment added`, `${transaction.hash}`);
     }
 
     // Check if possible transfer
     const possibleTransfer = this.utilitySvc.possibleTransfer(input);
     if (possibleTransfer) {
-      const existingComment = await this.sbSvc.getCommentByHashId(input);
+      const existingComment = await this.storageSvc.getCommentByHashId(input);
       if (!existingComment) return;
 
       const senderIsOwner = existingComment.from?.toLowerCase() === transaction.from?.toLowerCase();
       const isDeleting = (transaction.to === zeroAddress);
 
       if (senderIsOwner && isDeleting) {
-        await this.sbSvc.deleteComment(input);
+        await this.storageSvc.deleteComment(input);
         Logger.log(`Comment deleted`, `${transaction.hash}`);
       }
     }

@@ -1,9 +1,9 @@
-import { Inject, Injectable, Logger, Optional } from '@nestjs/common';
+import { Inject, Injectable, Logger, OnModuleInit, Optional } from '@nestjs/common';
 
 import { BlockProcessingQueue } from '@/modules/queue/queues/block-processing.queue';
 import { BridgeProcessingQueue } from '@/modules/queue/queues/bridge-processing.queue';
 
-import { SupabaseService } from '@/services/supabase.service';
+import { StorageService } from '@/modules/storage/storage.service';
 
 import { UtilityService } from '@/modules/shared/services/utility.service';
 import { Web3Service } from '@/modules/shared/services/web3.service';
@@ -13,16 +13,17 @@ import { chain, l1Client } from '@/constants/ethereum';
 const chainId = Number(process.env.CHAIN_ID);
 
 @Injectable()
-export class AppService {
+export class AppService implements OnModuleInit {
 
   constructor(
     @Inject('WEB3_SERVICE_L1') private readonly web3SvcL1: Web3Service,
     @Optional() private readonly blockQueue: BlockProcessingQueue,
     @Optional() private readonly bridgeQueue: BridgeProcessingQueue,
-    private readonly sbSvc: SupabaseService,
+    private readonly storageSvc: StorageService,
     private readonly utilSvc: UtilityService
-  ) {
+  ) {}
 
+  async onModuleInit() {
     if (Number(process.env.INDEXER)) {
       Promise.all([
         this.blockQueue.clearQueue(),
@@ -45,7 +46,7 @@ export class AppService {
       await this.utilSvc.delay(10000);
       await this.blockQueue.pauseQueue();
 
-      const startBlock = (await this.sbSvc.getLastBlock(chainId));
+      const startBlock = (await this.storageSvc.getLastBlock(chainId));
       await this.startBackfill(startBlock);
       await this.blockQueue.resumeQueue();
       await this.startPolling();

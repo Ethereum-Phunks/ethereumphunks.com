@@ -1,7 +1,7 @@
 import { Logger } from '@nestjs/common';
 
 import { Server, Socket } from 'socket.io';
-import { OnGatewayConnection, OnGatewayDisconnect, OnGatewayInit, WebSocketGateway, WebSocketServer } from '@nestjs/websockets';
+import { ConnectedSocket, MessageBody, OnGatewayConnection, OnGatewayDisconnect, OnGatewayInit, SubscribeMessage, WebSocketGateway, WebSocketServer } from '@nestjs/websockets';
 
 import { CustomLogger } from '@/modules/shared/services/logger.service';
 
@@ -22,8 +22,7 @@ export class AppGateway implements OnGatewayInit, OnGatewayConnection, OnGateway
 
   constructor(
     private readonly logger: CustomLogger,
-  ) {
-  }
+  ) {}
 
   afterInit(server: Server) {
     Logger.debug('Socket Server Initialized', 'AppGateway');
@@ -48,14 +47,12 @@ export class AppGateway implements OnGatewayInit, OnGatewayConnection, OnGateway
     Logger.verbose(client.id, 'Client disconnected');
   }
 
-  // @SubscribeMessage('logs')
-  // handleLogs(
-  //   @MessageBody() data: string,
-  //   @ConnectedSocket() client: Socket
-  // ) {
-  //   console.log('Received event:', data);
-  //   // return this.logger.logCollection
-
-  //   client.emit('marketStats', marketStats);
-  // }
+  @SubscribeMessage('message')
+  handleMessage(
+    @MessageBody() data: { id: string, message: string },
+    @ConnectedSocket() client: Socket
+  ) {
+    const { id, message } = data;
+    console.log('Received message:', { id, message: JSON.parse(message), clientId: client.id });
+  }
 }

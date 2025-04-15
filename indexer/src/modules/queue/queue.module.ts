@@ -5,6 +5,7 @@ import { BullModule } from '@nestjs/bull';
 
 import { NftModule } from '@/modules/nft/nft.module';
 import { SharedModule } from '@/modules/shared/shared.module';
+import { StorageModule } from '@/modules/storage/storage.module';
 import { CommentsModule } from '@/modules/comments/comments.module';
 import { BridgeL1Module } from '@/modules/bridge-l1/bridge-l1.module';
 import { BlockQueueService } from '@/modules/queue/services/block-queue.service';
@@ -14,7 +15,6 @@ import { BlockProcessingQueue } from '@/modules/queue/queues/block-processing.qu
 import { BridgeProcessingQueue } from '@/modules/queue/queues/bridge-processing.queue';
 
 import { ProcessingService } from '@/services/processing.service';
-import { SupabaseService } from '@/services/supabase.service';
 
 import { chain } from '@/constants/ethereum';
 
@@ -45,6 +45,7 @@ import { chain } from '@/constants/ethereum';
     SharedModule,
     BridgeL1Module,
     NftModule,
+    StorageModule,
 
     forwardRef(() => EthscriptionsModule),
     forwardRef(() => CommentsModule),
@@ -57,7 +58,6 @@ import { chain } from '@/constants/ethereum';
       BridgeProcessingQueue,
     ] : []),
     ProcessingService,
-    SupabaseService,
 
     // EthscriptionsService,
     // DiscordService,

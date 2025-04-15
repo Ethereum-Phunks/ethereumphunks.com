@@ -1,14 +1,13 @@
-// nestjs service
 import { Injectable, OnModuleInit } from '@nestjs/common';
+
+import { from, map, merge } from 'rxjs';
 import crypto, { createHash } from 'crypto';
 
-import { SupabaseService } from '@/services/supabase.service';
+import { StorageService } from '@/modules/storage/storage.service';
 import { TxPoolService } from '@/modules/tx-pool/tx-pool.service';
 import { DataService } from '@/services/data.service';
 
-import { Collection } from '@/models/db';
 import { MintRequestResponse, MetadataCollection } from './models/mint';
-import { from, map, merge } from 'rxjs';
 
 @Injectable()
 export class MintService implements OnModuleInit {
@@ -21,7 +20,7 @@ export class MintService implements OnModuleInit {
   private mintingActive: boolean;
 
   constructor(
-    private readonly sbSvc: SupabaseService,
+    private readonly storageSvc: StorageService,
     private readonly txPoolSvc: TxPoolService,
     private readonly dataSvc: DataService,
   ) {}
@@ -30,7 +29,7 @@ export class MintService implements OnModuleInit {
    * Initializes the service by loading metadata for the Call Data Comrades collection
    */
   async onModuleInit() {
-    this.metadata = await this.sbSvc.getCollectionData('call-data-comrades');
+    this.metadata = await this.storageSvc.getCollectionData('call-data-comrades');
 
     this.txPoolSvc.eventEmitter.on('txpool.update', (state) => {
       this.pendingInscriptionShas = state.pendingInscriptionShas;
@@ -42,8 +41,8 @@ export class MintService implements OnModuleInit {
 
   watchIsMinting() {
     merge(
-      from(this.sbSvc.isMinting('call-data-comrades')),
-      this.sbSvc.watchCollection('call-data-comrades').pipe(map((data) => data.mintEnabled && data.isMinting)),
+      from(this.storageSvc.isMinting('call-data-comrades')),
+      this.storageSvc.watchCollection('call-data-comrades').pipe(map((data) => data.mintEnabled && data.isMinting)),
     ).subscribe((mintingActive) => {
       this.mintingActive = mintingActive;
       console.log({ mintingActive });
@@ -67,7 +66,7 @@ export class MintService implements OnModuleInit {
     const metadata = this.metadata?.collection_items.find(item => item.tokenId === randomId);
 
     const [exists, existsGlobally] = await Promise.all([
-      this.sbSvc.checkEthscriptionExistsBySha(metadata.sha),
+      this.storageSvc.checkEthscriptionExistsBySha(metadata.sha),
       this.dataSvc.getEthscriptionBySha(metadata.sha),
     ]);
 

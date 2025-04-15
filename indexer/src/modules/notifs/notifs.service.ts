@@ -1,7 +1,10 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
 
-import { Collection, Ethscription, Event } from '@/models/db';
-import { EthscriptionWithCollectionAndAttributes, NotificationMessage } from './models/message.model';
+import { formatUnits } from 'viem';
+
+import { Event } from '@/modules/storage/models/db';
+import { StorageService } from '@/modules/storage/storage.service';
+import { NotificationMessage, NotifItemData } from './models/message.model';
 
 import { rarityData } from './constants/collections';
 
@@ -10,19 +13,11 @@ import { DiscordService } from './services/discord.service';
 import { Web3Service } from '../shared/services/web3.service';
 import { TwitterService } from './services/twitter.service';
 
-import { createClient } from '@supabase/supabase-js';
-import { formatUnits } from 'viem';
-
-const supabaseUrl = process.env.SUPABASE_URL;
-const serviceRole = process.env.SUPABASE_SERVICE_ROLE;
-const supabase = createClient(supabaseUrl, serviceRole);
-const suffix = process.env.CHAIN_ID === '1' ? '' : '_sepolia';
-
 /**
  * Service for handling notifications about marketPlace sales
  */
 @Injectable()
-export class NotifsService {
+export class NotifsService implements OnModuleInit {
 
   /** Current ETH/USD price */
   usdPrice: number = 0;
@@ -32,22 +27,13 @@ export class NotifsService {
     private readonly imgSvc: ImageService,
     private readonly twitterSvc: TwitterService,
     private readonly discordSvc: DiscordService,
-  ) {
+    private readonly storageSvc: StorageService,
+  ) {}
 
-    // Subscribe to Phunk sale events from Supabase
-    supabase
-      .channel(`sales${suffix}`)
-      .on('postgres_changes', {
-        event: 'INSERT',
-        schema: 'public',
-        table: `events${suffix}`,
-        filter: 'type=eq.PhunkBought'
-      }, payload => {
-        this.handleNotification(payload.new as Event);
-
-        // console.log(payload.new);
-      })
-      .subscribe()
+  async onModuleInit() {
+    this.storageSvc.listenSales().subscribe(event => {
+      this.handleNotification(event);
+    });
 
     // Fetch USD price every 10 minutes
     this.fetchUSDPrice().then(price => {
@@ -64,18 +50,8 @@ export class NotifsService {
    * @param hashId The transaction hash ID
    */
   async handleNotificationFromHashId(hashId: string) {
-    const response = supabase
-      .from(`events${suffix}`)
-      .select('*')
-      .eq('type', 'PhunkBought')
-      .eq('hashId', hashId)
-      .order('blockTimestamp', { ascending: false })
-      .limit(1)
-      .single();
-
-    const { data, error } = await response;
-
-    await this.handleNotification(data);
+    const event = await this.storageSvc.getLatestBoughtEventByHashId(hashId);
+    await this.handleNotification(event);
   }
 
   /**
@@ -100,7 +76,7 @@ export class NotifsService {
    */
   async createMessage(
     event: Event,
-    ethscriptionData: EthscriptionWithCollectionAndAttributes
+    ethscriptionData: NotifItemData
   ): Promise<NotificationMessage> {
     const { ethscription, collection } = ethscriptionData;
 
@@ -139,47 +115,31 @@ export class NotifsService {
    * @returns Ethscription data with collection and attributes
    * !FIXME: Update to use new attributes!
    */
-  async getEthscriptionWithCollectionAndAttributes(hashId: string): Promise<EthscriptionWithCollectionAndAttributes> {
-    const response = supabase
-      .from(`ethscriptions${suffix}`)
-      .select(`
-        *,
-        collections${suffix}!inner(
-          name,
-          singleName,
-          notifications
-        ),
-        attributes!inner(
-          values
-        )
-      `)
-      .eq('hashId', hashId)
-      .limit(1)
-      .single();
+  async getEthscriptionWithCollectionAndAttributes(hashId: string): Promise<NotifItemData> {
+    const {
+      ethscription,
+      collection,
+      attributes,
+    } = await this.storageSvc.getEthscriptionWithCollectionAndAttributes(hashId);
 
-    const { data } = await response;
-
-    if (!data || !data.attributes || !data[`collections${suffix}`]?.notifications) return null;
-
-    console.log(data);
+    if (!attributes || !collection?.notifications) return null;
 
     const result = {
-      ethscription: data,
-      collection: data[`collections${suffix}`],
-      attributes: Object.keys(data.attributes.values)?.map((key: string) => {
+      ethscription,
+      collection,
+      attributes: Object.keys(attributes.values)?.map((key: string) => {
         const k = key.replace(/_/g, ' ').replace(/\b\w/g, char => char.toUpperCase());
-        const v = Array.isArray(data.attributes?.values[key])
-          ? data.attributes?.values[key].map(val => val?.replaceAll('-', ' ').replace(/_/g, ' ').replace(/\b\w/g, char => char.toUpperCase())).join(', ')
-          : data.attributes?.values[key]?.replaceAll('-', ' ')?.replace(/_/g, ' ')?.replace(/\b\w/g, char => char?.toUpperCase());
+        const v = Array.isArray(attributes.values[key])
+          ? attributes.values[key].map(val => val?.replaceAll('-', ' ').replace(/_/g, ' ').replace(/\b\w/g, char => char.toUpperCase())).join(', ')
+          : attributes.values[key]?.replaceAll('-', ' ')?.replace(/_/g, ' ')?.replace(/\b\w/g, char => char?.toUpperCase());
         return {
           k,
           v,
-          rarity: rarityData[data.slug][v],
+          rarity: rarityData[attributes.slug][v],
         };
       }).sort((a, b) => (a.rarity || Infinity) - (b.rarity || Infinity)),
     };
 
-    delete result.ethscription[`collections${suffix}`];
     return result;
   }
 

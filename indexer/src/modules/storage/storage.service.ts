@@ -1,36 +1,25 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 
-import { createClient } from '@supabase/supabase-js';
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
 import { Transaction, fromHex, zeroAddress } from 'viem';
-import { writeFile } from 'fs/promises';
-
-import {
-  Event,
-  UserResponse,
-  EventType,
-  EventResponse,
-  User,
-  ListingResponse,
-  Bid,
-  BidResponse,
-  EthscriptionResponse,
-  Ethscription,
-  AttributeItem,
-  AttributesResponse,
-  CommentResponse,
-  DBComment,
-  CollectionResponse,
-} from '@/models/db';
 import { Observable } from 'rxjs';
 
-const supabaseUrl = process.env.SUPABASE_URL;
-const serviceRole = process.env.SUPABASE_SERVICE_ROLE;
-const supabase = createClient(supabaseUrl, serviceRole);
+import * as db from '@/modules/storage/models/db';
+import { Ethscription } from '@/modules/storage/models/db';
 
 @Injectable()
-export class SupabaseService {
+export class StorageService implements OnModuleInit {
+
+  supabase: SupabaseClient;
   suffix = process.env.CHAIN_ID === '1' ? '' : '_sepolia';
+
+  onModuleInit() {
+    this.supabase = createClient(
+      process.env.SUPABASE_URL,
+      process.env.SUPABASE_SERVICE_ROLE
+    );
+  }
 
   /**
    * Updates the last processed block number
@@ -38,7 +27,7 @@ export class SupabaseService {
    * @param createdAt - Timestamp of when this block was processed
    */
   async updateLastBlock(blockNumber: number, createdAt: Date): Promise<void> {
-    const response = await supabase
+    const response = await this.supabase
       .from('blocks')
       .upsert({
         network: process.env.CHAIN_ID,
@@ -56,7 +45,7 @@ export class SupabaseService {
    * @returns The last processed block number minus 10 blocks for safety, or null if no blocks processed
    */
   async getLastBlock(network: number): Promise<any> {
-    const response = await supabase
+    const response = await this.supabase
       .from('blocks')
       .select('*')
       .eq('network', network);
@@ -72,7 +61,7 @@ export class SupabaseService {
    * @param hashId - The hash ID of the bid to remove
    */
   async removeBid(hashId: string): Promise<void> {
-    const response: ListingResponse = await supabase
+    const response: db.ListingResponse = await this.supabase
       .from('bids' + this.suffix)
       .delete()
       .eq('hashId', hashId);
@@ -96,7 +85,7 @@ export class SupabaseService {
     fromAddress: string,
     value: bigint
   ): Promise<void> {
-    const response: ListingResponse = await supabase
+    const response: db.ListingResponse = await this.supabase
       .from('bids' + this.suffix)
       .upsert({
         createdAt,
@@ -116,8 +105,8 @@ export class SupabaseService {
    * @param hashId - The hash ID of the bid to get
    * @returns The bid if found, null otherwise
    */
-  async getBid(hashId: string): Promise<Bid> {
-    const response: BidResponse = await supabase
+  async getBid(hashId: string): Promise<db.Bid> {
+    const response: db.BidResponse = await this.supabase
       .from('bids' + this.suffix)
       .select('*')
       .eq('hashId', hashId);
@@ -125,7 +114,7 @@ export class SupabaseService {
     const { data, error } = response;
 
     if (error) throw error;
-    if (data?.length) return data[0] as Bid;
+    if (data?.length) return data[0] as db.Bid;
     return null;
   }
 
@@ -146,7 +135,7 @@ export class SupabaseService {
     minValue: bigint,
     l2: boolean = false
   ): Promise<void> {
-    const response: ListingResponse = await supabase
+    const response: db.ListingResponse = await this.supabase
       .from('listings' + this.suffix)
       .upsert({
         hashId,
@@ -177,7 +166,7 @@ export class SupabaseService {
     const listing = await this.getListing(hashId);
     if (!listing) return false;
 
-    const response: ListingResponse = await supabase
+    const response: db.ListingResponse = await this.supabase
       .from('listings' + this.suffix)
       .delete()
       .eq('hashId', hashId)
@@ -206,8 +195,8 @@ export class SupabaseService {
    * @param sha - The SHA to check
    * @returns The attribute data if it's an EthPhunk, null otherwise
    */
-  async checkIsCuratedCollection(sha: string): Promise<AttributeItem | null> {
-    const response: AttributesResponse = await supabase
+  async checkIsCuratedCollection(sha: string): Promise<db.AttributeItem | null> {
+    const response: db.AttributesResponse = await this.supabase
       .from('attributes_new')
       .select('*')
       .eq('sha', sha);
@@ -225,7 +214,7 @@ export class SupabaseService {
    * @returns True if ethscription exists, false otherwise
    */
   async checkEthscriptionExistsBySha(sha: string): Promise<boolean> {
-    const response: EthscriptionResponse = await supabase
+    const response: db.EthscriptionResponse = await this.supabase
       .from('ethscriptions' + this.suffix)
       .select('*')
       .eq('sha', sha);
@@ -242,8 +231,8 @@ export class SupabaseService {
    * @param hash - The hash ID to check
    * @returns The ethscription if found, null otherwise
    */
-  async checkEthscriptionExistsByHashId(hash: string): Promise<Ethscription> {
-    const response: EthscriptionResponse = await supabase
+  async checkEthscriptionExistsByHashId(hash: string): Promise<db.Ethscription> {
+    const response: db.EthscriptionResponse = await this.supabase
       .from('ethscriptions' + this.suffix)
       .select('*')
       .eq('hashId', hash?.toLowerCase());
@@ -270,7 +259,7 @@ export class SupabaseService {
     for (let i = 0; i < hashes.length; i += batchSize) {
       const batch = hashes.slice(i, i + batchSize);
 
-      const response: EthscriptionResponse = await supabase
+      const response: db.EthscriptionResponse = await this.supabase
         .from('ethscriptions' + this.suffix)
         .select('*')
         .in('hashId', batch.map((hash) => hash.toLowerCase()));
@@ -291,8 +280,8 @@ export class SupabaseService {
    * @param id - The token ID
    * @returns The ethscription if found, null otherwise
    */
-  async fetchEthscriptionBySlugAndTokenId(slug: string, id: number): Promise<Ethscription> {
-    const response: EthscriptionResponse = await supabase
+  async fetchEthscriptionBySlugAndTokenId(slug: string, id: number): Promise<db.Ethscription> {
+    const response: db.EthscriptionResponse = await this.supabase
       .from('ethscriptions' + this.suffix)
       .select('*')
       .eq('tokenId', id)
@@ -315,7 +304,7 @@ export class SupabaseService {
    */
   async getCollectionData(slug: string): Promise<any> {
     // Requires a service role token
-    const { data, error } = await supabase.storage
+    const { data, error } = await this.supabase.storage
       .from('mint-data')
       .download(`${slug}.json`);
 
@@ -330,7 +319,7 @@ export class SupabaseService {
    */
   async getMintImageBySha(sha: string): Promise<{ buffer: Buffer; mimeType: string }> {
     // Requires a service role token
-    const { data, error } = await supabase.storage
+    const { data, error } = await this.supabase.storage
       .from('mint-images')
       .download(`${sha}`);
 
@@ -355,7 +344,7 @@ export class SupabaseService {
     imageBuffer: Buffer,
     contentType: string
   ): Promise<{ path: string }> {
-    const { data, error } = await supabase.storage
+    const { data, error } = await this.supabase.storage
       .from('images')
       .upload(`${sha}.${contentType.split('/')[1]}`, imageBuffer, {
         contentType,
@@ -371,7 +360,7 @@ export class SupabaseService {
    * @returns True if the collection is minting and minting is enabled, false otherwise
    */
   async isMinting(slug: string): Promise<boolean> {
-    const response: CollectionResponse = await supabase
+    const response: db.CollectionResponse = await this.supabase
       .from('collections' + this.suffix)
       .select('*')
       .eq('slug', slug);
@@ -385,7 +374,7 @@ export class SupabaseService {
 
   watchCollection(slug: string): Observable<any> {
     const changes$ = new Observable(subscriber => {
-      const channel = supabase
+      const channel = this.supabase
         .channel('collections' + this.suffix)
         .on(
           'postgres_changes',
@@ -411,7 +400,7 @@ export class SupabaseService {
    * @returns The mint progress and total supply
    */
   async fetchMintProgress(slug: string): Promise<{ progress: number, total: number }> {
-    const query = supabase
+    const query = this.supabase
       .from('ethscriptions' + this.suffix)
       .select('*', { count: 'exact', head: true })
       .eq('slug', slug);
@@ -436,7 +425,7 @@ export class SupabaseService {
   async addEthscription(
     txn: Transaction,
     createdAt: Date,
-    attributesData: AttributeItem,
+    attributesData: db.AttributeItem,
   ): Promise<void> {
 
     // Get or create the users
@@ -449,7 +438,7 @@ export class SupabaseService {
       ]);
     }
 
-    const { error }: EthscriptionResponse = await supabase
+    const { error }: db.EthscriptionResponse = await this.supabase
       .from('ethscriptions' + this.suffix)
       .insert([
         {
@@ -484,7 +473,7 @@ export class SupabaseService {
     from: string,
     to: string,
     hashId: string,
-    type: EventType,
+    type: db.EventType,
     createdAt: Date,
     value: bigint,
     logIndex: number
@@ -500,7 +489,7 @@ export class SupabaseService {
     }
 
     const txId = `${txn.hash.toLowerCase()}-${logIndex}`;
-    const response: EthscriptionResponse = await supabase
+    const response: db.EventResponse = await this.supabase
       .from('events' + this.suffix)
       .upsert({
         txId,
@@ -527,7 +516,7 @@ export class SupabaseService {
    * Adds multiple events to the database
    * @param events - Array of events to add
    */
-  async addEvents(events: Event[]): Promise<void> {
+  async addEvents(events: db.Event[]): Promise<void> {
 
     events = events.map((event, i) => {
       event.txId = `${event.txHash.toLowerCase()}-${event.txIndex}-${i}`;
@@ -538,7 +527,7 @@ export class SupabaseService {
       return event;
     });
 
-    const response: EventResponse = await supabase
+    const response: db.EventResponse = await this.supabase
       .from('events' + this.suffix)
       .upsert(events, {
         ignoreDuplicates: true,
@@ -558,10 +547,10 @@ export class SupabaseService {
    * @param createdAt - Optional timestamp for when user was created
    * @returns The user object
    */
-  async getOrCreateUser(address: string, createdAt?: Date): Promise<User> {
+  async getOrCreateUser(address: string, createdAt?: Date): Promise<db.User> {
     if (!address) return null;
 
-    const response: UserResponse = await supabase
+    const response: db.UserResponse = await this.supabase
       .from('users' + this.suffix)
       .select('*')
       .eq('address', address.toLowerCase());
@@ -572,7 +561,7 @@ export class SupabaseService {
     if (error) throw error;
     if (data.length) return data[0];
 
-    const newUserResponse: UserResponse = await supabase
+    const newUserResponse: db.UserResponse = await this.supabase
       .from('users' + this.suffix)
       .insert({
         address: address.toLowerCase(),
@@ -594,7 +583,7 @@ export class SupabaseService {
    * @returns The collection if found, null otherwise
    */
   async getCollectionBySlug(slug: string): Promise<any> {
-    const response = await supabase
+    const response = await this.supabase
       .from('collections' + this.suffix)
       .select('*')
       .eq('slug', slug);
@@ -611,7 +600,7 @@ export class SupabaseService {
    * @returns The attributes if found, null otherwise
    */
   async getAttributesFromSha(sha: string): Promise<any> {
-    const response = await supabase
+    const response = await this.supabase
       .from('attributes_new')
       .select('*')
       .eq('sha', sha);
@@ -641,7 +630,7 @@ export class SupabaseService {
     // Get or create the users
     await this.getOrCreateUser(newOwner);
 
-    const response: EthscriptionResponse = await supabase
+    const response: db.EthscriptionResponse = await this.supabase
       .from('ethscriptions' + this.suffix)
       .update({
         owner: newOwner.toLowerCase(),
@@ -659,7 +648,7 @@ export class SupabaseService {
    * @param data - The data to update
    */
   async updateEvent(eventId: number, data: any): Promise<void> {
-    const response: EventResponse = await supabase
+    const response: db.EventResponse = await this.supabase
       .from('events' + this.suffix)
       .update(data)
       .eq('txId', eventId);
@@ -674,7 +663,7 @@ export class SupabaseService {
    * @param points - The new points value
    */
   async updateUserPoints(address: string, points: number): Promise<void> {
-    const response: UserResponse = await supabase
+    const response: db.UserResponse = await this.supabase
       .from('users' + this.suffix)
       .update({ points })
       .eq('address', address.toLowerCase());
@@ -702,7 +691,7 @@ export class SupabaseService {
     },
     createdAt: Date
   ): Promise<void> {
-    const { data, error } = await supabase
+    const { data, error } = await this.supabase
       .from('auctions' + this.suffix)
       .upsert({
         auctionId: Number(args.auctionId),
@@ -739,7 +728,7 @@ export class SupabaseService {
     txn: Transaction,
     createdAt: Date
   ): Promise<void> {
-    const { data: auctionsData, error: auctionsError } = await supabase
+    const { data: auctionsData, error: auctionsError } = await this.supabase
       .from('auctions' + this.suffix)
       .update({
         amount: args.value.toString(),
@@ -749,7 +738,7 @@ export class SupabaseService {
 
     if (auctionsData) throw auctionsError;
 
-    const { data: bidsData, error: bidsError } = await supabase
+    const { data: bidsData, error: bidsError } = await this.supabase
       .from('auctionBids' + this.suffix)
       .insert({
         auctionId: Number(args.auctionId),
@@ -775,7 +764,7 @@ export class SupabaseService {
       amount: bigint
     }
   ): Promise<void> {
-    const { data, error } = await supabase
+    const { data, error } = await this.supabase
       .from('auctions' + this.suffix)
       .update({
         settled: true,
@@ -797,7 +786,7 @@ export class SupabaseService {
       endTime: bigint
     }
   ): Promise<void> {
-    const { data, error } = await supabase
+    const { data, error } = await this.supabase
       .from('auctions' + this.suffix)
       .update({
         endTime: new Date(Number(args.endTime) * 1000),
@@ -817,8 +806,8 @@ export class SupabaseService {
    * @param tokenId - The token ID to look up
    * @returns The ethscription if found, undefined otherwise
    */
-  async getEthscriptionByTokenId(tokenId: string): Promise<Ethscription> {
-    const response: EthscriptionResponse = await supabase
+  async getEthscriptionByTokenId(tokenId: string): Promise<db.Ethscription> {
+    const response: db.EthscriptionResponse = await this.supabase
       .from('ethscriptions' + this.suffix)
       .select('*')
       .eq('tokenId', tokenId);
@@ -835,7 +824,7 @@ export class SupabaseService {
    * @returns The listing if found, null otherwise
    */
   async getListing(hashId: string): Promise<any> {
-    const response = await supabase
+    const response = await this.supabase
       .from('listings' + this.suffix)
       .select('*')
       .eq('hashId', hashId);
@@ -850,8 +839,8 @@ export class SupabaseService {
    * Gets all transfer events
    * @returns Array of transfer events
    */
-  async getAllTransfers(): Promise<Event[]> {
-    const response: EventResponse = await supabase
+  async getAllTransfers(): Promise<db.Event[]> {
+    const response: db.EventResponse = await this.supabase
       .from('events' + this.suffix)
       .select('*')
       .eq('type', 'transfer');
@@ -860,41 +849,6 @@ export class SupabaseService {
 
     if (error) throw error;
     if (data?.length) return data;
-  }
-
-  /**
-   * Gets all EthPhunks and writes them to a file
-   */
-  async getAllEthPhunks(): Promise<void> {
-    let allPhunks: any[] = [];
-    const pageSize = 1000; // Max rows per request
-    let hasMore = true;
-    let page = 0;
-
-    while (hasMore) {
-      const { data, error } = await supabase
-        .from('ethscriptions' + this.suffix)
-        .select('hashId')
-        .order('tokenId', { ascending: true })
-        .range(page * pageSize, (page + 1) * pageSize - 1);
-
-      if (error) {
-        console.error('Error fetching data:', error);
-        throw error;
-      }
-
-      if (data) {
-        allPhunks = allPhunks.concat(data);
-        hasMore = data.length === pageSize;
-        page++;
-      } else {
-        hasMore = false;
-      }
-    }
-
-    const cleanPhunks = allPhunks.map((phunk) => phunk.hashId);
-
-    await writeFile('tree.json', JSON.stringify(cleanPhunks));
   }
 
   /**
@@ -907,7 +861,7 @@ export class SupabaseService {
     let page = 0;
 
     while (hasMore) {
-      const { data, error } = await supabase
+      const { data, error } = await this.supabase
         .from('phunks_sepolia')
         .select('phunkId')
         .order('phunkId', { ascending: true })
@@ -949,8 +903,8 @@ export class SupabaseService {
    * @param hashId - The hash ID to look up
    * @returns The event if found, undefined otherwise
    */
-  async getEventByHashId(hashId: string): Promise<Event> {
-    const response: EventResponse = await supabase
+  async getEventByHashId(hashId: string): Promise<db.Event> {
+    const response: db.EventResponse = await this.supabase
       .from('events' + this.suffix)
       .select('*')
       .order('blockTimestamp', { ascending: false })
@@ -981,7 +935,7 @@ export class SupabaseService {
       commentData.topic?.length === 66 ? 'hash' :
       undefined;
 
-    const comment: DBComment = {
+    const comment: db.DBComment = {
       id: txn.hash.toLowerCase(),
       topic: commentData.topic?.toLowerCase(),
       topicType,
@@ -992,7 +946,7 @@ export class SupabaseService {
       from: txn.from.toLowerCase(),
     };
 
-    const response: CommentResponse = await supabase
+    const response: db.CommentResponse = await this.supabase
       .from('comments' + this.suffix)
       .upsert(comment);
 
@@ -1006,8 +960,8 @@ export class SupabaseService {
    * @param hashId - The hash ID to look up
    * @returns The comment if found
    */
-  async getCommentByHashId(hashId: string): Promise<DBComment> {
-    const response: CommentResponse = await supabase
+  async getCommentByHashId(hashId: string): Promise<db.DBComment> {
+    const response: db.CommentResponse = await this.supabase
       .from('comments' + this.suffix)
       .select('*')
       .eq('id', hashId.toLowerCase());
@@ -1022,7 +976,7 @@ export class SupabaseService {
    * @param hashId - The hash ID of the comment to delete
    */
   async deleteComment(hashId: string): Promise<void> {
-    const response: CommentResponse = await supabase
+    const response: db.CommentResponse = await this.supabase
       .from('comments' + this.suffix)
       .update({ deleted: true })
       .eq('id', hashId.toLowerCase());
@@ -1041,7 +995,7 @@ export class SupabaseService {
    * @returns True if the ethscription was locked, false otherwise
    */
   async lockEthscription(hashId: string): Promise<boolean> {
-    const response: EthscriptionResponse = await supabase
+    const response: db.EthscriptionResponse = await this.supabase
       .from('ethscriptions' + this.suffix)
       .update({
         locked: true,
@@ -1060,7 +1014,7 @@ export class SupabaseService {
    * @returns True if the ethscription was unlocked, false otherwise
    */
   async unlockEthscription(hashId: string): Promise<boolean> {
-    const response: EthscriptionResponse = await supabase
+    const response: db.EthscriptionResponse = await this.supabase
       .from('ethscriptions' + this.suffix)
       .update({
         locked: false,
@@ -1088,7 +1042,7 @@ export class SupabaseService {
     owner: string,
     hashId: string,
   ): Promise<void> {
-    const response: EventResponse = await supabase
+    const response: db.EventResponse = await this.supabase
       .from('nfts' + this.suffix)
       .upsert({
         tokenId,
@@ -1106,7 +1060,7 @@ export class SupabaseService {
    * @param owner - The new owner of the NFT
    */
   async updateNftL2(tokenId: number, owner: string): Promise<void> {
-    const response: EventResponse = await supabase
+    const response: db.EventResponse = await this.supabase
       .from('nfts' + this.suffix)
       .update({ owner: owner.toLowerCase() })
       .eq('tokenId', tokenId);
@@ -1121,7 +1075,7 @@ export class SupabaseService {
    * @param hashId - The hash ID of the NFT
    */
   async removeNftL2(tokenId: number, hashId: string): Promise<void> {
-    const response: EventResponse = await supabase
+    const response: db.EventResponse = await this.supabase
       .from('nfts' + this.suffix)
       .delete()
       .eq('hashId', hashId)
@@ -1136,7 +1090,7 @@ export class SupabaseService {
    * @param event - The event to add
    */
   async addEventL2(event: any): Promise<void> {
-    const response: EventResponse = await supabase
+    const response: db.EventResponse = await this.supabase
       .from('l2_events' + this.suffix)
       .upsert(event);
 
@@ -1144,6 +1098,95 @@ export class SupabaseService {
     if (error) throw error;
   }
 
-}
+  ///////////////////////////////////////////////////////////////
+  // NOTIFICATIONS //////////////////////////////////////////////
+  ///////////////////////////////////////////////////////////////
 
-// 0x6ab3099fa660b0d2ac925b50d5e96410f3c7571c75f0ef88e01a6b8fe9df1bef
+  /**
+   * Retrieves full Ethscription data including collection and attributes
+   * @param hashId The Ethscription hash ID
+   * @returns Ethscription data with collection and attributes
+   * !FIXME: Update to use new attributes!
+   */
+  async getEthscriptionWithCollectionAndAttributes(
+    hashId: string
+  ): Promise<db.EthscriptionWithCollectionAndAttributes> {
+
+    const response = this.supabase
+      .from(`ethscriptions${this.suffix}`)
+      .select(`
+        *,
+        collections${this.suffix}!inner(
+          name,
+          singleName,
+          notifications
+        ),
+        attributes!inner(
+          values
+        )
+      `)
+      .eq('hashId', hashId)
+      .limit(1)
+      .single();
+
+    const { data, error } = await response;
+    if (error) throw error;
+    if (!data) return null;
+
+    const collection = data[`collections${this.suffix}`];
+    const attributes = data['attributes'];
+
+    return {
+      ethscription: data as unknown as db.Ethscription,
+      collection,
+      attributes,
+    };
+  }
+
+  /**
+   * Listens for Phunk sale events from Supabase
+   * @returns An Observable that emits Phunk sale events
+   */
+  listenSales(): Observable<db.Event> {
+    return new Observable(subscriber => {
+      const subscription = this.supabase
+        .channel(`sales${this.suffix}`)
+        .on('postgres_changes', {
+          event: 'INSERT',
+          schema: 'public',
+          table: `events${this.suffix}`,
+          filter: 'type=eq.PhunkBought'
+        }, payload => {
+          console.log(payload.new);
+          subscriber.next(payload.new as db.Event);
+        })
+        .subscribe();
+
+      // Return cleanup function
+      return () => {
+        subscription.unsubscribe();
+      };
+    });
+  }
+
+  /**
+   * Retrieves the latest Phunk bought event by hash ID
+   * @param hashId The hash ID of the Phunk
+   * @returns The latest Phunk bought event
+   */
+  async getLatestBoughtEventByHashId(hashId: string): Promise<db.Event> {
+    const response = this.supabase
+      .from(`events${this.suffix}`)
+      .select('*')
+      .eq('type', 'PhunkBought')
+      .eq('hashId', hashId)
+      .order('blockTimestamp', { ascending: false })
+      .limit(1)
+      .single();
+
+    const { data, error } = await response;
+
+    if (error) throw error;
+    return data;
+  }
+}

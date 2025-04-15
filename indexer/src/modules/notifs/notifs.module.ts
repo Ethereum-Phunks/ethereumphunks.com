@@ -7,11 +7,11 @@ import { TelegramService } from '@/modules/notifs/services/telegram.service';
 import { DiscordService } from '@/modules/notifs/services/discord.service';
 import { ImageService } from '@/modules/notifs/services/image.service';
 
-import { SupabaseService } from '@/services/supabase.service';
-
 import { NotifsService } from './notifs.service';
 import { NotifsController } from './notifs.controller';
 import { TwitterService } from './services/twitter.service';
+
+import { StorageModule } from '@/modules/storage/storage.module';
 
 @Module({
   controllers: [
@@ -19,7 +19,8 @@ import { TwitterService } from './services/twitter.service';
   ],
   imports: [
     HttpModule,
-    SharedModule
+    SharedModule,
+    StorageModule,
   ],
   providers: [
     NotifsService,
@@ -28,8 +29,6 @@ import { TwitterService } from './services/twitter.service';
     DiscordService,
     ImageService,
     TwitterService,
-
-    SupabaseService
   ],
   exports: [
     NotifsService

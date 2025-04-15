@@ -1,17 +1,17 @@
-import { Module, forwardRef } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 
 import { CommentsService } from './comments.service';
-import { SupabaseService } from '@/services/supabase.service';
 
 import { SharedModule } from '@/modules/shared/shared.module';
+import { StorageModule } from '@/modules/storage/storage.module';
 
 @Module({
   imports: [
-    SharedModule
+    SharedModule,
+    StorageModule,
   ],
   providers: [
     CommentsService,
-    SupabaseService,
   ],
   exports: [
     CommentsService

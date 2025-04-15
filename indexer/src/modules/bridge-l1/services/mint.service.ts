@@ -5,7 +5,7 @@ import { WriteContractParameters, parseEventLogs } from 'viem';
 import { catchError, firstValueFrom, map, of } from 'rxjs';
 
 import { ImageUriService } from '@/modules/bridge-l1/services/image-uri.service';
-import { SupabaseService } from '@/services/supabase.service';
+import { StorageService } from '@/modules/storage/storage.service';
 import { Web3Service } from '@/modules/shared/services/web3.service';
 import { UtilityService } from '@/modules/shared/services/utility.service';
 
@@ -21,7 +21,7 @@ export class MintService {
     @Inject('WEB3_SERVICE_L1') private readonly web3SvcL1: Web3Service,
     @Inject('WEB3_SERVICE_L2') private readonly web3SvcL2: Web3Service,
     private readonly http: HttpService,
-    private readonly sbSvc: SupabaseService,
+    private readonly storageSvc: StorageService,
     private readonly imageSvc: ImageUriService,
     private readonly utilSvc: UtilityService
   ) {}
@@ -88,11 +88,11 @@ export class MintService {
     hashId: string,
     owner: string,
   ): Promise<WriteContractParameters> {
-    const { slug, tokenId, sha } = await this.sbSvc.checkEthscriptionExistsByHashId(hashId);
+    const { slug, tokenId, sha } = await this.storageSvc.checkEthscriptionExistsByHashId(hashId);
 
     const [ { name, singleName }, { values } ] = await Promise.all([
-      this.sbSvc.getCollectionBySlug(slug),
-      this.sbSvc.getAttributesFromSha(sha)
+      this.storageSvc.getCollectionBySlug(slug),
+      this.storageSvc.getAttributesFromSha(sha)
     ]);
 
     const imageUri = await this.imageSvc.createImageUri(sha);

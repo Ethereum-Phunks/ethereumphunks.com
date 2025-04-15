@@ -1,9 +1,9 @@
 import { Inject, Injectable, Logger, Optional } from '@nestjs/common';
 
-import { SupabaseService } from '@/services/supabase.service';
 import { DataService } from '@/services/data.service';
 import { UtilityService } from '@/modules/shared/services/utility.service';
 import { Web3Service } from '@/modules/shared/services/web3.service';
+import { StorageService } from '@/modules/storage/storage.service';
 
 import { BridgeProcessingQueue } from '@/modules/queue/queues/bridge-processing.queue';
 
@@ -12,13 +12,12 @@ import * as esips from '@/constants/esips';
 
 import { bridgeAbiL1, chain, marketAbiL1, marketAddressL1, pointsAbiL1, pointsAddressL1 } from '@/constants/ethereum';
 
-import { AttributeItem, Ethscription, Event } from '@/models/db';
+import { AttributeItem, Ethscription, Event } from '@/modules/storage/models/db';
 
 import { DecodeEventLogReturnType, Log, Transaction, TransactionReceipt, decodeEventLog, hexToString, zeroAddress } from 'viem';
 
 import { mkdir, writeFile } from 'fs/promises';
 import { createHash } from 'crypto';
-
 
 @Injectable()
 export class EthscriptionsService {
@@ -27,7 +26,7 @@ export class EthscriptionsService {
     @Optional() private readonly bridgeQueue: BridgeProcessingQueue,
     @Inject('WEB3_SERVICE_L1') private readonly web3SvcL1: Web3Service,
     @Inject('WEB3_SERVICE_L2') private readonly web3SvcL2: Web3Service,
-    private readonly sbSvc: SupabaseService,
+    private readonly storageSvc: StorageService,
     private readonly dataSvc: DataService,
     private readonly utilitySvc: UtilityService
   ) {}
@@ -63,11 +62,11 @@ export class EthscriptionsService {
       const sha = createHash('sha256').update(cleanedString).digest('hex');
 
       // Check if the sha exists
-      const attributesData = await this.sbSvc.checkIsCuratedCollection(sha);
+      const attributesData = await this.storageSvc.checkIsCuratedCollection(sha);
       if (!attributesData) return;
 
       // Check if its a duplicate (already been inscribed)
-      const isDuplicate = await this.sbSvc.checkEthscriptionExistsBySha(sha);
+      const isDuplicate = await this.storageSvc.checkEthscriptionExistsBySha(sha);
       if (isDuplicate) return
 
       Logger.debug('Processing ethscription', transaction.hash);
@@ -194,7 +193,7 @@ export class EthscriptionsService {
     const { from, to, hash: hashId } = txn;
 
     // Add the ethscription
-    await this.sbSvc.addEthscription(txn, createdAt, attributesData);
+    await this.storageSvc.addEthscription(txn, createdAt, attributesData);
     Logger.log('Added ethscription', `${hashId.toLowerCase()}`);
 
     return {
@@ -234,7 +233,7 @@ export class EthscriptionsService {
       if (eventName === 'HashLocked') {
         const { hashId, prevOwner } = args;
 
-        const locked = await this.sbSvc.lockEthscription(hashId);
+        const locked = await this.storageSvc.lockEthscription(hashId);
         if (!locked) throw new Error('Failed to lock ethscription');
 
         // Bridge the ethscription
@@ -304,7 +303,7 @@ export class EthscriptionsService {
         await this.web3SvcL1.getPoints(fromAddress) :
         await this.web3SvcL2.getPoints(fromAddress);
 
-      await this.sbSvc.updateUserPoints(fromAddress, Number(points));
+      await this.storageSvc.updateUserPoints(fromAddress, Number(points));
       Logger.log(
         `Updated user points for ${points.toString()}`,
         fromAddress
@@ -329,7 +328,7 @@ export class EthscriptionsService {
     createdAt: Date,
     index?: number
   ): Promise<Event | null> {
-    const ethscript: Ethscription = await this.sbSvc.checkEthscriptionExistsByHashId(hashId);
+    const ethscript: Ethscription = await this.storageSvc.checkEthscriptionExistsByHashId(hashId);
     // console.log({ethscript})
     if (!ethscript) return null;
 
@@ -347,7 +346,7 @@ export class EthscriptionsService {
     );
 
     // Update the eth phunk owner
-    await this.sbSvc.updateEthscriptionOwner(hashId, ethscript.owner, txn.to);
+    await this.storageSvc.updateEthscriptionOwner(hashId, ethscript.owner, txn.to);
     Logger.log(
       `Updated ethscript owner to ${txn.to} (transfer event)`,
       ethscript.hashId
@@ -391,7 +390,7 @@ export class EthscriptionsService {
     value?: bigint,
     prevOwner?: string,
   ): Promise<Event | null> {
-    const ethscript: Ethscription = await this.sbSvc.checkEthscriptionExistsByHashId(hashId);
+    const ethscript: Ethscription = await this.storageSvc.checkEthscriptionExistsByHashId(hashId);
     if (!ethscript) return null;
 
     const isMatchedHashId = ethscript.hashId.toLowerCase() === hashId.toLowerCase();
@@ -406,7 +405,7 @@ export class EthscriptionsService {
     if (!isMatchedHashId || !transferrerIsOwner || !samePrevOwner) return null;
 
     // Update the eth phunk owner
-    await this.sbSvc.updateEthscriptionOwner(ethscript.hashId, ethscript.owner, to);
+    await this.storageSvc.updateEthscriptionOwner(ethscript.hashId, ethscript.owner, to);
     Logger.log(
       `Updated ethscript owner to ${to} (contract event)`,
       ethscript.hashId
@@ -530,7 +529,7 @@ export class EthscriptionsService {
 
     const allHashes = data.match(/.{1,64}/g).map((hash) => '0x' + hash);
     // console.log(allHashes.length);
-    const validItems = await this.sbSvc.checkEthscriptionsExistsByHashIds(allHashes);
+    const validItems = await this.storageSvc.checkEthscriptionsExistsByHashIds(allHashes);
 
     if (!validItems?.length) return [];
     const validHashes = validItems.map((item) => item.hashId);
@@ -623,13 +622,13 @@ export class EthscriptionsService {
 
     if (!hashId) return;
 
-    const phunk = await this.sbSvc.checkEthscriptionExistsByHashId(hashId);
+    const phunk = await this.storageSvc.checkEthscriptionExistsByHashId(hashId);
     if (!phunk) return;
 
     if (eventName === 'PhunkBought') {
       const { phunkId: hashId, fromAddress, toAddress, value } = args;
 
-      const removedListing = await this.sbSvc.removeListing(hashId);
+      const removedListing = await this.storageSvc.removeListing(hashId);
       if (!removedListing) return;
 
       return {
@@ -650,7 +649,7 @@ export class EthscriptionsService {
     if (eventName === 'PhunkNoLongerForSale') {
       const { phunkId: hashId } = args;
 
-      const removedListing = await this.sbSvc.removeListing(hashId);
+      const removedListing = await this.storageSvc.removeListing(hashId);
       if (!removedListing) return;
 
       if (txn.from === phunk.prevOwner) {
@@ -688,13 +687,13 @@ export class EthscriptionsService {
 
         // Since this listing will STILL overwrite existing listings
         // on the smart contract, we must delete it from the database
-        await this.sbSvc.removeListing(hashId);
+        await this.storageSvc.removeListing(hashId);
         return;
       }
 
       // console.log({ hashId, toAddress, minValue });
 
-      await this.sbSvc.createListing(txn, createdAt, hashId, toAddress, minValue);
+      await this.storageSvc.createListing(txn, createdAt, hashId, toAddress, minValue);
       return {
         txId: txn.hash + log.logIndex,
         type: eventName,

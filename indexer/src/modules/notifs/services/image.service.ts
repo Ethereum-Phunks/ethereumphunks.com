@@ -3,7 +3,7 @@ import { HttpService } from '@nestjs/axios';
 
 import { createCanvas, Image, registerFont } from 'canvas';
 
-import { Collection, Ethscription } from '@/models/db';
+import { Collection, Ethscription } from '@/modules/storage/models/db';
 import { catchError, firstValueFrom, of } from 'rxjs';
 import { readFile } from 'fs/promises';
 import path from 'path';

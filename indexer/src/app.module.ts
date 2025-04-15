@@ -1,6 +1,9 @@
 import { MiddlewareConsumer, Module, RequestMethod } from '@nestjs/common';
 import { HttpModule } from '@nestjs/axios';
+import { ConfigModule } from '@nestjs/config';
 
+import { StorageModule } from '@/modules/storage/storage.module';
+import { CommentsModule } from '@/modules/comments/comments.module';
 import { SharedModule } from '@/modules/shared/shared.module';
 import { QueueModule } from '@/modules/queue/queue.module';
 import { NotifsModule } from '@/modules/notifs/notifs.module';
@@ -16,14 +19,13 @@ import { AppController } from '@/app.controller';
 import { AppGateway } from '@/app.gateway';
 
 import { DataService } from '@/services/data.service';
-import { SupabaseService } from '@/services/supabase.service';
 import { ProcessingService } from '@/services/processing.service';
 
 import { ApiKeyMiddleware } from '@/middleware/api-key.middleware';
-import { CommentsModule } from '@/modules/comments/comments.module';
 
 @Module({
   imports: [
+    ConfigModule.forRoot(),
     HttpModule,
 
     NftModule,
@@ -38,13 +40,13 @@ import { CommentsModule } from '@/modules/comments/comments.module';
     ...(Number(process.env.TX_POOL) ? [TxPoolModule] : []),
     ...(Number(process.env.MINT) ? [MintModule] : []),
 
-    CommentsModule
+    CommentsModule,
+    StorageModule,
   ],
   controllers: [AppController],
   providers: [
     AppService,
     AppGateway,
-    SupabaseService,
     ProcessingService,
     DataService,
   ],
