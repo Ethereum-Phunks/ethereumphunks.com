@@ -1,6 +1,11 @@
+# database
+data.sql
+
 # Supabase
 .branches
 .temp
-.env
 
-migrations
+# dotenvx
+.env.keys
+.env.local
+.env.*.local
