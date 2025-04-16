@@ -57,6 +57,28 @@ Key features:
 - Bridge operation support
 - WebSocket notifications
 
+### 4. Supabase (`/supabase`)
+Contains the database schema and configuration for the project's PostgreSQL database:
+
+- **Database Schema**:
+  - Tables for ethscriptions, listings, bids, auctions, and collections
+  - Separate tables for mainnet and sepolia testnet
+  - User management and authentication tables
+  - Event tracking and activity logs
+  - Leaderboard and points system
+
+- **Stored Procedures**:
+  - Functions for fetching ethscriptions with listings and bids
+  - Pagination and filtering utilities
+  - Volume and sales calculations
+  - User activity tracking
+  - Address verification and holder checks
+
+- **Configuration**:
+  - Database configuration settings
+  - Migration scripts
+  - Data seeding utilities
+
 ## Getting Started
 
 ### Prerequisites
