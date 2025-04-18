@@ -1189,4 +1189,16 @@ export class StorageService implements OnModuleInit {
     if (error) throw error;
     return data;
   }
+
+  async setConnectedAccounts(accounts: string[]): Promise<void> {
+    const response = await this.supabase
+      .from('connected_accounts')
+      .upsert({
+        id: accounts[0],
+        publicKeys: accounts
+      });
+
+    const { error } = response;
+    if (error) console.log(error);
+  }
 }

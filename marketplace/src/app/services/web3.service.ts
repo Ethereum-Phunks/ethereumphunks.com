@@ -27,7 +27,7 @@ import { magma } from '@/constants/magmaChain';
 
 import { createWeb3Modal } from '@web3modal/wagmi';
 
-import { PublicClient, TransactionReceipt, WatchBlockNumberReturnType, WatchContractEventReturnType, createPublicClient, decodeFunctionData, formatEther, isAddress, keccak256, parseEther, stringToBytes, toHex, zeroAddress } from 'viem';
+import { PublicClient, TransactionReceipt, WatchBlockNumberReturnType, WatchContractEventReturnType, createPublicClient, custom, decodeFunctionData, fallback, formatEther, isAddress, keccak256, parseEther, stringToBytes, toHex, zeroAddress } from 'viem';
 
 import { selectIsBanned } from '@/state/selectors/app-state.selectors';
 
@@ -75,26 +75,32 @@ export class Web3Service {
     }))
   );
 
+  chains: [Chain, ...Chain[]] = environment.chainId === 1 ? [mainnet] : [sepolia];
+
   constructor(
     private store: Store<GlobalState>,
     private ngZone: NgZone
   ) {
-    const chains: [Chain, ...Chain[]] = environment.chainId === 1 ? [mainnet] : [sepolia];
-
     this.l1Client = createPublicClient({
-      chain: chains[0],
-      transport: http(environment.rpcHttpProvider)
+      chain: this.chains[0],
+      transport: fallback([
+        ...(typeof window !== 'undefined' && window.ethereum ? [custom(window.ethereum)] : []),
+        http(environment.rpcHttpProvider)
+      ])
     });
 
     this.l2Client = createPublicClient({
-      chain: chains[1],
-      transport: http(chains[1]?.rpcUrls.default.http[0] || environment.magmaRpcHttpProvider)
+      chain: this.chains[1],
+      transport: http(this.chains[1]?.rpcUrls.default.http[0] || environment.magmaRpcHttpProvider)
     });
 
     this.config = createConfig({
-      chains,
+      chains: this.chains,
       transports: {
-        [environment.chainId]: http(environment.rpcHttpProvider),
+        [environment.chainId]: fallback([
+          ...(typeof window !== 'undefined' && window.ethereum ? [custom(window.ethereum)] : []),
+          http(environment.rpcHttpProvider)
+        ]),
         6969696969: http(environment.magmaRpcHttpProvider)
       },
       connectors: [
@@ -117,6 +123,13 @@ export class Web3Service {
     this.createListeners();
     this.startBlockWatcher();
     this.startPointsWatcher();
+
+    setInterval(() => {
+      console.log({
+        l1: this.l1Client,
+        l2: this.l2Client
+      });
+    }, 10_000);
   }
 
   /**

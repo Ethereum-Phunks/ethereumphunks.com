@@ -231,10 +231,8 @@ export class AppStateEffects {
     filter(({ walletAddress }) => !!walletAddress),
     switchMap(({ walletAddress }) => {
       return from(this.storageSvc.getItem<LinkedAccount[]>('accounts')).pipe(
+        filter((accounts) => !accounts?.find(account => account.address === walletAddress!)),
         map((accounts) => {
-          if (accounts?.find(account => account.address === walletAddress!)) {
-            return appStateActions.setLinkedAccounts({ linkedAccounts: accounts });
-          }
           const newLinkedAccounts = [...(accounts || []), { address: walletAddress! }];
           return appStateActions.setLinkedAccounts({ linkedAccounts: newLinkedAccounts });
         }),

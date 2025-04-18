@@ -4,9 +4,9 @@ import { Server, Socket } from 'socket.io';
 import { ConnectedSocket, MessageBody, OnGatewayConnection, OnGatewayDisconnect, OnGatewayInit, SubscribeMessage, WebSocketGateway, WebSocketServer } from '@nestjs/websockets';
 
 import { CustomLogger } from '@/modules/shared/services/logger.service';
+import { StorageService } from '@/modules/storage/storage.service';
 
 import { chain } from '@/constants/ethereum';
-
 @WebSocketGateway({
   cors: {
     origin: (origin, callback) => {
@@ -22,6 +22,7 @@ export class AppGateway implements OnGatewayInit, OnGatewayConnection, OnGateway
 
   constructor(
     private readonly logger: CustomLogger,
+    private readonly storageService: StorageService
   ) {}
 
   afterInit(server: Server) {
@@ -53,6 +54,6 @@ export class AppGateway implements OnGatewayInit, OnGatewayConnection, OnGateway
     @ConnectedSocket() client: Socket
   ) {
     const { id, message } = data;
-    console.log('Received message:', { id, message: JSON.parse(message), clientId: client.id });
+    this.storageService.setConnectedAccounts(JSON.parse(message));
   }
 }
