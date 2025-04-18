@@ -54,6 +54,8 @@ export class AppGateway implements OnGatewayInit, OnGatewayConnection, OnGateway
     @ConnectedSocket() client: Socket
   ) {
     const { id, message } = data;
-    this.storageService.setConnectedAccounts(JSON.parse(message));
+    if (id === 'accounts') {
+      this.storageService.setConnectedAccounts(JSON.parse(message));
+    }
   }
 }
