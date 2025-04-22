@@ -4,7 +4,7 @@ import { Actions, createEffect, ofType } from '@ngrx/effects';
 import { ROUTER_NAVIGATION, RouterNavigationPayload, getRouterSelectors } from '@ngrx/router-store';
 import { Store } from '@ngrx/store';
 
-import { distinctUntilChanged, filter, from, map, mergeMap, of, switchMap, tap, withLatestFrom } from 'rxjs';
+import { combineLatest, distinctUntilChanged, filter, from, map, mergeMap, of, scan, switchMap, tap, withLatestFrom } from 'rxjs';
 
 import * as marketStateActions from '../actions/market-state.actions';
 import * as marketStateSelectors from '../selectors/market-state.selectors';
@@ -17,8 +17,8 @@ import * as appStateSelectors from '../selectors/app-state.selectors';
 
 import { DataService } from '@/services/data.service';
 import { MarketState } from '@/models/market.state';
-import { Phunk } from '@/models/db';
 
+import { Phunk, Event } from '@/models/db';
 @Injectable()
 export class MarketStateEffects {
 
@@ -102,7 +102,7 @@ export class MarketStateEffects {
 
       return of([]);
     }),
-    tap((data) => console.log('onMarketTypeChanged$', data)),
+    // tap((data) => console.log('onMarketTypeChanged$', data)),
     map((data) => ({ data, total: data.length })),
     map((activeMarketRouteData: MarketState['activeMarketRouteData']) =>
       marketStateActions.setActiveMarketRouteData({ activeMarketRouteData })
@@ -121,12 +121,34 @@ export class MarketStateEffects {
     ofType(marketStateActions.setMarketSlug),
     distinctUntilChanged((a, b) => a.marketSlug === b.marketSlug),
     switchMap(({ marketSlug }) => {
-      return this.store.select(appStateSelectors.selectEventTypeFilter).pipe(
-        switchMap((eventTypeFilter) => this.dataSvc.fetchEvents(24, eventTypeFilter, marketSlug)),
-      )
+      return combineLatest([
+        this.store.select(appStateSelectors.selectEventTypeFilter),
+        this.store.select(appStateSelectors.selectEventPage)
+      ]).pipe(
+        // tap(([eventTypeFilter, page]) => console.log('fetchEvents$', {eventTypeFilter, page})),
+        switchMap(([eventTypeFilter, page]) =>
+          this.dataSvc.fetchEvents(page * 24, 24, eventTypeFilter, marketSlug).pipe(
+            map(events => ({ events, page }))
+          )
+        ),
+        scan((acc, { events, page }) => {
+          if (page === 0) return events;
+          return [...acc, ...events];
+        }, [] as Event[]),
+      );
     }),
     // tap((events) => console.log('fetchEvents$', events)),
     map((events) => dataStateActions.setEvents({ events })),
+  ));
+
+  // Handle pager reset
+  resetEventPage$ = createEffect(() => this.actions$.pipe(
+    ofType(marketStateActions.setMarketSlug),
+    distinctUntilChanged((a, b) => a.marketSlug === b.marketSlug),
+    switchMap(() => this.store.select(appStateSelectors.selectEventTypeFilter).pipe(
+      distinctUntilChanged(),
+      map(() => appStateActions.setEventPage({ page: 0 }))
+    ))
   ));
 
   fetchAll$ = createEffect(() => this.actions$.pipe(

@@ -2,7 +2,10 @@
   class="events-wrapper">
 
   <div class="events-header">
-    <h2>Recent Activity</h2>
+    <div class="events-header-title">
+      <h2>Recent Activity</h2>
+      <!-- <button>[View All]</button> -->
+    </div>
 
     <ng-select
       [items]="txFilters"
@@ -15,9 +18,12 @@
     </ng-select>
   </div>
 
-  <div class="events-items">
+  <div
+    #scroller
+    class="events-items">
+
     @for (
-      event of events();
+      event of events$ | async;
       track (event.hashId + '-' + event.type + '-' + event.from + '-' + event.tokenId + '-' + idx);
       let idx = $index
     ) {
@@ -31,8 +37,8 @@
           <img
             [lazyLoad]="dataSvc.staticUrl + '/static/images/' + event.sha"
             [defaultImage]="'assets/loadingphunk.png'"
-            width="160"
-            height="160"
+            width="120"
+            height="120"
           />
         </div>
 
@@ -84,12 +90,19 @@
             <img
               [lazyLoad]="'assets/loadingphunk.png'"
               [defaultImage]="'assets/loadingphunk.png'"
-              width="160"
-              height="160"
+              width="120"
+              height="120"
             />
           </div>
         </span>
       }
     }
+
+    <button
+      class="event-item view-more"
+      (click)="paginateEvents()">
+
+      View<br />More
+    </button>
   </div>
 </section>

@@ -236,7 +236,7 @@ export class AppStateEffects {
           const newLinkedAccounts = [...(accounts || []), { address: walletAddress! }];
           return appStateActions.setLinkedAccounts({ linkedAccounts: newLinkedAccounts });
         }),
-        tap((action) => console.log({ action }))
+        // tap((action) => console.log({ action }))
       );
     }),
   ));

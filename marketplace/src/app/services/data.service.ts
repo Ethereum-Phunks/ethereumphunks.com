@@ -467,6 +467,7 @@ export class DataService {
    * @param slug Collection slug filter
    */
   fetchEvents(
+    offset: number,
     limit: number,
     type: EventType,
     slug: string,
@@ -476,7 +477,8 @@ export class DataService {
       {
         p_limit: limit,
         p_type: type && type !== 'All' ? type : null,
-        p_collection_slug: slug
+        p_collection_slug: slug,
+        p_offset: offset,
       }
     );
 

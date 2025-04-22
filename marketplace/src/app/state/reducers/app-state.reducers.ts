@@ -23,6 +23,7 @@ export const initialState: AppState = {
   scrollPositions: {},
 
   eventTypeFilter: 'All',
+  eventPage: 0,
 
   currentBlock: 0,
   indexerBlock: 0,
@@ -100,6 +101,13 @@ export const appStateReducer: ActionReducer<AppState, Action> = createReducer(
       eventTypeFilter,
     };
     return setActiveFilters
+  }),
+  on(actions.setEventPage, (state, { page }) => {
+    const setEventPage = {
+      ...state,
+      eventPage: page
+    };
+    return setEventPage
   }),
   on(actions.setMenuActive, (state, { menuActive }) => {
     const setMenuActive = {

@@ -35,6 +35,11 @@ export const setEventTypeFilter = createAction(
   props<{ eventTypeFilter: EventType }>()
 );
 
+export const setEventPage = createAction(
+  '[App State] Set Event Page',
+  props<{ page: number }>()
+);
+
 export const setMenuActive = createAction(
   '[App State] Set Menu Active',
   props<{ menuActive: AppState['menuActive'] }>()

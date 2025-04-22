@@ -39,6 +39,11 @@ export const selectEventTypeFilter = createSelector(
   (appState: AppState) => appState.eventTypeFilter
 );
 
+export const selectEventPage = createSelector(
+  selectAppState,
+  (appState: AppState) => appState.eventPage
+);
+
 export const selectMenuActive = createSelector(
   selectAppState,
   (appState: AppState) => appState.menuActive
