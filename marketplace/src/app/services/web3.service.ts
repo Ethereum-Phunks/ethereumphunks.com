@@ -945,7 +945,7 @@ export class Web3Service {
   // INSCRIPTION ///////////////////
   //////////////////////////////////
 
-  async inscribe(dataUri: string): Promise<any> {
+  async inscribe(dataUri: string): Promise<`0x${string}`> {
     const chainId = getChainId(this.config);
     const walletClient = await getWalletClient(this.config, { chainId });
 

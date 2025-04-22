@@ -1,6 +1,7 @@
 {
   "name": "etherphunks-market",
   "version": "2.1.0",
+  "type": "module",
   "scripts": {
     "prebuild": "node prebuild.js",
     "ng": "ng",

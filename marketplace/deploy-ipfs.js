@@ -1,12 +1,21 @@
-const { create } = require('ipfs-http-client');
-const fs = require('fs');
-const path = require('path');
-const moment = require('moment');
-require('dotenv').config();
+import { create } from 'ipfs-http-client';
+import { fileURLToPath } from 'url';
+import moment from 'moment';
+
+import fs from 'fs';
+import path from 'path';
+import chalk from 'chalk';
+
+import dotenv from 'dotenv';
+dotenv.config();
+
+// Get __dirname equivalent in ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // IPFS configuration
-const localNode = process.env.IPFS_LOCAL_NODE || 'http://localhost:5001';
 const cloudNode = process.env.IPFS_CLOUD_NODE;
+const cloudToken = process.env.IPFS_CLOUD_TOKEN;
 
 // Get the current timestamp for the build directory
 const timestamp = moment().format('MMMD').toLowerCase();
@@ -33,39 +42,60 @@ async function retryOperation(operation, retries = MAX_RETRIES) {
       return await operation();
     } catch (error) {
       lastError = error;
-      console.log(`Attempt ${i + 1} failed, retrying in ${RETRY_DELAY/1000} seconds...`);
+      console.log(chalk.yellow(`Attempt ${i + 1} failed, retrying in ${RETRY_DELAY/1000} seconds...`));
       await sleep(RETRY_DELAY);
     }
   }
   throw lastError;
 }
 
+function logSection(title) {
+  console.log(chalk.blue('\n' + '='.repeat(50)));
+  console.log(chalk.blue.bold(` ${title} `));
+  console.log(chalk.blue('='.repeat(50) + '\n'));
+}
+
+function logSuccess(message) {
+  console.log(chalk.green('✓ ' + message));
+}
+
+function logError(message) {
+  console.log(chalk.red('✗ ' + message));
+}
+
+function logInfo(message) {
+  console.log(chalk.cyan('ℹ ' + message));
+}
+
+function logUrl(url) {
+  console.log(chalk.hex('#00BFFF').underline(url));
+}
+
 async function deployToIPFS() {
   try {
-    // Create IPFS clients with timeout configuration
-    const localClient = create({
-      url: localNode,
-      timeout: '2m'
-    });
-
+    // Create IPFS client with timeout configuration
     const cloudClient = create({
       url: cloudNode,
-      timeout: '2m'
+      timeout: '5m',
+      headers: {
+        Authorization: `Bearer ${cloudToken}`
+      }
     });
 
-    // Deploy both sepolia and mainnet builds
-    const configs = ['sepolia', 'mainnet'];
+    // Deploy mainnet build
+    const configs = ['mainnet'];
 
     for (const config of configs) {
+      logSection(`Deploying ${config.toUpperCase()} Build`);
+
       const buildDir = path.join(__dirname, 'dist', `etherphunks-market-${config}_${timestamp}`, 'browser');
 
       if (!fs.existsSync(buildDir)) {
-        console.log(`Build directory for ${config} not found: ${buildDir}`);
+        logError(`Build directory not found: ${buildDir}`);
         continue;
       }
 
-      console.log(`\nDeploying ${config} build...`);
-      console.log(`Build directory: ${buildDir}`);
+      logInfo(`Build directory: ${buildDir}`);
 
       // Read all files in the build directory recursively and sort them
       const files = [];
@@ -86,54 +116,34 @@ async function deployToIPFS() {
       }
       readDir(buildDir);
 
-      // Add files to local IPFS node
-      console.log(`Uploading ${config} build to local IPFS node...`);
-      const localAddResult = await localClient.addAll(files, ipfsOptions);
-
       let rootHash;
       let rootCid;
-      for await (const result of localAddResult) {
-        if (result.path === '') {
-          rootHash = result.cid.toString();
-          rootCid = result.cid;
-          console.log(`${config} IPFS Hash:`, rootHash);
-        }
-      }
 
-      // Pin to local node
-      await localClient.pin.add(rootCid);
-      console.log(`Pinned to local node`);
-
-      // Pin to cloud node using remote pinning
-      console.log(`Pinning to Digital Ocean IPFS node...`);
+      // Upload to remote node
       try {
-        await retryOperation(async () => {
-          await cloudClient.pin.remote.add(rootCid, {
-            service: 'ipfs',
-            name: `etherphunks-market-${config}_${timestamp}`,
-            background: true
-          });
-        });
-        console.log(`Pinned to Digital Ocean node`);
+        logInfo(`Uploading to remote IPFS node...`);
+        const remoteAddResult = cloudClient.addAll(files, ipfsOptions);
+        for await (const result of remoteAddResult) {
+          if (result.path === '') {
+            rootHash = result.cid.toString();
+            rootCid = result.cid;
+            logSuccess(`IPFS Hash: ${rootHash}`);
+          }
+        }
+        logSuccess(`Pinned to remote node`);
       } catch (error) {
-        console.error('Failed to pin to Digital Ocean node after retries:', error);
-        console.log('The content is still available on your local node and IPFS network.');
-        console.log('You may need to check your Digital Ocean IPFS node configuration.');
-        continue;
+        logError(`Failed to upload to remote node: ${error.message}`);
+        throw error;
       }
 
-      console.log(`\n${config} deployment complete!`);
-      console.log('IPFS Hash:', rootHash);
-      console.log('You can access your site at:');
-      console.log(`https://ipfs.io/ipfs/${rootHash}`);
-      console.log(`https://cloudflare-ipfs.com/ipfs/${rootHash}`);
-      console.log(`https://gateway.pinata.cloud/ipfs/${rootHash}`);
-      console.log(`https://dweb.link/ipfs/${rootHash}`);
-      console.log(`http://192.81.213.80:8080/ipfs/${rootHash}`);
+      logSection(`${config.toUpperCase()} Deployment Complete`);
+      logSuccess(`IPFS Hash: ${rootHash}`);
+      logInfo('You can access your site at:');
+      logUrl(`https://${rootHash}.ipfs.dweb.link`);
     }
 
   } catch (error) {
-    console.error('Deployment failed:', error);
+    logError(`Deployment failed: ${error.message}`);
     process.exit(1);
   }
 }
