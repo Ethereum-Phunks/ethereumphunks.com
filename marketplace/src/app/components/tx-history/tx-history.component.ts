@@ -2,6 +2,8 @@ import { Component, Input, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 
+import { TimeagoModule } from 'ngx-timeago';
+
 import { Store } from '@ngrx/store';
 
 import { LazyLoadImageModule } from 'ng-lazyload-image';
@@ -9,11 +11,10 @@ import { LazyLoadImageModule } from 'ng-lazyload-image';
 import { WalletAddressDirective } from '@/directives/wallet-address.directive';
 
 import { WeiToEthPipe } from '@/pipes/wei-to-eth.pipe';
-import { FormatCashPipe } from '@/pipes/format-cash.pipe';
 
 import { DataService } from '@/services/data.service';
 
-import { EventType, GlobalState, TxFunction } from '@/models/global-state';
+import { EventType, GlobalState } from '@/models/global-state';
 import { Phunk } from '@/models/db';
 
 import { environment } from 'src/environments/environment';
@@ -30,13 +31,12 @@ type EventLabels = {
   imports: [
     CommonModule,
     RouterModule,
-
+    TimeagoModule,
     LazyLoadImageModule,
 
     WalletAddressDirective,
 
     WeiToEthPipe,
-    FormatCashPipe
   ],
   selector: 'app-tx-history',
   templateUrl: './tx-history.component.html',

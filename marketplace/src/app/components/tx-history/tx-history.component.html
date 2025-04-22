@@ -66,8 +66,13 @@
 
               <td>
                 <div class="cell-inner">
-                  <a [href]="explorerUrl + '/tx/' + (event.txHash)" target="_blank">
-                    {{ event.blockTimestamp | date }}
+                  <a
+                    [href]="explorerUrl + '/tx/' + (event.txHash)"
+                    target="_blank"
+                    class="tx-link"
+                    [title]="event.blockTimestamp | date">
+
+                    {{ event.blockTimestamp | timeago }}
                   </a>
                 </div>
               </td>
