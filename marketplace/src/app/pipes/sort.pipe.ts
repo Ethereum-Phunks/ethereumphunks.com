@@ -38,6 +38,10 @@ export class SortPipe implements PipeTransform {
       sorted = sorted.sort((a, b) => priceComparison(a, b, false));
     }
 
+    if (sort === 'recently-listed') {
+      sorted = sorted.sort((a, b) => dateToNumber(b.listing?.createdAt) - dateToNumber(a.listing?.createdAt));
+    }
+
     // if (sort === 'recent') {
     //   if (type === 'listings') {
     //     sorted = sorted.sort((a, b) => dateToNumber(b.listing?.createdAt) - dateToNumber(a.listing?.createdAt));

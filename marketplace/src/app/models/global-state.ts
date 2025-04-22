@@ -27,6 +27,7 @@ export interface AppState {
   slideoutActive: boolean;
 
   eventTypeFilter: EventType;
+  eventPage: number;
 
   scrollPositions: { [navigationId: number]: number };
 
