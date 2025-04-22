@@ -1,6 +1,5 @@
 import { Inject, Injectable, Logger, Optional } from '@nestjs/common';
 
-import { DataService } from '@/services/data.service';
 import { UtilityService } from '@/modules/shared/services/utility.service';
 import { Web3Service } from '@/modules/shared/services/web3.service';
 import { StorageService } from '@/modules/storage/storage.service';
@@ -27,7 +26,6 @@ export class EthscriptionsService {
     @Inject('WEB3_SERVICE_L1') private readonly web3SvcL1: Web3Service,
     @Inject('WEB3_SERVICE_L2') private readonly web3SvcL2: Web3Service,
     private readonly storageSvc: StorageService,
-    private readonly dataSvc: DataService,
     private readonly utilitySvc: UtilityService
   ) {}
 

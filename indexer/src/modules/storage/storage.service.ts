@@ -191,9 +191,9 @@ export class StorageService implements OnModuleInit {
   ////////////////////////////////////////////////////////////////////////////////
 
   /**
-   * Checks if a SHA matches an EthPhunk
+   * Checks if a SHA matches a curated collection
    * @param sha - The SHA to check
-   * @returns The attribute data if it's an EthPhunk, null otherwise
+   * @returns The attribute data if it's a curated collection, null otherwise
    */
   async checkIsCuratedCollection(sha: string): Promise<db.AttributeItem | null> {
     const response: db.AttributesResponse = await this.supabase
@@ -1157,7 +1157,7 @@ export class StorageService implements OnModuleInit {
           table: `events${this.suffix}`,
           filter: 'type=eq.PhunkBought'
         }, payload => {
-          console.log(payload.new);
+          // console.log(payload.new);
           subscriber.next(payload.new as db.Event);
         })
         .subscribe();
