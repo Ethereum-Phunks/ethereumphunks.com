@@ -92,7 +92,8 @@ export class MarketComponent {
     { label: 'Price Low', value: 'price-low' },
     { label: 'Price High', value: 'price-high' },
     // { label: 'Recent', value: 'recent' },
-    { label: 'Token ID', value: 'id' }
+    { label: 'Token ID', value: 'id' },
+    { label: 'Recently Listed', value: 'recently-listed' },
   ];
   activeSortModel: any = this.sorts[0];
   filtersVisible: boolean = false;
