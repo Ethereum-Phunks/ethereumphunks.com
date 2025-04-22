@@ -109,12 +109,13 @@ export class PhunkImageComponent {
    */
   async getPhunkByHashId(hashId: string): Promise<any> {
     const tx = await this.web3Svc.getTransactionL1(hashId);
+    // console.log({tx});
     const isDevMode = environment.chainId === 11155111;
 
     if (isDevMode && hexToString(tx.input).startsWith('data:application/phunky')) {
-      this.getPhunkImageBySha(hexToString(tx.input).split(',')[1]);
+      this.getPhunkImageBySha(hexToString(tx.input || tx.data).split(',')[1]);
     } else {
-      this.phunkImgSrc = hexToString(tx.input);
+      this.phunkImgSrc = hexToString(tx.input || tx.data);
     }
   }
 

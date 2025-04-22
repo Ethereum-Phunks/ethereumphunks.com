@@ -54,7 +54,6 @@ export class IndexComponent {
   listings$ = this.store.select(marketStateSelectors.selectListings);
   bids$ = this.store.select(marketStateSelectors.selectBids);
   all$ = this.store.select(marketStateSelectors.selectAll);
-  events$ = this.store.select(dataStateSelectors.selectEvents);
 
   isMobile$ = this.store.select(appStateSelectors.selectIsMobile);
   usd$ = this.store.select(dataStateSelectors.selectUsd);

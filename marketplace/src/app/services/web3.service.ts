@@ -124,12 +124,12 @@ export class Web3Service {
     this.startBlockWatcher();
     this.startPointsWatcher();
 
-    setInterval(() => {
-      console.log({
-        l1: this.l1Client,
-        l2: this.l2Client
-      });
-    }, 10_000);
+    // setInterval(() => {
+    //   console.log({
+    //     l1: this.l1Client,
+    //     l2: this.l2Client
+    //   });
+    // }, 10_000);
   }
 
   /**
@@ -251,9 +251,9 @@ export class Web3Service {
    */
   async checkHasWithdrawal(address: string): Promise<bigint> {
     const pendingWithdrawals = await this.readMarketContract('pendingWithdrawals', [address]);
-    const pendingWithdrawalsV2 = await this.readMarketContract('pendingWithdrawalsV2', [address]);
+    // const pendingWithdrawalsV2 = await this.readMarketContract('pendingWithdrawalsV2', [address]);
     // console.log(pendingWithdrawals || BigInt(0)) + (pendingWithdrawalsV2 || BigInt(0));
-    return (pendingWithdrawals || BigInt(0)) + (pendingWithdrawalsV2 || BigInt(0));
+    return pendingWithdrawals || BigInt(0);
   }
 
   /**
@@ -384,7 +384,7 @@ export class Web3Service {
       });
       return call;
     } catch (error) {
-      // console.log({functionName, args, error});
+      console.log({functionName, args, error});
       return null;
     }
   }

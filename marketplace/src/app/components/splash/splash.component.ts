@@ -4,15 +4,16 @@ import { AsyncPipe, CommonModule } from '@angular/common';
 import { LazyLoadImageModule } from 'ng-lazyload-image';
 
 import { toObservable } from '@angular/core/rxjs-interop';
-import { distinctUntilChanged, filter, from, map, Observable, of, scan, shareReplay, startWith, switchMap, tap } from 'rxjs';
+import { distinctUntilChanged, from, map, Observable, of, startWith, switchMap } from 'rxjs';
 
 import { Collection } from '@/models/data.state';
 
 import { PixelArtService } from '@/services/pixel-art.service';
 import { ImageService } from '@/services/image.service';
 
-import { gsap } from 'gsap';
+import { StatsComponent } from '@/components/stats/stats.component';
 
+import { gsap } from 'gsap';
 interface Image {
   src: string;
   type: 'loading' | 'mint' | 'gray';
@@ -24,7 +25,8 @@ interface Image {
   imports: [
     CommonModule,
     LazyLoadImageModule,
-    AsyncPipe
+    AsyncPipe,
+    StatsComponent
   ],
   templateUrl: './splash.component.html',
   styleUrls: ['./splash.component.scss'],
