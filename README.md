@@ -4,6 +4,10 @@
 
 Ethereum Phunks Market is an open source platform for trading ethscriptions on the Ethereum blockchain. The project consists of three main components: a marketplace frontend, smart contracts, and an indexer service.
 
+## ⚠️ Disclaimer
+
+IMPORTANT: The smart contracts in this repository are experimental and have not been audited. They come with absolutely no security guarantees. The contracts and other parts of the codebase are not guaranteed to be secure and should be considered experimental in nature. The code can change at any time without prior notice. Users interact with this codebase entirely at their own risk.
+
 ## Project Structure
 
 The repository is organized into three main directories:
