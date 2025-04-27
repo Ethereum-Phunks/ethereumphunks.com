@@ -484,7 +484,7 @@ export class DataService {
 
     const rpcFetch$ = from(query).pipe(
       map((res: any) => {
-        const result = res.data.map((tx: any) => {
+        const result = res.data?.map((tx: any) => {
           let type = tx.type;
           if (type === 'transfer') {
             if (tx.to?.toLowerCase() === environment.bridgeAddress) type = 'bridgeOut';

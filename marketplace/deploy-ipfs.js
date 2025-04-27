@@ -83,7 +83,7 @@ async function deployToIPFS() {
     });
 
     // Deploy mainnet build
-    const configs = ['mainnet'];
+    const configs = ['mainnet', 'sepolia'];
 
     for (const config of configs) {
       logSection(`Deploying ${config.toUpperCase()} Build`);

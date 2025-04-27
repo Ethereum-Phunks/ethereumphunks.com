@@ -31,7 +31,8 @@ import { StorageModule } from '@/modules/storage/storage.module';
     TwitterService,
   ],
   exports: [
-    NotifsService
+    NotifsService,
+    TelegramService,
   ]
 })
 export class NotifsModule {}

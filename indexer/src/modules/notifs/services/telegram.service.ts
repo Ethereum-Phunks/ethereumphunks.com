@@ -12,31 +12,42 @@ import FormData from 'form-data';
 export class TelegramService {
 
   private readonly botToken = process.env.TELEGRAM_BOT_TOKEN;
-  private readonly chatId = '5445160677';
+  private readonly chatId = '-1002530066767';
 
-  constructor(private httpSvc: HttpService) {}
+  constructor(
+    private http: HttpService
+  ) {
+    // setInterval(() => {
+    //   this.sendMessage('Status:', 'Hello, world!');
+    // }, 10000);
+  }
 
   /**
    * Sends a text message to the configured Telegram chat
    * @param message The text message to send
    * @returns Promise resolving to the Telegram API response
    */
-  async sendMessage(message: string): Promise<AxiosResponse> {
+  async sendMessage(prefix: string, message: string): Promise<void> {
     const apiUrl = `https://api.telegram.org/bot${this.botToken}/sendMessage`;
     const params = {
       chat_id: this.chatId,
-      text: message,
+      text: `${prefix}\n\n${message}`,
+      parse_mode: 'HTML',
     };
 
-    return await firstValueFrom(
-      this.httpSvc.post(apiUrl, params).pipe(
-        map((response) => response.data),
-        catchError((error) => {
-          console.log(error);
-          return error;
-        }),
-      )
-    );
+    try {
+      await firstValueFrom(
+        this.http.post(apiUrl, params).pipe(
+          map((response) => response.data),
+          catchError((error) => {
+            console.log(error);
+            return error;
+          }),
+        )
+      );
+    } catch (error) {
+      console.log(error);
+    }
   }
 
   /**
@@ -56,7 +67,7 @@ export class TelegramService {
     }
 
     return await firstValueFrom(
-      this.httpSvc.post(apiUrl, formData, {
+      this.http.post(apiUrl, formData, {
         headers: formData.getHeaders(),
       }).pipe(
         map((response) => response.data),

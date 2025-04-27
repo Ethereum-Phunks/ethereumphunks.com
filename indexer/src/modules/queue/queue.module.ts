@@ -13,6 +13,7 @@ import { EthscriptionsModule } from '@/modules/ethscriptions/ethscriptions.modul
 import { BridgeQueueService } from '@/modules/queue/services/bridge-queue.service';
 import { BlockProcessingQueue } from '@/modules/queue/queues/block-processing.queue';
 import { BridgeProcessingQueue } from '@/modules/queue/queues/bridge-processing.queue';
+import { NotifsModule } from '@/modules/notifs/notifs.module';
 
 import { ProcessingService } from '@/services/processing.service';
 
@@ -42,6 +43,7 @@ import { chain } from '@/constants/ethereum';
     BridgeL1Module,
     NftModule,
     StorageModule,
+    NotifsModule,
 
     forwardRef(() => EthscriptionsModule),
     forwardRef(() => CommentsModule),

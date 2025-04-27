@@ -11,8 +11,6 @@ import { Collection } from '@/models/data.state';
 import { PixelArtService } from '@/services/pixel-art.service';
 import { ImageService } from '@/services/image.service';
 
-import { StatsComponent } from '@/components/stats/stats.component';
-
 import { gsap } from 'gsap';
 interface Image {
   src: string;
@@ -25,8 +23,7 @@ interface Image {
   imports: [
     CommonModule,
     LazyLoadImageModule,
-    AsyncPipe,
-    StatsComponent
+    AsyncPipe
   ],
   templateUrl: './splash.component.html',
   styleUrls: ['./splash.component.scss'],

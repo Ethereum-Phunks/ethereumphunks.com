@@ -2,6 +2,7 @@ import { Inject, Injectable, Logger } from '@nestjs/common';
 
 import { Web3Service } from '@/modules/shared/services/web3.service';
 import { StorageService } from '@/modules/storage/storage.service';
+import { TelegramService } from '@/modules/notifs/services/telegram.service';
 
 import { UtilityService } from '@/modules/shared/services/utility.service';
 import { TimeService } from '@/modules/shared/services/time.service';
@@ -35,7 +36,8 @@ export class ProcessingService {
     private readonly utilSvc: UtilityService,
     private readonly timeSvc: TimeService,
     private readonly ethsSvc: EthscriptionsService,
-    private readonly commentsSvc: CommentsService
+    private readonly commentsSvc: CommentsService,
+    private readonly telegramSvc: TelegramService
   ) {}
 
   /**
@@ -72,7 +74,10 @@ export class ProcessingService {
     // Add the events to the database
     if (events.length) await this.storageSvc.addEvents(events);
     // Update the block in db
-    if (updateBlockDb) this.storageSvc.updateLastBlock(blockNumber, createdAt);
+    if (updateBlockDb) {
+      this.storageSvc.updateLastBlock(blockNumber, createdAt);
+      // this.telegramSvc.sendMessage('Status:', `Processed block ${blockNumber} (L1)`);
+    }
 
     // Add the block to the processed blocks
     this.processedBlocks.push({ number: blockNumber, hash, parentHash, confirmed: false });
