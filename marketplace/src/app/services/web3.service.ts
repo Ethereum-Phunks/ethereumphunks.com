@@ -39,9 +39,9 @@ const bridgeAddressL2 = environment.bridgeAddressL2;
 const projectId = 'd183619f342281fd3f3ff85716b6016a';
 
 const metadata = {
-  name: 'Ethereum Phunks',
+  name: 'Ethereum Phunks Market',
   description: '',
-  url: 'https://ethereumphunks.com',
+  url: 'https://etherphunks.eth.limo',
   icons: []
 };
 
