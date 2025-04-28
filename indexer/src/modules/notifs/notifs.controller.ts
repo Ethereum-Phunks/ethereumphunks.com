@@ -1,4 +1,4 @@
-import { Controller, Get, Param } from '@nestjs/common';
+import { Controller, Post, Param } from '@nestjs/common';
 
 import { NotifsService } from './notifs.service';
 
@@ -14,7 +14,7 @@ export class NotifsController {
    * @param hashId The transaction hash ID
    * @returns Promise resolving when the notification is sent
    */
-  @Get('resend/:hashId')
+  @Post('resend/:hashId')
   async resendNotification(@Param('hashId') hashId: string): Promise<void> {
     await this.notifsSvc.handleNotificationFromHashId(hashId);
   }

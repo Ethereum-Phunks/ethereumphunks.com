@@ -128,14 +128,15 @@ export class NotifsService implements OnModuleInit {
       ethscription,
       collection,
       attributes: Object.keys(attributes.values)?.map((key: string) => {
-        const k = key.replace(/_/g, ' ').replace(/\b\w/g, char => char.toUpperCase());
+        const k = key;
         const v = Array.isArray(attributes.values[key])
-          ? attributes.values[key].map(val => val?.replaceAll('-', ' ').replace(/_/g, ' ').replace(/\b\w/g, char => char.toUpperCase())).join(', ')
-          : attributes.values[key]?.replaceAll('-', ' ')?.replace(/_/g, ' ')?.replace(/\b\w/g, char => char?.toUpperCase());
+          ? attributes.values[key].join(', ')
+          : attributes.values[key];
+
         return {
           k,
           v,
-          rarity: rarityData[attributes.slug][v],
+          rarity: rarityData[ethscription.slug][v],
         };
       }).sort((a, b) => (a.rarity || Infinity) - (b.rarity || Infinity)),
     };

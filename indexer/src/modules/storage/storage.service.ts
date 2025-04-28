@@ -1121,7 +1121,7 @@ export class StorageService implements OnModuleInit {
           singleName,
           notifications
         ),
-        attributes!inner(
+        attributes_new!inner(
           values
         )
       `)
@@ -1134,7 +1134,7 @@ export class StorageService implements OnModuleInit {
     if (!data) return null;
 
     const collection = data[`collections${this.suffix}`];
-    const attributes = data['attributes'];
+    const attributes = data['attributes_new'];
 
     return {
       ethscription: data as unknown as db.Ethscription,
