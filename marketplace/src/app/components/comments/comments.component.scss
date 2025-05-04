@@ -11,7 +11,7 @@ h2 {
   padding-bottom: 2rem;
 }
 
-.main-comment-wrapper {
+.main-comment-form-wrapper {
   padding-bottom: 2rem;
   margin-bottom: 2rem;
   border-bottom: 2px solid rgba(var(--base-color), 1);
@@ -52,12 +52,41 @@ h2 {
 .comment-wrapper {
   background-color: rgba(var(--dark-text), .1);
   padding: 1rem;
+  padding-right: 0;
 
   .comment {
+
+    .reply-button,
+    .delete-button {
+      padding: 0;
+      margin: 0;
+
+      background: none;
+      font-size: 1.2rem;
+      font-weight: 600;
+      color: rgba(var(--text-color), 1);
+
+      &.active {
+        color: rgba(var(--base-color), 1);
+      }
+    }
+
+    .expand-button {
+      padding: 0;
+      margin: 0;
+
+      background: none;
+      font-size: 1.4rem;
+      font-weight: 600;
+      color: rgba(var(--base-color), 1);
+    }
+
     .comment-header {
       display: flex;
       align-items: center;
+      flex-wrap: wrap;
       gap: 2rem;
+      row-gap: 1rem;
 
       .author {
         display: flex;
@@ -79,21 +108,6 @@ h2 {
         font-size: 1.2rem;
         font-weight: 600;
       }
-
-      .reply-button,
-      .delete-button {
-        padding: 0;
-        margin: 0;
-
-        background: none;
-        font-size: 1.2rem;
-        font-weight: 600;
-        color: rgba(var(--text-color), 1);
-
-        &.active {
-          color: rgba(var(--base-color), 1);
-        }
-      }
     }
 
     .comment-content {
@@ -107,16 +121,15 @@ h2 {
           opacity: .5;
         }
       }
+    }
 
-      .expand-button {
-        padding: 0;
-        margin: 0;
+    .comment-footer {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
 
-        background: none;
-        font-size: 1.4rem;
-        font-weight: 600;
-        color: rgba(var(--base-color), 1);
-      }
+      padding-left: $padding;
+      padding-top: 2rem;
     }
 
     &.has-more {
@@ -127,6 +140,25 @@ h2 {
   .replies {
     margin-left: $padding;
     border-left: .2rem solid rgba(var(--base-color), 1);
+    margin-left: 0.5rem;
+
+    .reply-form-wrapper {
+      padding-left: 0rem;
+    }
+
+    .comment-wrapper {
+      background-color: rgba(var(--dark-text), .05);
+    }
+
+    .comment {
+      .comment-content {
+        padding-left: 0rem;
+      }
+
+      .comment-footer {
+        padding-left: 0rem;
+      }
+    }
   }
 
   .reply-form-wrapper {
@@ -134,13 +166,13 @@ h2 {
   }
 }
 
-.form-wrapper {
+.comment-form-wrapper {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   gap: 1rem;
 
-  padding-top: 2rem;
+  padding-top: 1rem;
 
   .comments-textarea {
     width: 100%;

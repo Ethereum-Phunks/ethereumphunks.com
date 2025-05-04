@@ -945,16 +945,22 @@ export class Web3Service {
   // INSCRIPTION ///////////////////
   //////////////////////////////////
 
-  async inscribe(dataUri: string): Promise<`0x${string}`> {
+  /**
+   * Inscribes a data URI on L1
+   * @param dataUri The data URI to inscribe
+   * @returns Promise resolving to the transaction hash if successful
+   * @ISSUE: https://github.com/MetaMask/metamask-extension/issues/32495
+   */
+  async inscribe(dataUri: string): Promise<`0x${string}` | null> {
     const chainId = getChainId(this.config);
     const walletClient = await getWalletClient(this.config, { chainId });
 
-    const tx = await walletClient?.sendTransaction({
+    const tx = await walletClient?.prepareTransactionRequest({
       to: walletClient.account.address,
-      data: toHex(dataUri)
+      data: toHex(dataUri),
     });
 
-    return tx;
+    return await walletClient?.sendTransaction(tx);
   }
 
   //////////////////////////////////

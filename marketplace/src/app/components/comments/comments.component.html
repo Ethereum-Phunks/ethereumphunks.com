@@ -2,10 +2,6 @@
   <h2 i18n>Comments</h2>
 </div>
 
-<div class="comments-wrapper">
-  <ng-container *ngTemplateOutlet="commentsList; context: { $implicit: comments$ | async }" />
-</div>
-
 @if ((connectedAddress$ | async)) {
   <div class="main-comment-form-wrapper">
     <ng-container
@@ -17,6 +13,10 @@
     />
   </div>
 }
+
+<div class="comments-wrapper">
+  <ng-container *ngTemplateOutlet="commentsList; context: { $implicit: comments$ | async }" />
+</div>
 
 <ng-template #commentsList let-comments>
   @for (comment of comments; track comment.id; let i = $index) {
@@ -34,15 +34,7 @@
 
           <span class="date">{{ comment.createdAt | date }}</span>
 
-          <button
-            class="reply-button"
-            [class.active]="replyActive() === comment.id"
-            (click)="setReplyActive(comment.id)">
-
-            [reply]
-          </button>
-
-          @if ((connectedAddress$ | async) === comment.from) {
+          @if ((connectedAddress$ | async) === comment.from && !comment.deleted) {
             <button
               class="delete-button"
               (click)="deleteComment(comment.id)">
@@ -56,10 +48,22 @@
           <p [class.deleted]="comment.deleted">
             {{ comment.deleted ? '[deleted]' : comment.content }}
           </p>
+        </div>
 
+        <div class="comment-footer">
           @if (comment.replies) {
             <button class="expand-button" (click)="expandComment(comment.id)">
               {{ comment.replies.length }} {{ (comment.replies.length > 1 ? 'replies' : 'reply') }} {{ expanded()[comment.id] ? '[-]' : '[+]' }}
+            </button>
+          }
+
+          @if (!comment.deleted) {
+            <button
+              class="reply-button"
+              [class.active]="replyActive() === comment.id"
+              (click)="setReplyActive(comment.id)">
+
+              [reply]
             </button>
           }
         </div>
@@ -95,10 +99,10 @@
   let-topic="topic"
   let-placeholder="placeholder">
 
-  <div class="form-wrapper">
+  <div class="comment-form-wrapper">
     <textarea
       class="comments-textarea"
-      rows="4"
+      rows="3"
       [ngModel]="commentValue()[topic]"
       (ngModelChange)="handleCommentChanged($event, topic)"
       [placeholder]="placeholder">

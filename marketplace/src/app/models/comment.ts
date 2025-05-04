@@ -8,7 +8,7 @@ export interface Comment {
   topic: string;
   content: string;
   version: string;
-  encoding: EncodingType;
+  encoding?: EncodingType;
   type?: CommentType;
 };
 

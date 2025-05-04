@@ -6,12 +6,12 @@ import { FormsModule } from '@angular/forms';
 import { Store } from '@ngrx/store';
 
 import { from } from 'rxjs';
-import { switchMap, tap, startWith, map } from 'rxjs/operators';
+import { switchMap, startWith } from 'rxjs/operators';
 
 import { DataService } from '@/services/data.service';
 import { Web3Service } from '@/services/web3.service';
 
-import { Comment, DBComment, CommentWithReplies } from '@/models/comment';
+import { Comment, CommentWithReplies } from '@/models/comment';
 import { GlobalState } from '@/models/global-state';
 
 import { WalletAddressDirective } from '@/directives/wallet-address.directive';
@@ -88,6 +88,7 @@ export class CommentsComponent {
    */
   handleCommentChanged(event: string, topic: string) {
     this.commentValue.update(prev => ({...prev, [topic]: event}));
+    console.log({commentValue: this.commentValue()});
   }
 
   /**
@@ -101,16 +102,22 @@ export class CommentsComponent {
     const commentObject: Comment = {
       topic,
       content,
-      version: '0x0',
-      encoding: 'utf8',
+      version: '0x0'
     };
 
     const commentString = JSON.stringify(commentObject);
-    const commentUrl = `data:message/vnd.tic+json,${commentString}`;
+    const commentUrl = `data:message/vnd.tic+json;rule=esip6,${commentString}`;
     // console.log({commentUrl});
 
-    const commentInscription = await this.web3Service.inscribe(commentUrl);
-    // console.log({commentInscription});
+    const hash = await this.web3Service.inscribe(commentUrl);
+    if (!hash) throw new Error('Failed to inscribe comment');
+    console.log({commentInscriptionHash: hash});
+
+    const receipt = await this.web3Service.pollReceipt(hash);
+    console.log({receipt});
+
+    this.clearCommentValue();
+    this.clearActiveReply();
   }
 
   /**

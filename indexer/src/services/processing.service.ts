@@ -193,7 +193,6 @@ export class ProcessingService {
     // Process comments
     await this.commentsSvc.processComments(
       transaction,
-      receipt,
       createdAt
     );
 

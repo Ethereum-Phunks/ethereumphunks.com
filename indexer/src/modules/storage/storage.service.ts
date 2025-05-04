@@ -2,11 +2,13 @@ import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
-import { Transaction, fromHex, zeroAddress } from 'viem';
+import { Transaction, zeroAddress } from 'viem';
 import { Observable } from 'rxjs';
 
 import * as db from '@/modules/storage/models/db';
 import { Ethscription } from '@/modules/storage/models/db';
+
+import { TIC } from '@/modules/comments/models/tic';
 
 @Injectable()
 export class StorageService implements OnModuleInit {
@@ -925,23 +927,20 @@ export class StorageService implements OnModuleInit {
    * @param txn - The transaction containing the comment
    * @param createdAt - Timestamp when comment was created
    */
-  async addComment(txn: Transaction, createdAt: Date): Promise<void> {
-
-    const jsonPart = fromHex(txn.input, 'string').replace('data:message/vnd.tic+json,', '');
-    const commentData = JSON.parse(jsonPart);
+  async addComment(tic: TIC, txn: Transaction, createdAt: Date): Promise<void> {
 
     const topicType =
-      commentData.topic?.length === 42 ? 'address' :
-      commentData.topic?.length === 66 ? 'hash' :
+      tic.topic?.length === 42 ? 'address' :
+      tic.topic?.length === 66 ? 'hash' :
       undefined;
 
     const comment: db.DBComment = {
       id: txn.hash.toLowerCase(),
-      topic: commentData.topic?.toLowerCase(),
+      topic: tic.topic?.toLowerCase(),
       topicType,
-      content: commentData.content,
-      version: commentData.version,
-      encoding: commentData.encoding,
+      content: tic.content,
+      version: tic.version,
+      encoding: tic.encoding || 'utf8',
       createdAt,
       from: txn.from.toLowerCase(),
     };
