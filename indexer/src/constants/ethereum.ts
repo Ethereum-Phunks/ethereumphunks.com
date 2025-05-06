@@ -39,29 +39,29 @@ export const l1RpcURL_BACKUP: string =
     : process.env.RPC_URL_SEPOLIA_BACKUP;
 
 export const marketAddressL1: string =
-  chain === 'mainnet'
+  (chain === 'mainnet'
     ? process.env.MARKET_ADDRESS_MAINNET_L1
-    : process.env.MARKET_ADDRESS_SEPOLIA_L1
+    : process.env.MARKET_ADDRESS_SEPOLIA_L1)?.toLowerCase();
 
 export const marketAddressL2: string =
-  chain === 'mainnet'
+  (chain === 'mainnet'
     ? process.env.MARKET_ADDRESS_MAINNET_L2
-    : process.env.MARKET_ADDRESS_SEPOLIA_L2
+    : process.env.MARKET_ADDRESS_SEPOLIA_L2)?.toLowerCase();
 
 export const pointsAddressL1: string =
-  chain === 'mainnet'
+  (chain === 'mainnet'
     ? process.env.POINTS_ADDRESS_MAINNET
-    : process.env.POINTS_ADDRESS_SEPOLIA;
+    : process.env.POINTS_ADDRESS_SEPOLIA)?.toLowerCase();
 
 export const bridgeAddressL1: string =
-  chain === 'mainnet'
+  (chain === 'mainnet'
     ? process.env.BRIDGE_ADDRESS_MAINNET_L1
-    : process.env.BRIDGE_ADDRESS_SEPOLIA_L1;
+    : process.env.BRIDGE_ADDRESS_SEPOLIA_L1)?.toLowerCase();
 
 export const bridgeAddressL2: string =
-  chain === 'mainnet'
+  (chain === 'mainnet'
     ? process.env.BRIDGE_ADDRESS_MAINNET_L2
-    : process.env.BRIDGE_ADDRESS_SEPOLIA_L2;
+    : process.env.BRIDGE_ADDRESS_SEPOLIA_L2)?.toLowerCase();
 
 export const l1Client = createPublicClient({
   chain: chain === 'mainnet' ? mainnet : sepolia,
@@ -94,4 +94,4 @@ export const l2WalletClient = createWalletClient({
   account: privateKeyToAccount(`0x${process.env.L2_RELAY_SIGNER_PK}`),
 });
 
-export const minterAddressL2 = l2WalletClient.account.address;
+export const minterAddressL2 = l2WalletClient.account.address?.toLowerCase();
