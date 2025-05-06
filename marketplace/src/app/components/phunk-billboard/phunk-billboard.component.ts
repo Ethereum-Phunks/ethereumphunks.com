@@ -6,8 +6,6 @@ import { LazyLoadImageModule } from 'ng-lazyload-image';
 
 import { PhunkImageComponent } from '../phunk-image/phunk-image.component';
 
-import { TokenIdParsePipe } from '@/pipes/token-id-parse.pipe';
-
 import { Phunk } from '@/models/db';
 
 @Component({
@@ -18,8 +16,7 @@ import { Phunk } from '@/models/db';
     LazyLoadImageModule,
     RouterModule,
 
-    PhunkImageComponent,
-    TokenIdParsePipe
+    PhunkImageComponent
   ],
   templateUrl: './phunk-billboard.component.html',
   styleUrls: ['./phunk-billboard.component.scss']

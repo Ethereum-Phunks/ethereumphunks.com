@@ -15,7 +15,6 @@ import { NotificationsComponent } from '@/components/notifications/notifications
 import { StatusBarComponent } from '@/components/status-bar/status-bar.component';
 import { ModalComponent } from '@/components/modal/modal.component';
 import { ChatComponent } from '@/components/chat/chat.component';
-import { OrdexWithdrawalComponent } from '@/components/ordex-withdrawal/ordex-withdrawal.component';
 
 import { Web3Service } from '@/services/web3.service';
 import { DataService } from '@/services/data.service';
@@ -47,7 +46,6 @@ import { environment } from 'src/environments/environment';
     StatusBarComponent,
     ModalComponent,
     ChatComponent,
-    OrdexWithdrawalComponent,
   ],
   selector: 'app-root',
   templateUrl: './app.component.html',

@@ -25,15 +25,15 @@ const socketConfig: SocketIoConfig = {
 })
 export class GasService extends Socket {
 
-  gas$ = this.fromEvent<any>('gasData').pipe(
-    // tap((data: GasData) => console.log('GAS DATA', data))
-  );
+  /** Observable stream of gas data */
+  gas$ = this.fromEvent<GasData, 'gasData'>('gasData');
 
   constructor() {
     super(socketConfig);
   }
 
-  connect(callback?: ((err: any) => void) | undefined) {
-    super.connect(callback);
+  connect(callback?: ((err: any) => void) | undefined): this {
+    super.connect();
+    return this;
   }
 }

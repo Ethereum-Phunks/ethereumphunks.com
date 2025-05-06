@@ -41,13 +41,13 @@ const socketConfig: SocketIoConfig = {
 export class SocketService extends Socket {
 
   /** Observable stream of individual log messages for current chain */
-  log$ = this.fromEvent<LogItem>(`log_${chain}`);
+  log$ = this.fromEvent<LogItem, `log_${typeof chain}`>(`log_${chain}`);
 
   /** Observable stream of log message arrays for current chain */
-  logs$ = this.fromEvent<LogItem[]>(`logs_${chain}`);
+  logs$ = this.fromEvent<LogItem[], `logs_${typeof chain}`>(`logs_${chain}`);
 
   /** Observable stream of pending inscription SHAs */
-  // pendingInscriptionShas$ = this.fromEvent<Map<string, string>>('pendingInscriptionShas');
+  // pendingInscriptionShas$ = this.fromEvent<Map<string, string>, 'pendingInscriptionShas'>('pendingInscriptionShas');
 
   constructor() {
     super(socketConfig);
@@ -61,8 +61,9 @@ export class SocketService extends Socket {
    * Establishes socket connection with optional error callback
    * @param callback Optional error callback function
    */
-  connect(callback?: ((err: any) => void) | undefined) {
-    super.connect(callback);
+  connect(callback?: ((err: any) => void) | undefined): this {
+    super.connect();
+    return this;
   }
 
   sendMessage(id: string, message: string) {
@@ -70,6 +71,6 @@ export class SocketService extends Socket {
   }
 
   onMessage() {
-    return this.fromEvent<{ id: string, message: string }>('message');
+    return this.fromEvent<{ id: string, message: string }, 'message'>('message');
   }
 }
