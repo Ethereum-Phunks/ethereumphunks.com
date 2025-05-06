@@ -1,4 +1,5 @@
 .vscode
+.cursor
 playground
 website
 merkleGen
