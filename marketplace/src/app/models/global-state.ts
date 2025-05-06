@@ -118,7 +118,9 @@ export type TxFunction =
   | 'chatMessage'
   | 'bridgeOut'
   | 'bridgeIn'
-  | 'mint';
+  | 'mint'
+  | 'tic'
+  | 'ticDelete';
 
 export interface TraitFilter {
   [key: string]: string | null;

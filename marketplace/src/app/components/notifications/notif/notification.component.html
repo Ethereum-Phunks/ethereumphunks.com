@@ -26,6 +26,10 @@
         <div class="single-image">
           <img src="/assets/chat-image.png" alt="">
         </div>
+      } @else if (txn.function === 'tic' || txn.function === 'ticDelete') {
+        <div class="single-image">
+          <img src="/assets/tic-image.png" alt="">
+        </div>
       } @else {
         <div class="single-image">
           <img src="/assets/loadingphunk.png" alt="">

@@ -10,9 +10,10 @@ import { switchMap, startWith } from 'rxjs/operators';
 
 import { DataService } from '@/services/data.service';
 import { Web3Service } from '@/services/web3.service';
+import { UtilService } from '@/services/util.service';
 
 import { Comment, CommentWithReplies } from '@/models/comment';
-import { GlobalState } from '@/models/global-state';
+import { GlobalState, Notification } from '@/models/global-state';
 
 import { WalletAddressDirective } from '@/directives/wallet-address.directive';
 import { TippyDirective } from '@/directives/tippy.directive';
@@ -21,7 +22,7 @@ import { AvatarComponent } from '@/components/avatar/avatar.component';
 
 import { selectWalletAddress } from '@/state/selectors/app-state.selectors';
 import { ZERO_ADDRESS } from '@/constants/utils';
-
+import { upsertNotification } from '@/state/actions/notification.actions';
 @Component({
   selector: 'app-comments',
   standalone: true,
@@ -46,11 +47,11 @@ export class CommentsComponent {
 
   comments$ = this.hashId$.pipe(
     switchMap((hashId: string) => {
-      return from(this.dataService.fetchComments(hashId)).pipe(
+      return from(this.dataSvc.fetchComments(hashId)).pipe(
         switchMap((initialComments: CommentWithReplies[]) => {
           const topics = [hashId, ...this.getAllTopicsAndIds(initialComments)];
-          return this.dataService.getCommentChanges(topics).pipe(
-            switchMap(() => from(this.dataService.fetchComments(hashId))),
+          return this.dataSvc.getCommentChanges(topics).pipe(
+            switchMap(() => from(this.dataSvc.fetchComments(hashId))),
             startWith(initialComments)
           );
         })
@@ -62,8 +63,9 @@ export class CommentsComponent {
 
   constructor(
     private store: Store<GlobalState>,
-    private web3Service: Web3Service,
-    private dataService: DataService,
+    private web3Svc: Web3Service,
+    private dataSvc: DataService,
+    private utilSvc: UtilService,
   ) {}
 
   getAllTopicsAndIds(comments: CommentWithReplies[]): string[] {
@@ -88,7 +90,6 @@ export class CommentsComponent {
    */
   handleCommentChanged(event: string, topic: string) {
     this.commentValue.update(prev => ({...prev, [topic]: event}));
-    console.log({commentValue: this.commentValue()});
   }
 
   /**
@@ -109,15 +110,49 @@ export class CommentsComponent {
     const commentUrl = `data:message/vnd.tic+json;rule=esip6,${commentString}`;
     // console.log({commentUrl});
 
-    const hash = await this.web3Service.inscribe(commentUrl);
-    if (!hash) throw new Error('Failed to inscribe comment');
-    console.log({commentInscriptionHash: hash});
+    let notification: Notification = {
+      id: this.utilSvc.createIdFromString('tic' + topic),
+      timestamp: Date.now(),
+      type: 'wallet',
+      function: 'tic',
+    };
 
-    const receipt = await this.web3Service.pollReceipt(hash);
-    console.log({receipt});
+    this.store.dispatch(upsertNotification({ notification }));
 
-    this.clearCommentValue();
-    this.clearActiveReply();
+    try {
+      const hash = await this.web3Svc.inscribe(commentUrl);
+      if (!hash) throw new Error('Failed to inscribe comment');
+
+      notification = {
+        ...notification,
+        type: 'pending',
+        hash,
+      };
+
+      this.store.dispatch(upsertNotification({ notification }));
+
+      const receipt = await this.web3Svc.pollReceipt(hash!);
+
+      notification = {
+        ...notification,
+        type: 'complete',
+        hash: receipt.transactionHash,
+      };
+
+    } catch (err) {
+      console.log(err);
+
+      notification = {
+        ...notification,
+        type: 'error',
+        detail: err,
+      };
+    } finally {
+      this.store.dispatch(upsertNotification({ notification }));
+
+      this.clearCommentValue();
+      this.clearActiveReply();
+    }
   }
 
   /**
@@ -150,10 +185,46 @@ export class CommentsComponent {
    * @param commentId The ID of the comment to delete
    */
   async deleteComment(commentId: string) {
-    const hash = await this.web3Service.transferPhunk(commentId, ZERO_ADDRESS);
-    if (!hash) return;
 
-    const receipt = await this.web3Service.pollReceipt(hash);
+    let notification: Notification = {
+      id: this.utilSvc.createIdFromString('ticDelete' + commentId),
+      timestamp: Date.now(),
+      type: 'wallet',
+      function: 'ticDelete',
+    };
+
+    this.store.dispatch(upsertNotification({ notification }));
+
+    try {
+      const hash = await this.web3Svc.transferPhunk(commentId, ZERO_ADDRESS);
+      if (!hash) return;
+
+      notification = {
+        ...notification,
+        type: 'pending',
+        hash,
+      };
+
+      this.store.dispatch(upsertNotification({ notification }));
+
+      const receipt = await this.web3Svc.pollReceipt(hash);
+
+      notification = {
+        ...notification,
+        type: 'complete',
+        hash: receipt.transactionHash,
+      };
+
+      this.store.dispatch(upsertNotification({ notification }));
+    } catch (error) {
+      notification = {
+        ...notification,
+        type: 'error',
+        detail: error,
+      };
+    } finally {
+      this.store.dispatch(upsertNotification({ notification }));
+    }
 
     this.clearCommentValue();
     this.clearActiveReply();

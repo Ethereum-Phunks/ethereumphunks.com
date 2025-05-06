@@ -1,6 +1,7 @@
 import { Pipe, PipeTransform } from '@angular/core';
 
 import { Notification, TxFunction } from '@/models/global-state';
+import { Collection } from '@/models/data.state';
 
 type NotificationTexts = {
   titles: {
@@ -42,6 +43,8 @@ export class NotificationPipe implements PipeTransform {
       bridgeOut: 'Bridge %singleName% to Magma',
       bridgeIn: 'Bridge %singleName% to Ethereum',
       mint: 'Inscribing %singleName%',
+      tic: 'Inscribing Comment',
+      ticDelete: 'Deleting Comment',
       batch: {
         sendToEscrow: 'Send <span class="highlight">%length%</span> items to Escrow',
         phunkNoLongerForSale: 'Delist <span class="highlight">%length%</span> items',
@@ -89,12 +92,14 @@ export class NotificationPipe implements PipeTransform {
       bridgeIn: 'bridge',
       bridgeOut: 'bridge',
       mint: 'mint',
+      tic: 'tic',
+      ticDelete: 'tic',
     },
   }
 
   transform(
     notif: Notification,
-    collections: any,
+    collections: { [key: Collection['slug']]: Collection },
     type: 'title' | 'body' | 'class'
   ): string | null {
 

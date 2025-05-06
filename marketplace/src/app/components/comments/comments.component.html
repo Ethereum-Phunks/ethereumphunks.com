@@ -33,15 +33,6 @@
           </span>
 
           <span class="date">{{ comment.createdAt | date }}</span>
-
-          @if ((connectedAddress$ | async) === comment.from && !comment.deleted) {
-            <button
-              class="delete-button"
-              (click)="deleteComment(comment.id)">
-
-              [delete]
-            </button>
-          }
         </div>
 
         <div class="comment-content">
@@ -50,14 +41,14 @@
           </p>
         </div>
 
-        <div class="comment-footer">
-          @if (comment.replies) {
-            <button class="expand-button" (click)="expandComment(comment.id)">
-              {{ comment.replies.length }} {{ (comment.replies.length > 1 ? 'replies' : 'reply') }} {{ expanded()[comment.id] ? '[-]' : '[+]' }}
-            </button>
-          }
+        @if (!comment.deleted) {
+          <div class="comment-footer">
+            @if (comment.replies) {
+              <button class="expand-button" (click)="expandComment(comment.id)">
+                {{ comment.replies.length }} {{ (comment.replies.length > 1 ? 'replies' : 'reply') }} {{ expanded()[comment.id] ? '[-]' : '[+]' }}
+              </button>
+            }
 
-          @if (!comment.deleted) {
             <button
               class="reply-button"
               [class.active]="replyActive() === comment.id"
@@ -65,8 +56,17 @@
 
               [reply]
             </button>
-          }
-        </div>
+
+            @if ((connectedAddress$ | async) === comment.from) {
+              <button
+                class="delete-button"
+                (click)="deleteComment(comment.id)">
+
+                [delete]
+              </button>
+            }
+          </div>
+        }
       </div>
 
       @if (comment.replies && expanded()[comment.id]) {
