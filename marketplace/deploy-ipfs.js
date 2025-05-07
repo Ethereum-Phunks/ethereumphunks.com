@@ -13,6 +13,16 @@ dotenv.config();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+// Parse command line arguments
+const args = process.argv.slice(2);
+const configArg = args.find(arg => arg.startsWith('--configuration='));
+const config = configArg ? configArg.split('=')[1] : null;
+
+if (!config || !['mainnet', 'sepolia'].includes(config)) {
+  logError('Please specify a valid configuration: --configuration=mainnet or --configuration=sepolia');
+  process.exit(1);
+}
+
 // IPFS configuration
 const cloudNode = process.env.IPFS_CLOUD_NODE;
 const cloudToken = process.env.IPFS_CLOUD_TOKEN;
@@ -82,65 +92,60 @@ async function deployToIPFS() {
       }
     });
 
-    // Deploy mainnet build
-    const configs = ['mainnet', 'sepolia'];
+    logSection(`Deploying ${config.toUpperCase()} Build`);
 
-    for (const config of configs) {
-      logSection(`Deploying ${config.toUpperCase()} Build`);
+    const buildDir = path.join(__dirname, 'dist', `etherphunks-market-${config}_${timestamp}`, 'browser');
 
-      const buildDir = path.join(__dirname, 'dist', `etherphunks-market-${config}_${timestamp}`, 'browser');
-
-      if (!fs.existsSync(buildDir)) {
-        logError(`Build directory not found: ${buildDir}`);
-        continue;
-      }
-
-      logInfo(`Build directory: ${buildDir}`);
-
-      // Read all files in the build directory recursively and sort them
-      const files = [];
-      function readDir(dir, relativePath = '') {
-        const items = fs.readdirSync(dir).sort(); // Sort files for consistent order
-        for (const item of items) {
-          const fullPath = path.join(dir, item);
-          const relPath = path.join(relativePath, item);
-          if (fs.statSync(fullPath).isDirectory()) {
-            readDir(fullPath, relPath);
-          } else {
-            files.push({
-              path: relPath,
-              content: fs.createReadStream(fullPath)
-            });
-          }
-        }
-      }
-      readDir(buildDir);
-
-      let rootHash;
-      let rootCid;
-
-      // Upload to remote node
-      try {
-        logInfo(`Uploading to remote IPFS node...`);
-        const remoteAddResult = cloudClient.addAll(files, ipfsOptions);
-        for await (const result of remoteAddResult) {
-          if (result.path === '') {
-            rootHash = result.cid.toString();
-            rootCid = result.cid;
-            logSuccess(`IPFS Hash: ${rootHash}`);
-          }
-        }
-        logSuccess(`Pinned to remote node`);
-      } catch (error) {
-        logError(`Failed to upload to remote node: ${error.message}`);
-        throw error;
-      }
-
-      logSection(`${config.toUpperCase()} Deployment Complete`);
-      logSuccess(`IPFS Hash: ${rootHash}`);
-      logInfo('You can access your site at:');
-      logUrl(`https://${rootHash}.ipfs.dweb.link`);
+    if (!fs.existsSync(buildDir)) {
+      logError(`Build directory not found: ${buildDir}`);
+      process.exit(1);
     }
+
+    logInfo(`Build directory: ${buildDir}`);
+
+    // Read all files in the build directory recursively and sort them
+    const files = [];
+    function readDir(dir, relativePath = '') {
+      const items = fs.readdirSync(dir).sort(); // Sort files for consistent order
+      for (const item of items) {
+        const fullPath = path.join(dir, item);
+        const relPath = path.join(relativePath, item);
+        if (fs.statSync(fullPath).isDirectory()) {
+          readDir(fullPath, relPath);
+        } else {
+          files.push({
+            path: relPath,
+            content: fs.createReadStream(fullPath)
+          });
+        }
+      }
+    }
+    readDir(buildDir);
+
+    let rootHash;
+    let rootCid;
+
+    // Upload to remote node
+    try {
+      logInfo(`Uploading to remote IPFS node...`);
+      const remoteAddResult = cloudClient.addAll(files, ipfsOptions);
+      for await (const result of remoteAddResult) {
+        if (result.path === '') {
+          rootHash = result.cid.toString();
+          rootCid = result.cid;
+          logSuccess(`IPFS Hash: ${rootHash}`);
+        }
+      }
+      logSuccess(`Pinned to remote node`);
+    } catch (error) {
+      logError(`Failed to upload to remote node: ${error.message}`);
+      throw error;
+    }
+
+    logSection(`${config.toUpperCase()} Deployment Complete`);
+    logSuccess(`IPFS Hash: ${rootHash}`);
+    logInfo('You can access your site at:');
+    logUrl(`https://${rootHash}.ipfs.dweb.link`);
 
   } catch (error) {
     logError(`Deployment failed: ${error.message}`);
