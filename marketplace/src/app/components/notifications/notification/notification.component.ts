@@ -5,7 +5,7 @@ import { RouterModule } from '@angular/router';
 import { Store } from '@ngrx/store';
 import { TimeagoModule } from 'ngx-timeago';
 
-import { PhunkImageComponent } from '@/components/phunk-image/phunk-image.component';
+import { NotificationImageComponent } from '@/components/notifications/notification-image/notification-image.component';
 import { WalletAddressDirective } from '@/directives/wallet-address.directive';
 
 import { NotificationPipe } from './notification.pipe';
@@ -29,7 +29,7 @@ import { setChat } from '@/state/actions/chat.actions';
     RouterModule,
     TimeagoModule,
 
-    PhunkImageComponent,
+    NotificationImageComponent,
 
     WalletAddressDirective,
 

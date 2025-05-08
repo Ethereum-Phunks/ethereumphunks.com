@@ -14,6 +14,7 @@ app-phunk-billboard {
 
   button {
     position: absolute;
+    z-index: 1;
     bottom: 3rem;
     right: 3rem;
 
@@ -67,7 +68,7 @@ app-phunk-billboard {
     margin-top: 100vh;
 
     @media (max-width: $mobile) {
-      margin-top: calc(var(--billboard-height) + 12rem);
+      margin-top: var(--billboard-height-expanded);
     }
   }
 }

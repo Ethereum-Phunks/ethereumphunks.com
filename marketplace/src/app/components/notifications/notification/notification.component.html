@@ -11,16 +11,12 @@
       @if (txn.isBatch && txn.hashIds) {
         <div class="batch-image">
           @for (hashId of txn.hashIds; track hashId) {
-            <app-phunk-image [color]="txn.type === 'event'" [hashId]="hashId" />
+            <app-notification-image [hashId]="hashId" />
           }
-        </div>
-      } @else if (txn.sha) {
-        <div class="single-image">
-          <img [src]="env.staticUrl + '/static/images/' + txn.sha" alt="">
         </div>
       } @else if (txn.hashId) {
         <a class="single-image" [routerLink]="['/', 'details', txn.hashId]">
-          <app-phunk-image [color]="txn.type === 'event'" [hashId]="txn.hashId" />
+          <app-notification-image [hashId]="txn.hashId" />
         </a>
       } @else if (txn.type === 'chat') {
         <div class="single-image">

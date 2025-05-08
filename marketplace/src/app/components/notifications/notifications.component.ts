@@ -5,7 +5,7 @@ import { Store } from '@ngrx/store';
 
 import { GlobalState, Notification } from '@/models/global-state';
 
-import { NotificationComponent } from './notif/notification.component';
+import { NotificationComponent } from './notification/notification.component';
 
 import * as notificationSelectors from '@/state/selectors/notification.selectors';
 

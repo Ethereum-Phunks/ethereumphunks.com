@@ -1,7 +1,35 @@
 <ng-content />
+<div class="content-wrapper">
 
-<div class="billboard-wrapper">
-  <div class="image-wrapper">
-    <app-phunk-image [phunk]="phunk" />
-  </div>
+  @if (contentData(); as data) {
+    @if (data.type === 'image') {
+      <div class="image-wrapper">
+        <img [src]="data.data" [alt]="data.mimeType" />
+      </div>
+    } @else if (data.type === 'json') {
+      <div class="json-wrapper" [title]="data.mimeType">
+        <pre>{{ data.data }}</pre>
+      </div>
+    } @else if (data.type === 'html') {
+      <div class="html-wrapper" [title]="data.mimeType">
+        <iframe [srcdoc]="data.data" sandbox="allow-scripts" scrolling="no"></iframe>
+      </div>
+    } @else if (data.type === 'text') {
+      <div class="text-wrapper" [title]="data.mimeType">
+        <p>{{ data.data }}</p>
+      </div>
+    } @else if (data.type === 'video') {
+      <div class="video-wrapper" [title]="data.mimeType">
+        <video [src]="data.data" playsinline autoplay muted loop></video>
+      </div>
+    } @else {
+      <div class="text-wrapper" [title]="data.mimeType">
+        <p>Unsupported content type: {{ data.mimeType }}</p>
+      </div>
+    }
+  } @else {
+    <div class="image-wrapper">
+      <img src="/assets/loadingphunk.png" />
+    </div>
+  }
 </div>
