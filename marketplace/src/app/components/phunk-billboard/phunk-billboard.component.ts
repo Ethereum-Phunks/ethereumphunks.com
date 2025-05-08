@@ -145,13 +145,26 @@ export class PhunkBillboardComponent {
                   const height = document.documentElement.scrollHeight;
                   window.parent.postMessage({ type: 'resize', height: height }, '*');
                 }
-                // Update on load and on any DOM changes
-                window.addEventListener('load', updateParent);
-                const observer = new MutationObserver(updateParent);
-                observer.observe(document.body, {
-                  childList: true,
-                  subtree: true
-                });
+
+                function setupObserver() {
+                  if (document.body) {
+                    // Update on load
+                    window.addEventListener('load', updateParent);
+
+                    // Setup observer once body is available
+                    const observer = new MutationObserver(updateParent);
+                    observer.observe(document.body, {
+                      childList: true,
+                      subtree: true
+                    });
+                  } else {
+                    // If body is not yet available, wait and try again
+                    setTimeout(setupObserver, 10);
+                  }
+                }
+
+                // Start the setup process
+                setupObserver();
               })();
             </script>
           `;

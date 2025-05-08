@@ -4,7 +4,6 @@ import { NavigationEnd, NavigationStart, Router, RouterModule } from '@angular/r
 
 import { Store } from '@ngrx/store';
 import { WaIntersectionObserver } from '@ng-web-apis/intersection-observer';
-import { LazyLoadImageModule } from 'ng-lazyload-image';
 
 import { GlobalState } from '@/models/global-state';
 
@@ -36,7 +35,6 @@ import { environment } from 'src/environments/environment';
   imports: [
     CommonModule,
     RouterModule,
-    LazyLoadImageModule,
     WaIntersectionObserver,
 
     MenuComponent,

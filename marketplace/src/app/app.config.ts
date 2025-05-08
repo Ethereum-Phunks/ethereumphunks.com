@@ -1,4 +1,4 @@
-import { APP_INITIALIZER, isDevMode } from '@angular/core';
+import { isDevMode } from '@angular/core';
 import { RouteReuseStrategy, provideRouter } from '@angular/router';
 import { provideServiceWorker } from '@angular/service-worker';
 import { provideHttpClient } from '@angular/common/http';
@@ -28,6 +28,7 @@ import { ChatEffects } from '@/state/effects/chat.effects';
 import { TokenIdParsePipe } from '@/pipes/token-id-parse.pipe';
 import { WeiToEthPipe } from '@/pipes/wei-to-eth.pipe';
 import { MinMaxPipe } from '@/pipes/min-max';
+
 export const config = {
   providers: [
     { provide: TimeagoFormatter, useClass: TimeagoDefaultFormatter },
@@ -55,7 +56,7 @@ export const config = {
       maxAge: 25,
       logOnly: !isDevMode(),
       trace: true,
-      // serialize: false
+      serialize: false
     }),
     provideRouterStore(),
     provideHttpClient(),
