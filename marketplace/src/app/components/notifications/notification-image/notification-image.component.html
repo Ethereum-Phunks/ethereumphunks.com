@@ -1,5 +1,6 @@
-@if (imageData(); as imageData) {
-  <img [src]="imageData" />
-} @else {
-  <img [src]="'assets/loadingphunk.png'" />
-}
+<img
+  [lazyLoad]="imageData() || 'assets/loadingphunk.png'"
+  [defaultImage]="'assets/loadingphunk.png'"
+  width="50"
+  height="50"
+/>

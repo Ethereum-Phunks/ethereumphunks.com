@@ -126,7 +126,7 @@ export class NotificationPipe implements PipeTransform {
         title = this.notifs.titles.chatMessage;
       }
 
-      return title;
+      return title.replace('%singleName%', 'Ethscription');
     }
 
     if (type === 'body') {
