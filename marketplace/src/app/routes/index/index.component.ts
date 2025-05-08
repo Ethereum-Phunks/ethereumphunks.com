@@ -1,7 +1,7 @@
 import { Component, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterModule } from '@angular/router';
-import { IntersectionObserverModule } from '@ng-web-apis/intersection-observer';
+import { WaIntersectionObserver } from '@ng-web-apis/intersection-observer';
 
 import { Store } from '@ngrx/store';
 import { TimeagoModule } from 'ngx-timeago';
@@ -31,7 +31,7 @@ import { tap } from 'rxjs';
     TimeagoModule,
     RouterModule,
     LazyLoadImageModule,
-    IntersectionObserverModule,
+    WaIntersectionObserver,
 
     SplashComponent,
     PhunkGridComponent,

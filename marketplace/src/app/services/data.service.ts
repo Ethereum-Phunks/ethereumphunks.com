@@ -953,8 +953,8 @@ export class DataService {
             schema: 'public',
             table: 'collections' + this.suffix
           },
-          () => {
-            subscriber.next();
+          (payload) => {
+            subscriber.next(payload.new as Collection[]);
           }
         )
         .subscribe();

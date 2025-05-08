@@ -5,7 +5,7 @@ import { RouterModule } from '@angular/router';
 import { Store } from '@ngrx/store';
 import { NgxPaginationModule } from 'ngx-pagination';
 import { LazyLoadImageModule } from 'ng-lazyload-image';
-import { IntersectionObserverModule } from '@ng-web-apis/intersection-observer';
+import { WaIntersectionObserver } from '@ng-web-apis/intersection-observer';
 
 import { GlobalState, TraitFilter } from '@/models/global-state';
 import { MarketType } from '@/models/market.state';
@@ -34,7 +34,7 @@ import * as marketStateActions from '@/state/actions/market-state.actions';
     RouterModule,
     LazyLoadImageModule,
     NgxPaginationModule,
-    IntersectionObserverModule,
+    WaIntersectionObserver,
 
     WeiToEthPipe,
     FormatCashPipe,
