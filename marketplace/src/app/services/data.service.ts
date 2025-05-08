@@ -678,7 +678,7 @@ export class DataService {
       .from('ethscriptions' + this.suffix)
       .select(`
         *,
-        collections${this.suffix}(singleName,slug,name,supply),
+        collections${this.suffix}(singleName,slug,name,supply,hasBackgrounds),
         nfts${this.suffix}(hashId,tokenId,owner)
       `)
       .eq('hashId', hashId)

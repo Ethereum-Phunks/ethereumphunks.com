@@ -37,7 +37,8 @@ input {
     font-weight: 500;
   }
 
-  &[type=radio] {
+  &[type=radio],
+  &[type=checkbox] {
     display: none;
 
     + label {

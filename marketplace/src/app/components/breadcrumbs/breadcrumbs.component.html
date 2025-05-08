@@ -3,28 +3,6 @@
     @if (phunk(); as phunk) {
 
       @if (phunk.tokenId > -1) {
-        @if (pfpOptionsActive) {
-          <div class="pfp-options-wrapper">
-
-            <div class="pfp-options">
-              <div class="shape-select">
-                <input type="radio" id="square" name="shape" value="square" [formControl]="shapeCheck">
-                <label i18n for="square">Square</label>
-              </div>
-
-              <div class="shape-select">
-                <input type="radio" id="round" name="shape" value="round" [formControl]="shapeCheck">
-                <label i18n for="round">Round</label>
-              </div>
-
-              <div class="shape-select">
-                <input type="radio" id="transparent" name="shape" value="trans" [formControl]="shapeCheck">
-                <label i18n for="transparent">Transparent</label>
-              </div>
-            </div>
-          </div>
-        }
-
         <div class="crumbs-wrapper">
           <div class="crumbs">
             <button [routerLink]="['/', 'curated', phunk.slug]">
@@ -36,13 +14,39 @@
 
           <div class="save-pfp">
             <button
-              (click)="pfpOptionsActive ? downloadCanvas() : togglePfpOptions()"
-              [class.active]="pfpOptionsActive">
+              (click)="togglePfpOptions()"
+              [class.active]="pfpOptionsActive()"
+              [class.disabled]="!downloadEnabled()">
 
-              {{ pfpOptionsActive ? 'Save' : 'Download' }}
+              {{ pfpOptionsActive() ? 'Cancel' : 'Download PFP' }}
             </button>
           </div>
         </div>
+
+        @if (pfpOptionsActive()) {
+          <div class="pfp-options-wrapper">
+
+            <div class="pfp-options">
+              <div
+                class="shape-select"
+                [class.disabled]="!customizeEnabled()">
+
+                <input
+                  type="checkbox"
+                  id="transparent"
+                  name="transparent"
+                  value="transparent"
+                  [formControl]="transparentCheck"
+                />
+                <label i18n for="transparent">Transparent</label>
+              </div>
+            </div>
+
+            <div class="actions-wrapper">
+              <button (click)="downloadCanvas()">Save</button>
+            </div>
+          </div>
+        }
       }
 
     } @else {
@@ -54,7 +58,7 @@
         </div>
 
         <div class="save-pfp">
-          <button class="disabled">Download</button>
+          <button class="disabled">Download PFP</button>
         </div>
       </div>
     }

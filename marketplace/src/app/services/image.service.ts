@@ -31,7 +31,7 @@ export class ImageService {
   /**
    * Fetches an image by SHA and converts it to a blob URL
    * @param sha SHA hash of the image to fetch
-   * @returns Promise resolving to the blob URL of the image
+   * @returns ArrayBuffer of the image
    */
   public async fetchSupportedImageBySha(sha: string): Promise<ArrayBuffer> {
     // console.log('fetchImageBySha', sha);

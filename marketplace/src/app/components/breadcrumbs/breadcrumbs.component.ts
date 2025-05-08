@@ -1,5 +1,5 @@
 import { CommonModule, Location } from '@angular/common';
-import { Component, ElementRef, Inject, Input, SimpleChanges, ViewChild, input, signal } from '@angular/core';
+import { Component, ElementRef, ViewChild, effect, input, signal } from '@angular/core';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 
@@ -7,11 +7,8 @@ import { DataService } from '@/services/data.service';
 
 import { Phunk } from '@/models/db';
 
-import { firstValueFrom, tap } from 'rxjs';
-import { HttpClient } from '@angular/common/http';
-import { TokenIdParsePipe } from '@/pipes/token-id-parse.pipe';
-
-import { HISTORY } from '@ng-web-apis/common';
+import { filter, tap } from 'rxjs';
+import { EthscriptionService } from '@/services/ethscription.service';
 
 @Component({
   standalone: true,
@@ -26,125 +23,102 @@ import { HISTORY } from '@ng-web-apis/common';
 })
 export class BreadcrumbsComponent {
 
-  // @Input() phunk!: Phunk | null;
   phunk = input<Phunk | null>();
 
   @ViewChild('pfp') pfp!: ElementRef;
-  @ViewChild('tokenImage') tokenImage!: ElementRef;
 
-  pfpOptionsActive!: boolean;
 
-  shapeCheck = new FormControl('square');
-  resolution: string = 'pfp';
-
+  ctx!: CanvasRenderingContext2D | null;
   width: number = 480;
   height: number = 480;
   scale: number = 2;
+  transparentCheck = new FormControl(false);
 
-  ctx!: CanvasRenderingContext2D | null;
+  pfpOptionsActive = signal(false);
+  downloadEnabled = signal(false);
+  customizeEnabled = signal(false);
 
   constructor(
-    @Inject(HISTORY) public history: History,
-    private http: HttpClient,
-    private tokenIdParsePipe: TokenIdParsePipe,
+    private ethscriptionSvc: EthscriptionService,
     public location: Location,
     public dataSvc: DataService
   ) {
-    this.ctx?.scale(this.scale, this.scale);
+    effect(() => {
+      if (!this.phunk()) return;
+      const phunk = this.phunk()!;
+      this.paintCanvas(phunk);
+    });
 
-    this.shapeCheck.valueChanges.pipe(
-      tap(() => this.paintCanvas())
+    this.transparentCheck.valueChanges.pipe(
+      filter(() => !!this.phunk()),
+      tap(() => this.paintCanvas(this.phunk()!))
     ).subscribe();
   }
 
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  // CANVAS PFP STUFFS /////////////////////////////////////////////////////////////////////////////////////////////////
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-  togglePfpOptions(): void {
-    this.pfpOptionsActive = !this.pfpOptionsActive;
-    if (this.pfpOptionsActive) this.paintCanvas();
-    else this.clearCanvas();
-  }
-
-  paintCanvas(): void {
-    const shape = this.shapeCheck.value;
+  async paintCanvas(phunk: Phunk): Promise<void> {
+    const transparent = this.transparentCheck.value;
     const canvas = this.pfp.nativeElement as HTMLCanvasElement;
 
+    // Set physical canvas dimensions
     canvas.width = this.width;
     canvas.height = this.height;
 
+    // Set display dimensions
     canvas.style.width = this.width / this.scale + 'px';
     canvas.style.height = this.height / this.scale + 'px';
 
-    this.ctx?.restore();
-    this.ctx?.clearRect(0, 0, this.width, this.height);
+    // Get fresh context
     this.ctx = canvas.getContext('2d');
     if (!this.ctx) return;
 
+    // Clear canvas and set rendering options
     this.ctx.clearRect(0, 0, this.width, this.height);
     this.ctx.imageSmoothingEnabled = false;
 
-    this.drawPhunk();
+    // Apply scaling
+    this.ctx.scale(this.scale, this.scale);
 
-    this.ctx.fillStyle = '#C3FF00';
-
-    if (shape === 'square') {
-      this.ctx.fillRect(0, 0, this.width, this.height);
+    // If not transparent, fill with background color first
+    if (!transparent && phunk.isSupported) {
+      this.ctx.fillStyle = '#C3FF00';
+      this.ctx.fillRect(0, 0, this.width / this.scale, this.height / this.scale);
     }
 
-    if (shape === 'round') {
-      this.ctx.beginPath();
-      this.ctx.arc(
-        this.width / this.scale,
-        this.height / this.scale,
-        this.width / this.scale,
-        0,
-        this.scale * Math.PI
-      );
-      this.ctx.fill();
-      this.ctx.save();
-      this.ctx.clip();
-    }
+    // Draw the phunk image
+    const image = await this.drawPhunk(phunk);
+    if (!image) return;
 
-    if (shape === 'trans') {
-      this.ctx.clearRect(0, 0, this.width, this.height);
-      this.drawPhunk();
-    }
+    this.ctx.drawImage(
+      image,
+      0,
+      0,
+      this.width / this.scale,
+      this.height / this.scale
+    );
   }
 
-  clearCanvas(): void {
-    this.ctx?.clearRect(0, 0, this.width, this.height);
-  }
-
-  async drawPhunk(): Promise<void> {
-    const dataUrl = await this.getPunkImage();
+  async drawPhunk(phunk: Phunk): Promise<HTMLImageElement | undefined> {
+    const dataUrl = await this.getPunkImage(phunk);
     if (!dataUrl) return;
-    return new Promise<void>((resolve, reject) => {
+    return new Promise<HTMLImageElement>((resolve, reject) => {
       const img = new Image();
       img.onload = () => {
-        this.ctx?.drawImage(
-          img,
-          0,
-          0,
-          this.width,
-          this.height
-        );
-        resolve();
+        this.downloadEnabled.set(true);
+        resolve(img);
       };
       img.onerror = err => {
+        this.downloadEnabled.set(false);
         reject(err);
       };
       img.src = dataUrl;
     });
   }
 
-  async getPunkImage(): Promise<string | undefined> {
-    if (!this.phunk()) return;
-    const imgUrl = this.dataSvc.staticUrl + '/static/images/' + this.phunk()!.sha;
-    const response = await firstValueFrom(this.http.get(imgUrl, { responseType: 'blob' }));
-    const blob = new Blob([response], { type: 'image/png' });
-    return URL.createObjectURL(blob);
+  async getPunkImage(phunk: Phunk): Promise<string | undefined> {
+    this.customizeEnabled.set(!!(phunk.isSupported && !phunk.collection?.hasBackgrounds));
+
+    const decodedData = await this.ethscriptionSvc.processImage(phunk);
+    return decodedData?.data;
   }
 
   downloadCanvas(): void {
@@ -157,6 +131,14 @@ export class BreadcrumbsComponent {
     link.target = '_blank';
     link.href = this.pfp.nativeElement.toDataURL('image/png;base64');
     link.click();
-    this.pfpOptionsActive = false;
+    this.pfpOptionsActive.set(false);
+  }
+
+  togglePfpOptions(): void {
+    this.pfpOptionsActive.update(active => !active);
+  }
+
+  clearCanvas(): void {
+    this.ctx?.clearRect(0, 0, this.width, this.height);
   }
 }
