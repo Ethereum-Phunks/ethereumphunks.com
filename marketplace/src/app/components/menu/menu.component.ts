@@ -1,9 +1,9 @@
-import { Component, ElementRef, ViewChild } from '@angular/core';
+import { Component, ElementRef, signal, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 
 import { Store } from '@ngrx/store';
-import { IntersectionObserverModule } from '@ng-web-apis/intersection-observer';
+import { WaIntersectionObserver } from '@ng-web-apis/intersection-observer';
 
 import { Phunk } from '@/models/db';
 import { GlobalState, Notification } from '@/models/global-state';
@@ -11,7 +11,7 @@ import { GlobalState, Notification } from '@/models/global-state';
 import { Web3Service } from '@/services/web3.service';
 
 import { PhunkGridComponent } from '@/components/phunk-grid/phunk-grid.component';
-import { NotificationComponent } from '@/components/notifications/notif/notification.component';
+import { NotificationComponent } from '@/components/notifications/notification/notification.component';
 import { LeaderboardComponent } from '@/components/leaderboard/leaderboard.component';
 import { CollectionsComponent } from '@/components/collections/collections.component';
 
@@ -27,7 +27,7 @@ import * as marketStateSelectors from '@/state/selectors/market-state.selectors'
 
 import { FormatCashPipe } from '@/pipes/format-cash.pipe';
 
-import { map, switchMap, tap } from 'rxjs';
+import { from, map, switchMap, tap } from 'rxjs';
 
 import anime from 'animejs';
 
@@ -38,7 +38,7 @@ import { environment } from '@/../environments/environment';
   standalone: true,
   imports: [
     CommonModule,
-    IntersectionObserverModule,
+    WaIntersectionObserver,
     RouterModule,
 
     PhunkGridComponent,
@@ -95,6 +95,7 @@ export class MenuComponent {
   };
 
   menuTimeline!: anime.AnimeTimelineInstance;
+  menuSeen = signal(false);
 
   isStandaloneMarket = environment.standalone;
 
@@ -106,8 +107,9 @@ export class MenuComponent {
     this.menuActive$.pipe(
       switchMap((active) => {
         return this.activeMenuNav$.pipe(
-          // tap(console.log),
-          tap((menuNav) => {
+          switchMap((menuNav) => {
+            if (active) this.menuSeen.set(active);
+
             this.menuTimeline = anime.timeline({
               easing: 'cubicBezier(0.85, 0, 0.30, 1.01)',
               duration: 400,
@@ -127,6 +129,8 @@ export class MenuComponent {
               opacity: menuNav === 'curated' ? 1 : 0,
               translateX: menuNav === 'curated' ? '0' : '100%',
             }, '-=400');
+
+            return from(this.menuTimeline.finished);
           })
         );
       }),
