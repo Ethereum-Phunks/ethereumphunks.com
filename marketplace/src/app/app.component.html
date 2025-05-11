@@ -25,13 +25,15 @@
   [class.visible]="statusBarVisible()">
 
   <app-status-bar [visible]="statusBarVisible()" />
+  <button
+    class="chat-button"
+    [class.active]="chatActive$ | async"
+    (click)="openChat()">
+
+    DM
+  </button>
 </div>
 
 @if ((chatActive$ | async); as active) {
-  <app-modal
-    [width]="500"
-    [height]="600">
-
-    <app-chat />
-  </app-modal>
+  <app-chat />
 }

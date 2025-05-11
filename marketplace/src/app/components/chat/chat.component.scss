@@ -2,8 +2,45 @@
 @use 'abstracts/mixins' as *;
 
 :host {
+  display: flex;
+  flex-direction: column;
   font-family: var(--secondary-font-stack);
   font-weight: 400;
+  height: 100%;
+}
+
+.close-wrapper {
+  position: absolute;
+  z-index: 1000;
+  top: 0;
+  right: 0;
+
+  width: 4rem;
+  height: 4rem;
+
+  background: none;
+  border: none;
+}
+
+.chat-header {
+  display: flex;
+  align-items: center;
+
+  height: 4rem;
+  padding: 0 1rem;
+
+  h2 {
+    font-size: 1.4rem;
+    font-weight: 400;
+  }
+}
+
+.chat-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+
+  overflow: hidden;
 }
 
 .message-wrapper {

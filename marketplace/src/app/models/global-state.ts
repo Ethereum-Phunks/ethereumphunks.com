@@ -10,6 +10,20 @@ export interface GlobalState {
   marketState: MarketState;
   notificationState: NotificationState;
   chatState: ChatState;
+  modalState: ModalState;
+}
+
+export interface ModalState {
+  activeModals: {
+    [key: string]: {
+      isOpen: boolean;
+      config?: {
+        width?: number;
+        height?: number;
+        position?: 'center' | 'right' | 'left';
+      } | null;
+    }
+  };
 }
 
 export interface AppState {
@@ -41,7 +55,6 @@ export interface AppState {
   searchHistoryActive: boolean;
   isSearchResult: boolean;
 
-  modalActive: boolean;
   collectionsMenuActive: boolean;
 
   config: GlobalConfig;

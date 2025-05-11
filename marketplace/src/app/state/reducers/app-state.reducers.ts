@@ -35,7 +35,6 @@ export const initialState: AppState = {
   searchHistoryActive: false,
   isSearchResult: false,
 
-  modalActive: false,
   collectionsMenuActive: false,
 
   config: {
@@ -227,13 +226,6 @@ export const appStateReducer: ActionReducer<AppState, Action> = createReducer(
       isSearchResult
     };
     return setIsSearchResult
-  }),
-  on(actions.setModalActive, (state, { modalActive }) => {
-    const setModalActive = {
-      ...state,
-      modalActive
-    };
-    return setModalActive
   }),
   on(actions.setCollectionsMenuActive, (state, { collectionsMenuActive }) => {
     const setCollectionsMenuActive = {

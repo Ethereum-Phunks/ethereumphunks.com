@@ -29,16 +29,57 @@ main {
   bottom: 0;
   right: 0;
 
+  height: var(--status-bar-height);
+  padding: 1rem 1.5rem;
+
+  background-color: rgba(var(--black), 1);
+
   @include trans($duration: .2s);
+
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+
+  .chat-button {
+    font-family: var(--secondary-font-stack);
+    font-weight: 400;
+    font-size: 1.6rem;
+    color: rgba(var(--white), 1);
+    background-color: rgba(var(--dark-grey), 1);
+
+    padding: 0 1rem;
+    margin-left: .5rem;
+
+    &.active {
+      color: rgba(var(--base-color), 1);
+    }
+  }
 
   @media (max-width: $mobile) {
     bottom: -100%;
+    padding-bottom: calc(env(safe-area-inset-bottom) + 2rem);
 
     &.visible {
       bottom: 0;
     }
   }
 }
+
+app-chat {
+  position: fixed;
+  z-index: 99300;
+  bottom: var(--status-bar-height);
+  right: 0;
+
+  background-color: rgba(var(--dark-grey), 1);
+  // background-color: rgba(var(--bid-color), 1);
+  border: .3rem solid rgba(var(--base-color), 1);
+
+  width: 100%;
+  max-width: 40rem;
+  height: 50rem;
+}
+
 
 app-ordex-withdrawal {
   position: fixed;

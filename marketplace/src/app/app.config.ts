@@ -28,6 +28,7 @@ import { ChatEffects } from '@/state/effects/chat.effects';
 import { TokenIdParsePipe } from '@/pipes/token-id-parse.pipe';
 import { WeiToEthPipe } from '@/pipes/wei-to-eth.pipe';
 import { MinMaxPipe } from '@/pipes/min-max';
+import { modalReducer } from './state/reducers/modal.reducers';
 
 export const config = {
   providers: [
@@ -43,7 +44,8 @@ export const config = {
       marketState: marketStateReducer,
       notificationState: notificationReducer,
       chatState: chatReducer,
-      router: routerReducer
+      modalState: modalReducer,
+      router: routerReducer,
     }),
     provideEffects([
       AppStateEffects,

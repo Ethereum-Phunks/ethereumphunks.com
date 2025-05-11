@@ -13,22 +13,23 @@ import { MenuComponent } from '@/components/menu/menu.component';
 import { NotificationsComponent } from '@/components/notifications/notifications.component';
 import { StatusBarComponent } from '@/components/status-bar/status-bar.component';
 import { ModalComponent } from '@/components/modal/modal.component';
-import { ChatComponent } from '@/components/chat/chat.component';
 
 import { Web3Service } from '@/services/web3.service';
 import { DataService } from '@/services/data.service';
 import { ThemeService } from '@/services/theme.service';
 import { PwaUpdateService } from '@/services/pwa-update.service';
 
-import { selectChatActive } from '@/state/selectors/chat.selectors';
 import { selectIsMobile } from '@/state/selectors/app-state.selectors';
 
 import * as appStateActions from '@/state/actions/app-state.actions';
 import * as dataStateActions from '@/state/actions/data-state.actions';
 
-import { asyncScheduler, fromEvent, debounceTime, filter, map, observeOn, scan, tap, withLatestFrom } from 'rxjs';
+import { asyncScheduler, fromEvent, debounceTime, filter, observeOn, scan, tap, withLatestFrom, map } from 'rxjs';
 
 import { environment } from 'src/environments/environment';
+import { ChatComponent } from './components/chat/chat.component';
+import { selectChatActive } from './state/selectors/chat.selectors';
+import { setChat } from './state/actions/chat.actions';
 
 @Component({
   standalone: true,
@@ -43,7 +44,7 @@ import { environment } from 'src/environments/environment';
     NotificationsComponent,
     StatusBarComponent,
     ModalComponent,
-    ChatComponent,
+    ChatComponent
   ],
   selector: 'app-root',
   templateUrl: './app.component.html',
@@ -54,9 +55,9 @@ export class AppComponent implements OnInit {
 
   env = environment;
 
-  chatActive$ = this.store.select(selectChatActive).pipe(map(({ active }) => active));
-
   statusBarVisible = signal(true);
+
+  chatActive$ = this.store.select(selectChatActive).pipe(map(({ active }) => active));
 
   constructor(
     @Inject(DOCUMENT) private document: Document,
@@ -146,5 +147,9 @@ export class AppComponent implements OnInit {
       const scrollY = window.scrollY;
       this.statusBarVisible.set(scrollY > 100);
     }
+  }
+
+  openChat() {
+    this.store.dispatch(setChat({ active: true }));
   }
 }

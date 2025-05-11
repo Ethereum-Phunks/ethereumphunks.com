@@ -2,6 +2,7 @@ import { Component, input, model, signal } from '@angular/core';
 import { toObservable } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { RouterModule } from '@angular/router';
 
 import { Store } from '@ngrx/store';
 
@@ -20,15 +21,19 @@ import { TippyDirective } from '@/directives/tippy.directive';
 
 import { AvatarComponent } from '@/components/avatar/avatar.component';
 
-import { selectWalletAddress } from '@/state/selectors/app-state.selectors';
-import { ZERO_ADDRESS } from '@/constants/utils';
 import { upsertNotification } from '@/state/actions/notification.actions';
+import { selectActiveCollection } from '@/state/selectors/data-state.selectors';
+import { selectWalletAddress } from '@/state/selectors/app-state.selectors';
+
+import { ZERO_ADDRESS } from '@/constants/utils';
+
 @Component({
   selector: 'app-comments',
   standalone: true,
   imports: [
     CommonModule,
     FormsModule,
+    RouterModule,
     WalletAddressDirective,
     TippyDirective,
     AvatarComponent,
@@ -38,14 +43,16 @@ import { upsertNotification } from '@/state/actions/notification.actions';
 })
 export class CommentsComponent {
 
-  hashId = input.required<string>();
-  hashId$ = toObservable(this.hashId);
+  mainTopic = input.required<string>();
+  mainTopic$ = toObservable(this.mainTopic);
+
+  showTitle = input<boolean>(true);
 
   commentValue = model<Record<string, string>>({});
   expanded = signal<Record<string, boolean>>({});
   replyActive = signal<string | null>(null);
 
-  comments$ = this.hashId$.pipe(
+  comments$ = this.mainTopic$.pipe(
     switchMap((hashId: string) => {
       return from(this.dataSvc.fetchComments(hashId)).pipe(
         switchMap((initialComments: CommentWithReplies[]) => {
@@ -59,6 +66,7 @@ export class CommentsComponent {
     })
   );
 
+  activeCollection$ = this.store.select(selectActiveCollection);
   connectedAddress$ = this.store.select(selectWalletAddress);
 
   constructor(

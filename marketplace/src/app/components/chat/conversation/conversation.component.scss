@@ -2,6 +2,10 @@
 @use 'abstracts/mixins' as *;
 
 :host {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+
   font-family: var(--secondary-font-stack);
   font-weight: 400;
 }
@@ -79,6 +83,9 @@
           font-family: var(--primary-font-stack);
           font-size: 1.4rem;
           font-weight: 600;
+          word-break: break-word;
+          white-space: pre-wrap;
+          overflow-wrap: anywhere;
         }
       }
 

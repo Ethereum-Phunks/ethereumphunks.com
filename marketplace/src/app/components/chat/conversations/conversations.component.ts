@@ -30,9 +30,6 @@ import { setChat } from '@/state/actions/chat.actions';
 })
 export class ConversationsComponent implements OnInit {
 
-  @Input() withUser!: string;
-  @Output() setConversation: EventEmitter<string> = new EventEmitter();
-
   convosLength = 0;
 
   conversations$ = from(this.chatSvc.getConversations()).pipe(

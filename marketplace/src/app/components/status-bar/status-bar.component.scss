@@ -5,16 +5,12 @@
   display: flex;
   align-items: center;
   gap: 1rem;
-  background-color: rgba(var(--black), 1);
-  padding: 1rem 1.5rem;
-
-  height: 4.5rem;
 }
 
 .logger {
 
   position: fixed;
-  bottom: 4.5rem;
+  bottom: var(--status-bar-height);
   right: 0;
   z-index: 1000;
 
@@ -32,8 +28,9 @@
   }
 
   app-logger {
-    max-width: 60rem;
-    height: 30rem;
+    width: 100%;
+    max-width: 40rem;
+    height: 50rem;
     border: .2rem solid rgba(var(--base-color), 1);
     border-top: none;
   }

@@ -1,19 +1,29 @@
-@if ((activeView$ | async); as activeView) {
-  @if (activeView === 'login') {
-    <app-login />
-  }
+<button class="close-wrapper" (click)="closeChat()">
+  <ng-template [ngTemplateOutlet]="closeIcon" />
+</button>
 
-  @if (activeView === 'conversations') {
-    <app-conversations />
-  }
+<div class="chat-container">
+  @if ((activeView$ | async); as activeView) {
+    @if (activeView === 'login') {
+      <app-login />
+    }
 
-  @if (activeView === 'conversation') {
-    <app-conversation />
-  }
+    @if (activeView === 'conversations') {
+      <app-conversations />
+    }
 
-  @if (activeView === 'disabled') {
-    <div class="message-wrapper">
-      <p>Chat is currently disabled for maintenance. BRB.</p>
-    </div>
+    @if (activeView === 'conversation') {
+      <app-conversation />
+    }
+
+    @if (activeView === 'disabled') {
+      <div class="message-wrapper">
+        <p>Chat is currently disabled for maintenance. BRB.</p>
+      </div>
+    }
   }
-}
+</div>
+
+<ng-template #closeIcon>
+  <svg height="15" viewBox="0 0 15 15" width="15" xmlns="http://www.w3.org/2000/svg"><g fill="rgba(var(--dark-grey), 1)" fill-rule="evenodd"><path d="m6 6h3v3h-3z"/><path d="m3 3h3v3h-3z"/><path d="m3 9h3v3h-3z"/><path d="m0 0h3v3h-3z"/><path d="m0 12h3v3h-3z"/><path d="m12 3h-3v3h3z"/><path d="m12 9h-3v3h3z"/><path d="m15 0h-3v3h3z"/><path d="m15 12h-3v3h3z"/></g></svg>
+</ng-template>

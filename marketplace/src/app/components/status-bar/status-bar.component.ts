@@ -8,7 +8,7 @@ import * as appStateSelectors from '@/state/selectors/app-state.selectors';
 import { GasService } from '@/services/gas.service';
 import { LogItem, SocketService } from '@/services/socket.service';
 
-import { LoggerComponent } from '@/components/status-bar/logger/logger.component';
+import { LoggerComponent } from '@/components/logger/logger.component';
 
 import { combineLatest, scan, startWith, switchMap, take } from 'rxjs';
 
