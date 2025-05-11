@@ -1,7 +1,7 @@
 import { AppState, NotificationState } from '@/models/global-state';
 import { Action, ActionReducer, createReducer, on } from '@ngrx/store';
 
-import * as actions from '../actions/notification.actions';
+import * as actions from '../notification/notification.actions';
 
 export const initialState: NotificationState = {
   notifications: [],

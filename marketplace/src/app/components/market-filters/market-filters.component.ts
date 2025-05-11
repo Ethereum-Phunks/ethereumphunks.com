@@ -10,8 +10,8 @@ import { DataService } from '@/services/data.service';
 import { IsNumberPipe } from '@/pipes/is-number';
 import { GlobalState } from '@/models/global-state';
 
-import { setActiveTraitFilters } from '@/state/actions/market-state.actions';
-import { selectActiveTraitFilters } from '@/state/selectors/market-state.selectors';
+import { setActiveTraitFilters } from '@/state/market/market-state.actions';
+import { selectActiveTraitFilters } from '@/state/market/market-state.selectors';
 
 import { tap } from 'rxjs';
 @Component({

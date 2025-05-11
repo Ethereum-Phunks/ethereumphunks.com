@@ -31,15 +31,15 @@ import { UtilService } from '@/services/util.service';
 import { Phunk } from '@/models/db';
 import { GlobalState, Notification } from '@/models/global-state';
 
-import * as appStateActions from '@/state/actions/app-state.actions';
-import * as appStateSelectors from '@/state/selectors/app-state.selectors';
+import * as appStateActions from '@/state/app/app-state.actions';
+import * as appStateSelectors from '@/state/app/app-state.selectors';
 
-import * as dataStateSelectors from '@/state/selectors/data-state.selectors';
+import * as dataStateSelectors from '@/state/data/data-state.selectors';
 
-import { selectNotifications } from '@/state/selectors/notification.selectors';
-import { upsertNotification } from '@/state/actions/notification.actions';
+import { selectNotifications } from '@/state/notification/notification.selectors';
+import { upsertNotification } from '@/state/notification/notification.actions';
 
-import { setChat } from '@/state/actions/chat.actions';
+import { setChat } from '@/state/chat/chat.actions';
 
 import { environment } from 'src/environments/environment';
 

@@ -17,11 +17,11 @@ import { FormatCashPipe } from '@/pipes/format-cash.pipe';
 
 import { GlobalState } from '@/models/global-state';
 
-import * as appStateSelectors from '@/state/selectors/app-state.selectors';
-import * as notificationSelectors from '@/state/selectors/notification.selectors';
-import * as dataStateSelectors from '@/state/selectors/data-state.selectors';
+import * as appStateSelectors from '@/state/app/app-state.selectors';
+import * as notificationSelectors from '@/state/notification/notification.selectors';
+import * as dataStateSelectors from '@/state/data/data-state.selectors';
 
-import * as appStateActions from '@/state/actions/app-state.actions';
+import * as appStateActions from '@/state/app/app-state.actions';
 
 import { environment } from '@/../environments/environment';
 import { LazyLoadImageModule } from 'ng-lazyload-image';

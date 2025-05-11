@@ -21,9 +21,9 @@ import { TippyDirective } from '@/directives/tippy.directive';
 
 import { AvatarComponent } from '@/components/avatar/avatar.component';
 
-import { upsertNotification } from '@/state/actions/notification.actions';
-import { selectActiveCollection } from '@/state/selectors/data-state.selectors';
-import { selectWalletAddress } from '@/state/selectors/app-state.selectors';
+import { upsertNotification } from '@/state/notification/notification.actions';
+import { selectActiveCollection } from '@/state/data/data-state.selectors';
+import { selectWalletAddress } from '@/state/app/app-state.selectors';
 
 import { ZERO_ADDRESS } from '@/constants/utils';
 

@@ -7,8 +7,8 @@ import { Store } from '@ngrx/store';
 import { filter, switchMap, tap } from 'rxjs';
 
 import { GlobalState } from '@/models/global-state';
-import { selectModalById, selectIsModalOpen } from '@/state/selectors/modal.selectors';
-import { closeModal } from '@/state/actions/modal.actions';
+import { selectModalById, selectIsModalOpen } from '@/state/modal/modal.selectors';
+import { closeModal } from '@/state/modal/modal.actions';
 
 @Component({
   standalone: true,

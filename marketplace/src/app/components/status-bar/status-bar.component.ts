@@ -3,7 +3,7 @@ import { AsyncPipe, DecimalPipe, NgTemplateOutlet } from '@angular/common';
 
 import { Store } from '@ngrx/store';
 import { GlobalState } from '@/models/global-state';
-import * as appStateSelectors from '@/state/selectors/app-state.selectors';
+import * as appStateSelectors from '@/state/app/app-state.selectors';
 
 import { GasService } from '@/services/gas.service';
 import { LogItem, SocketService } from '@/services/socket.service';

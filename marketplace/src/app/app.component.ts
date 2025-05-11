@@ -19,17 +19,17 @@ import { DataService } from '@/services/data.service';
 import { ThemeService } from '@/services/theme.service';
 import { PwaUpdateService } from '@/services/pwa-update.service';
 
-import { selectIsMobile } from '@/state/selectors/app-state.selectors';
+import { selectIsMobile } from '@/state/app/app-state.selectors';
 
-import * as appStateActions from '@/state/actions/app-state.actions';
-import * as dataStateActions from '@/state/actions/data-state.actions';
+import * as appStateActions from '@/state/app/app-state.actions';
+import * as dataStateActions from '@/state/data/data-state.actions';
 
 import { asyncScheduler, fromEvent, debounceTime, filter, observeOn, scan, tap, withLatestFrom, map } from 'rxjs';
 
 import { environment } from 'src/environments/environment';
 import { ChatComponent } from './components/chat/chat.component';
-import { selectChatActive } from './state/selectors/chat.selectors';
-import { setChat } from './state/actions/chat.actions';
+import { selectChatActive } from './state/chat/chat.selectors';
+import { setChat } from './state/chat/chat.actions';
 
 @Component({
   standalone: true,

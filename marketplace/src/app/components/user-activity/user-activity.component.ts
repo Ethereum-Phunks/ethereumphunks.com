@@ -16,7 +16,7 @@ import { WeiToEthPipe } from '@/pipes/wei-to-eth.pipe';
 
 import { GlobalState } from '@/models/global-state';
 
-import * as dataStateSelectors from '@/state/selectors/data-state.selectors';
+import * as dataStateSelectors from '@/state/data/data-state.selectors';
 
 @Component({
   standalone: true,

@@ -3,7 +3,7 @@ import { Action, ActionReducer, createReducer, on } from '@ngrx/store';
 
 import { Theme } from '@/models/theme';
 
-import * as actions from '../actions/app-state.actions';
+import * as actions from '../app/app-state.actions';
 import { environment } from 'src/environments/environment';
 
 export const initialState: AppState = {

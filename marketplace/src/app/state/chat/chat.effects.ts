@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { setChat, setChatConnected } from '../actions/chat.actions';
+import { setChat, setChatConnected } from './chat.actions';
 
 import { Store } from '@ngrx/store';
 
@@ -9,7 +9,7 @@ import { GlobalState } from '@/models/global-state';
 
 import { filter, from, map, switchMap, tap, withLatestFrom } from 'rxjs';
 
-import { selectWalletAddress } from '../selectors/app-state.selectors';
+import { selectWalletAddress } from '../app/app-state.selectors';
 
 import { ChatService } from '@/services/chat.service';
 

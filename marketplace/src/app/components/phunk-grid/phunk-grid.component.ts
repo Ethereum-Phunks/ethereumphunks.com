@@ -23,8 +23,8 @@ import { ImageUrlPipe } from '@/pipes/image-url.pipe';
 
 import { environment } from 'src/environments/environment';
 
-import * as dataStateSelectors from '@/state/selectors/data-state.selectors';
-import * as marketStateActions from '@/state/actions/market-state.actions';
+import * as dataStateSelectors from '@/state/data/data-state.selectors';
+import * as marketStateActions from '@/state/market/market-state.actions';
 
 @Component({
   selector: 'app-phunk-grid',

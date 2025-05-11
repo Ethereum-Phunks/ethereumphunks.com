@@ -1,7 +1,7 @@
 import { ModalState } from '@/models/global-state';
 import { Action, ActionReducer, createReducer, on } from '@ngrx/store';
-import { closeAllModals, closeModal } from '../actions/modal.actions';
-import { openModal } from '../actions/modal.actions';
+import { closeAllModals, closeModal } from '../modal/modal.actions';
+import { openModal } from '../modal/modal.actions';
 
 const initialState: ModalState = {
   activeModals: {}

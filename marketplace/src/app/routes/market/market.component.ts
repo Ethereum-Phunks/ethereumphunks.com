@@ -27,19 +27,19 @@ import { WeiToEthPipe } from '@/pipes/wei-to-eth.pipe';
 import { CalcPipe } from '@/pipes/calculate.pipe';
 import { FormatCashPipe } from '@/pipes/format-cash.pipe';
 
-import * as appStateSelectors from '@/state/selectors/app-state.selectors';
-import * as appStateActions from '@/state/actions/app-state.actions';
-import * as dataStateSelectors from '@/state/selectors/data-state.selectors';
-import * as marketStateSelectors from '@/state/selectors/market-state.selectors';
-import * as marketStateActions from '@/state/actions/market-state.actions';
+import * as appStateSelectors from '@/state/app/app-state.selectors';
+import * as appStateActions from '@/state/app/app-state.actions';
+import * as dataStateSelectors from '@/state/data/data-state.selectors';
+import * as marketStateSelectors from '@/state/market/market-state.selectors';
+import * as marketStateActions from '@/state/market/market-state.actions';
 
-import { upsertNotification } from '@/state/actions/notification.actions';
+import { upsertNotification } from '@/state/notification/notification.actions';
 
 import { environment } from 'src/environments/environment';
 
 import { filter, map, tap } from 'rxjs';
-import { openModal } from '@/state/actions/modal.actions';
-import { setChat } from '@/state/actions/chat.actions';
+import { openModal } from '@/state/modal/modal.actions';
+import { setChat } from '@/state/chat/chat.actions';
 
 const defaultActionState = {
   canList: false,

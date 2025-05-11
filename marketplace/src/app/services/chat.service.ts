@@ -10,7 +10,7 @@ import { GlobalState, Notification } from '@/models/global-state';
 import { Web3Service } from './web3.service';
 import { UtilService } from './util.service';
 
-import { upsertNotification } from '@/state/actions/notification.actions';
+import { upsertNotification } from '@/state/notification/notification.actions';
 
 /**
  * Service for handling XMTP messaging functionality
@@ -42,6 +42,7 @@ export class ChatService {
    * @returns Promise resolving to boolean indicating success
    */
   async signInToXmtp(): Promise<boolean> {
+    console.time('signInToXmtp');
     try {
       const signer = await this.web3Svc.getActiveWalletClient();
       const address = signer?.account.address;
@@ -63,11 +64,14 @@ export class ChatService {
 
       this.streamAllMessages();
 
-      if (this.client) return true;
+      if (this.client) {
+        console.timeEnd('signInToXmtp');
+        return true;
+      }
     } catch (error) {
       console.error('Error signing in to XMTP', error);
     }
-
+    console.timeEnd('signInToXmtp');
     return false;
   }
 
@@ -77,8 +81,12 @@ export class ChatService {
    * @returns Promise resolving to boolean indicating success
    */
   async reconnectXmtp(address: string): Promise<boolean> {
+    console.time('reconnectXmtp');
     let keys = this.loadKeys(address);
-    if (!keys) return false;
+    if (!keys) {
+      console.timeEnd('reconnectXmtp');
+      return false;
+    }
 
     this.client = await Client.create(null, {
       ...this.clientOptions,
@@ -87,7 +95,11 @@ export class ChatService {
 
     this.streamAllMessages();
 
-    if (this.client) return true;
+    if (this.client) {
+      console.timeEnd('reconnectXmtp');
+      return true;
+    }
+    console.timeEnd('reconnectXmtp');
     return false;
   }
 
@@ -108,7 +120,10 @@ export class ChatService {
    * @returns Promise resolving to array of messages
    */
   async getChatMessagesFromConversation(conversation: Conversation): Promise<any> {
+    console.time(`getChatMessagesFromConversation:${conversation.peerAddress}`);
     const messages = await conversation.messages();
+    console.timeEnd(`getChatMessagesFromConversation:${conversation.peerAddress}`);
+    console.log(`Fetched messages for ${conversation.peerAddress}:`, messages.length);
     return messages;
   }
 
@@ -177,9 +192,14 @@ export class ChatService {
   streamMessages(conversation: Conversation): Observable<any> {
     return new Observable(subscriber => {
       (async () => {
+        console.time(`streamMessages:${conversation.peerAddress}`);
+        let count = 0;
         for await (const message of await conversation.streamMessages()) {
           subscriber.next(message);
+          count++;
         }
+        console.timeEnd(`streamMessages:${conversation.peerAddress}`);
+        console.log(`streamMessages processed messages for ${conversation.peerAddress}:`, count);
       })().catch(err => subscriber.error(err));
       return () => {
         // Teardown logic here
@@ -193,8 +213,10 @@ export class ChatService {
    */
   async getConversations(): Promise<Conversation[]> {
     if (!this.client) await this.signInToXmtp();
-
+    console.time('getConversations');
     const conversations = await this.client.conversations.list();
+    console.timeEnd('getConversations');
+    console.log('Fetched conversations:', conversations.length);
     return conversations;
   }
 
@@ -202,6 +224,8 @@ export class ChatService {
    * Streams all incoming messages and creates notifications
    */
   async streamAllMessages() {
+    console.time('streamAllMessages');
+    let count = 0;
     for await (const message of await this.client.conversations.streamAllMessages()) {
       if (message.senderAddress === this.client.address) continue;
 
@@ -217,7 +241,10 @@ export class ChatService {
       };
 
       this.store.dispatch(upsertNotification({ notification }));
+      count++;
     }
+    console.timeEnd('streamAllMessages');
+    console.log('streamAllMessages processed messages:', count);
   }
 
   /**

@@ -11,7 +11,7 @@ import { LazyLoadImageModule } from 'ng-lazyload-image';
 import { ImageUrlPipe } from '@/pipes/image-url.pipe';
 import { Store } from '@ngrx/store';
 import { GlobalState } from '@/models/global-state';
-import { setChat } from '@/state/actions/chat.actions';
+import { setChat } from '@/state/chat/chat.actions';
 
 @Component({
   imports: [

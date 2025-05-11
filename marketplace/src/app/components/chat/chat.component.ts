@@ -8,12 +8,12 @@ import { ConversationComponent } from './conversation/conversation.component';
 import { ConversationsComponent } from './conversations/conversations.component';
 import { LoginComponent } from './login/login.component';
 
-import { selectChatConnected, selectChatState } from '@/state/selectors/chat.selectors';
-import { selectConfig } from '@/state/selectors/app-state.selectors';
+import { selectChatConnected, selectChatState } from '@/state/chat/chat.selectors';
+import { selectConfig } from '@/state/app/app-state.selectors';
 
 import { ViewType } from '@/models/chat';
 import { GlobalState } from '@/models/global-state';
-import { setChat } from '@/state/actions/chat.actions';
+import { setChat } from '@/state/chat/chat.actions';
 
 @Component({
   standalone: true,

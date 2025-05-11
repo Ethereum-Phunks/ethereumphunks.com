@@ -12,8 +12,8 @@ import { Message } from '@/models/chat';
 import { WalletAddressDirective } from '@/directives/wallet-address.directive';
 import { Store } from '@ngrx/store';
 import { GlobalState } from '@/models/global-state';
-import { setChat } from '@/state/actions/chat.actions';
-import { selectChatState } from '@/state/selectors/chat.selectors';
+import { setChat } from '@/state/chat/chat.actions';
+import { selectChatState } from '@/state/chat/chat.selectors';
 
 @Component({
   selector: 'app-conversation',

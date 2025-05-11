@@ -12,10 +12,10 @@ import { DataService } from '@/services/data.service';
 
 import { GlobalState, HistoryItem } from '@/models/global-state';
 
-import * as appStateSelectors from '@/state/selectors/app-state.selectors';
-import * as appStateActions from '@/state/actions/app-state.actions';
-import { selectMarketSlug } from '@/state/selectors/market-state.selectors';
-import { setMarketSlug } from '@/state/actions/market-state.actions';
+import * as appStateSelectors from '@/state/app/app-state.selectors';
+import * as appStateActions from '@/state/app/app-state.actions';
+import { selectMarketSlug } from '@/state/market/market-state.selectors';
+import { setMarketSlug } from '@/state/market/market-state.actions';
 
 @Component({
   selector: 'app-search',

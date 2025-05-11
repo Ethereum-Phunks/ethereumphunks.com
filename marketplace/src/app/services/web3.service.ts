@@ -20,7 +20,7 @@ import { EtherPhunksBridgeL2ABI } from '@/abi/EtherPhunksBridgeL2';
 import { reconnect, http, createConfig, Config, watchAccount, getPublicClient, getAccount, disconnect, getChainId, getWalletClient, GetWalletClientReturnType, GetAccountReturnType } from '@wagmi/core';
 import { coinbaseWallet, walletConnect, injected } from '@wagmi/connectors';
 
-import * as appStateActions from '@/state/actions/app-state.actions';
+import * as appStateActions from '@/state/app/app-state.actions';
 
 import { Chain, mainnet, sepolia } from 'viem/chains';
 import { magma } from '@/constants/magmaChain';
@@ -29,7 +29,7 @@ import { createWeb3Modal } from '@web3modal/wagmi';
 
 import { PublicClient, TransactionReceipt, WatchBlockNumberReturnType, WatchContractEventReturnType, createPublicClient, custom, decodeFunctionData, fallback, formatEther, isAddress, keccak256, parseEther, stringToBytes, toHex, zeroAddress } from 'viem';
 
-import { selectIsBanned } from '@/state/selectors/app-state.selectors';
+import { selectIsBanned } from '@/state/app/app-state.selectors';
 
 const marketAddress = environment.marketAddress;
 const marketAddressL2 = environment.marketAddressL2;

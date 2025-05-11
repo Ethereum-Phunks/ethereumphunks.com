@@ -20,8 +20,8 @@ import { UtilService } from '@/services/util.service';
 
 import { TippyDirective } from '@/directives/tippy.directive';
 
-import { selectConnected, selectWalletAddress } from '@/state/selectors/app-state.selectors';
-import { upsertNotification } from '@/state/actions/notification.actions';
+import { selectConnected, selectWalletAddress } from '@/state/app/app-state.selectors';
+import { upsertNotification } from '@/state/notification/notification.actions';
 
 import { environment } from 'src/environments/environment';
 

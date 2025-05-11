@@ -16,10 +16,10 @@ import { GlobalState, Notification } from '@/models/global-state';
 
 import { map } from 'rxjs';
 
-import * as dataStateSelectors from '@/state/selectors/data-state.selectors';
+import * as dataStateSelectors from '@/state/data/data-state.selectors';
 
-import { removeNotification, setNotifHoverState } from '@/state/actions/notification.actions';
-import { setChat } from '@/state/actions/chat.actions';
+import { removeNotification, setNotifHoverState } from '@/state/notification/notification.actions';
+import { setChat } from '@/state/chat/chat.actions';
 
 @Component({
   selector: 'app-notification',

@@ -7,7 +7,7 @@ import { GlobalState, Notification } from '@/models/global-state';
 
 import { NotificationComponent } from './notification/notification.component';
 
-import * as notificationSelectors from '@/state/selectors/notification.selectors';
+import * as notificationSelectors from '@/state/notification/notification.selectors';
 
 import { map } from 'rxjs';
 

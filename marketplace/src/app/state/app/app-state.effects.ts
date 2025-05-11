@@ -14,8 +14,8 @@ import { GlobalState, LinkedAccount } from '@/models/global-state';
 
 import { catchError, EMPTY, filter, from, map, mergeMap, of, switchMap, tap, withLatestFrom } from 'rxjs';
 
-import * as appStateActions from '@/state/actions/app-state.actions';
-import * as appStateSelectors from '@/state/selectors/app-state.selectors';
+import * as appStateActions from '@/state/app/app-state.actions';
+import * as appStateSelectors from '@/state/app/app-state.selectors';
 
 import { ChatService } from '@/services/chat.service';
 
