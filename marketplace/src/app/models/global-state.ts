@@ -1,3 +1,4 @@
+import { LogItem } from '@/services/socket.service';
 import { DataState } from './data.state';
 import { MarketState } from './market.state';
 
@@ -11,6 +12,12 @@ export interface GlobalState {
   notificationState: NotificationState;
   chatState: ChatState;
   modalState: ModalState;
+  indexerLogsState: IndexerLogsState;
+}
+
+export interface IndexerLogsState {
+  logsActive: boolean;
+  logs: LogItem[];
 }
 
 export interface ModalState {
@@ -60,6 +67,9 @@ export interface AppState {
   config: GlobalConfig;
 
   linkedAccounts: LinkedAccount[];
+
+  logsActive: boolean;
+  logs: LogItem[];
 }
 
 export interface LinkedAccount {

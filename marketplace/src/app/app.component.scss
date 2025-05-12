@@ -32,7 +32,7 @@ main {
   height: var(--status-bar-height);
   padding: 1rem 1.5rem;
 
-  background-color: rgba(var(--black), 1);
+  background-color: rgba(var(--dark-grey), 1);
 
   @include trans($duration: .2s);
 
@@ -45,13 +45,29 @@ main {
     font-weight: 400;
     font-size: 1.6rem;
     color: rgba(var(--white), 1);
-    background-color: rgba(var(--dark-grey), 1);
 
     padding: 0 1rem;
     margin-left: .5rem;
+    background: transparent;
+    border: none;
+
+    svg {
+      width: 2rem;
+      height: 2rem;
+
+      path {
+        fill: rgba(var(--white), 1);
+      }
+    }
 
     &.active {
       color: rgba(var(--base-color), 1);
+
+      svg {
+        path {
+          fill: rgba(var(--base-color), 1);
+        }
+      }
     }
   }
 
@@ -80,6 +96,19 @@ app-chat {
   height: 50rem;
 }
 
+app-logger {
+  position: fixed;
+  z-index: 99200;
+  bottom: var(--status-bar-height);
+  right: 0;
+
+  width: 100%;
+  max-width: 40rem;
+  height: 50rem;
+
+  background-color: rgba(var(--dark-grey), 1);
+  border: .3rem solid rgba(var(--base-color), 1);
+}
 
 app-ordex-withdrawal {
   position: fixed;

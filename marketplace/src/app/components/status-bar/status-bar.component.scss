@@ -7,35 +7,6 @@
   gap: 1rem;
 }
 
-.logger {
-
-  position: fixed;
-  bottom: var(--status-bar-height);
-  right: 0;
-  z-index: 1000;
-
-  .title-bar {
-    display: flex;
-    align-items: center;
-    padding: .5rem 1rem;
-
-    font-family: var(--secondary-font-stack);
-    font-weight: 400;
-    font-size: 1rem;
-
-    color: rgba(var(--black), 1);
-    background-color: rgba(var(--base-color), 1);
-  }
-
-  app-logger {
-    width: 100%;
-    max-width: 40rem;
-    height: 50rem;
-    border: .2rem solid rgba(var(--base-color), 1);
-    border-top: none;
-  }
-}
-
 .chat-button {
   display: flex;
   align-items: center;

@@ -19,12 +19,14 @@ import { marketStateReducer } from '@/state/market/market-state.reducers';
 import { notificationReducer } from '@/state/notification/notification.reducers';
 import { chatReducer } from '@/state/chat/chat.reducers';
 import { modalReducer } from '@/state/modal/modal.reducers';
+import { indexerLogsReducer } from '@/state/indexer-logs/indexer-logs.reducers';
 
 import { AppStateEffects } from '@/state/app/app-state.effects';
 import { DataStateEffects } from '@/state/data/data-state.effects';
 import { MarketStateEffects } from '@/state/market/market-state.effects';
 import { NotificationEffects } from '@/state/notification/notification.effects';
 import { ChatEffects } from '@/state/chat/chat.effects';
+import { IndexerLogsEffects } from '@/state/indexer-logs/indexer-logs.effects';
 
 import { TokenIdParsePipe } from '@/pipes/token-id-parse.pipe';
 import { WeiToEthPipe } from '@/pipes/wei-to-eth.pipe';
@@ -45,6 +47,7 @@ export const config = {
       notificationState: notificationReducer,
       chatState: chatReducer,
       modalState: modalReducer,
+      indexerLogsState: indexerLogsReducer,
       router: routerReducer,
     }),
     provideEffects([
@@ -52,7 +55,8 @@ export const config = {
       DataStateEffects,
       MarketStateEffects,
       NotificationEffects,
-      ChatEffects
+      ChatEffects,
+      IndexerLogsEffects
     ]),
     provideStoreDevtools({
       maxAge: 25,

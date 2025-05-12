@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
+
 import { Socket, SocketIoConfig } from 'ngx-socket-io';
-import { tap } from 'rxjs';
 
 import { environment } from 'src/environments/environment';
 
@@ -51,10 +51,6 @@ export class SocketService extends Socket {
 
   constructor() {
     super(socketConfig);
-
-    this.onMessage().subscribe(({ id, message }) => {
-      console.log('received message', { id, message });
-    });
   }
 
   /**

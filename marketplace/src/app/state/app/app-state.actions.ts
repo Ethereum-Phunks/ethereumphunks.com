@@ -1,6 +1,7 @@
 import { createAction, props } from '@ngrx/store';
 
 import { AppState, Cooldowns, EventType, GlobalConfig, HistoryItem, LinkedAccount } from '@/models/global-state';
+import { LogItem } from '@/services/socket.service';
 
 export const setConnected = createAction(
   '[App State] Set Wallet Connected',

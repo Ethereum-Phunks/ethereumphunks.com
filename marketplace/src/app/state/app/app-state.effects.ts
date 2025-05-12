@@ -8,11 +8,11 @@ import { Actions, createEffect, ofType } from '@ngrx/effects';
 import { Web3Service } from '@/services/web3.service';
 import { ThemeService } from '@/services/theme.service';
 import { DataService } from '@/services/data.service';
-import { SocketService } from '@/services/socket.service';
+import { LogItem, SocketService } from '@/services/socket.service';
 
 import { GlobalState, LinkedAccount } from '@/models/global-state';
 
-import { catchError, EMPTY, filter, from, map, mergeMap, of, switchMap, tap, withLatestFrom } from 'rxjs';
+import { catchError, EMPTY, filter, from, map, mergeMap, of, scan, startWith, switchMap, take, tap, withLatestFrom, takeUntil } from 'rxjs';
 
 import * as appStateActions from '@/state/app/app-state.actions';
 import * as appStateSelectors from '@/state/app/app-state.selectors';

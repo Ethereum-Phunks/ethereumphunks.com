@@ -45,7 +45,10 @@ export const initialState: AppState = {
     defaultCollection: null
   },
 
-  linkedAccounts: []
+  linkedAccounts: [],
+
+  logsActive: false,
+  logs: []
 };
 
 export const appStateReducer: ActionReducer<AppState, Action> = createReducer(

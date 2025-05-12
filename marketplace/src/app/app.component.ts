@@ -12,7 +12,8 @@ import { FooterComponent } from '@/components/footer/footer.component';
 import { MenuComponent } from '@/components/menu/menu.component';
 import { NotificationsComponent } from '@/components/notifications/notifications.component';
 import { StatusBarComponent } from '@/components/status-bar/status-bar.component';
-import { ModalComponent } from '@/components/modal/modal.component';
+import { ChatComponent } from './components/chat/chat.component';
+import { LoggerComponent } from './components/logger/logger.component';
 
 import { Web3Service } from '@/services/web3.service';
 import { DataService } from '@/services/data.service';
@@ -20,17 +21,17 @@ import { ThemeService } from '@/services/theme.service';
 import { PwaUpdateService } from '@/services/pwa-update.service';
 
 import { selectIsMobile } from '@/state/app/app-state.selectors';
+import { selectLogsActive } from '@/state/indexer-logs/indexer-logs.selectors';
 
 import * as appStateActions from '@/state/app/app-state.actions';
 import * as dataStateActions from '@/state/data/data-state.actions';
 
-import { asyncScheduler, fromEvent, debounceTime, filter, observeOn, scan, tap, withLatestFrom, map } from 'rxjs';
+import { asyncScheduler, fromEvent, debounceTime, filter, observeOn, scan, tap, withLatestFrom, map, firstValueFrom } from 'rxjs';
 
 import { environment } from 'src/environments/environment';
-import { ChatComponent } from './components/chat/chat.component';
+
 import { selectChatActive } from './state/chat/chat.selectors';
 import { setChat } from './state/chat/chat.actions';
-
 @Component({
   standalone: true,
   imports: [
@@ -43,8 +44,8 @@ import { setChat } from './state/chat/chat.actions';
     FooterComponent,
     NotificationsComponent,
     StatusBarComponent,
-    ModalComponent,
-    ChatComponent
+    ChatComponent,
+    LoggerComponent
   ],
   selector: 'app-root',
   templateUrl: './app.component.html',
@@ -58,6 +59,7 @@ export class AppComponent implements OnInit {
   statusBarVisible = signal(true);
 
   chatActive$ = this.store.select(selectChatActive).pipe(map(({ active }) => active));
+  logsActive$ = this.store.select(selectLogsActive);
 
   constructor(
     @Inject(DOCUMENT) private document: Document,
@@ -149,7 +151,8 @@ export class AppComponent implements OnInit {
     }
   }
 
-  openChat() {
-    this.store.dispatch(setChat({ active: true }));
+  async toggleChat() {
+    const active = await firstValueFrom(this.chatActive$);
+    this.store.dispatch(setChat({ active: !active }));
   }
 }
