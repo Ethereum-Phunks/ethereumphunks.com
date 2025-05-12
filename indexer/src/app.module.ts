@@ -13,6 +13,7 @@ import { BridgeL2Module } from '@/modules/bridge-l2/bridge-l2.module';
 import { EthscriptionsModule } from '@/modules/ethscriptions/ethscriptions.module';
 import { TxPoolModule } from '@/modules/tx-pool/tx-pool.module';
 import { MintModule } from '@/modules/mint/mint.module';
+import { AgentModule } from '@/modules/agent/agent.module';
 
 import { AppService } from '@/app.service';
 import { AppController } from '@/app.controller';
@@ -22,7 +23,6 @@ import { DataService } from '@/services/data.service';
 import { ProcessingService } from '@/services/processing.service';
 
 import { ApiKeyMiddleware } from '@/middleware/api-key.middleware';
-
 @Module({
   imports: [
     ConfigModule.forRoot(),
@@ -42,6 +42,7 @@ import { ApiKeyMiddleware } from '@/middleware/api-key.middleware';
 
     CommentsModule,
     StorageModule,
+    AgentModule,
   ],
   controllers: [AppController],
   providers: [
