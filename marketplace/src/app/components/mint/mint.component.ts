@@ -23,7 +23,7 @@ import { TippyDirective } from '@/directives/tippy.directive';
 import { selectConnected, selectWalletAddress } from '@/state/app/app-state.selectors';
 import { upsertNotification } from '@/state/notification/notification.actions';
 
-import { environment } from 'src/environments/environment';
+import { environment } from '@environments/environment';
 
 import { MintRequestResponse } from './models/metadata';
 

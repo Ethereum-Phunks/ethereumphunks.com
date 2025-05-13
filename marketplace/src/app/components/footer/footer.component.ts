@@ -2,7 +2,7 @@ import { magma } from '@/constants/magmaChain';
 import { WalletAddressDirective } from '@/directives/wallet-address.directive';
 import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
-import { environment } from 'src/environments/environment';
+import { environment } from '@environments/environment';
 
 @Component({
   standalone: true,

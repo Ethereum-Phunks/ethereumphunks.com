@@ -41,7 +41,7 @@ import { upsertNotification } from '@/state/notification/notification.actions';
 
 import { setChat } from '@/state/chat/chat.actions';
 
-import { environment } from 'src/environments/environment';
+import { environment } from '@environments/environment';
 
 interface ActionsState {
   sell: boolean;

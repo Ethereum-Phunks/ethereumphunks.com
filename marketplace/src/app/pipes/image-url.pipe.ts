@@ -1,7 +1,7 @@
 import { Phunk } from '@/models/db';
 import { Pipe, PipeTransform } from '@angular/core';
 
-import { environment } from 'src/environments/environment';
+import { environment } from '@environments/environment';
 
 @Pipe({
   standalone: true,

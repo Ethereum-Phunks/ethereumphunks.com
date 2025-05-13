@@ -10,7 +10,7 @@ import { WalletAddressDirective } from '@/directives/wallet-address.directive';
 
 import { NotificationPipe } from './notification.pipe';
 
-import { environment } from 'src/environments/environment';
+import { environment } from '@environments/environment';
 
 import { GlobalState, Notification } from '@/models/global-state';
 

@@ -11,7 +11,7 @@ import { Event } from '@/models/db';
 
 import { EMPTY, catchError, delay, map, of, switchMap, tap, withLatestFrom } from 'rxjs';
 
-import { environment } from 'src/environments/environment';
+import { environment } from '@environments/environment';
 import { DataService } from '@/services/data.service';
 
 import { selectNotifHoverState, selectNotifications } from '../notification/notification.selectors';

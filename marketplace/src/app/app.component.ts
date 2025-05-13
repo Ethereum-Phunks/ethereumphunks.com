@@ -28,7 +28,7 @@ import * as dataStateActions from '@/state/data/data-state.actions';
 
 import { asyncScheduler, fromEvent, debounceTime, filter, observeOn, scan, tap, withLatestFrom, map, firstValueFrom } from 'rxjs';
 
-import { environment } from 'src/environments/environment';
+import { environment } from '@environments/environment';
 
 import { selectChatActive } from './state/chat/chat.selectors';
 import { setChat } from './state/chat/chat.actions';

@@ -19,7 +19,7 @@ import * as appStateSelectors from '@/state/app/app-state.selectors';
 
 import { ChatService } from '@/services/chat.service';
 
-import { environment } from 'src/environments/environment';
+import { environment } from '@environments/environment';
 import { formatEther } from 'viem';
 import { StorageService } from '@/services/storage.service';
 @Injectable()

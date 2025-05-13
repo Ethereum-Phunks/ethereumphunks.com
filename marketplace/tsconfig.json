@@ -18,9 +18,16 @@
     "module": "es2020",
     "esModuleInterop": true,
     "skipLibCheck": true,
+    "types": ["vite/client", "node"],
     "paths": {
       "@/*": [
         "src/app/*"
+      ],
+      "@scss/*": [
+        "src/scss/*"
+      ],
+      "@environments/*": [
+        "src/environments/*"
       ]
     },
     "lib": [

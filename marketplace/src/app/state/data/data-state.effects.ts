@@ -15,7 +15,7 @@ import * as dataStateSelectors from '@/state/data/data-state.selectors';
 import * as marketStateSelectors from '@/state/market/market-state.selectors';
 
 import { filter, map, switchMap, take, tap } from 'rxjs';
-import { environment } from 'src/environments/environment';
+import { environment } from '@environments/environment';
 
 @Injectable()
 export class DataStateEffects {

@@ -9,7 +9,7 @@ import { GasService } from '@/services/gas.service';
 
 import { combineLatest, firstValueFrom } from 'rxjs';
 
-import { environment } from 'src/environments/environment';
+import { environment } from '@environments/environment';
 import { setLogsActive } from '@/state/indexer-logs/indexer-logs.actions';
 import { selectLogsActive } from '@/state/indexer-logs/indexer-logs.selectors';
 

@@ -35,7 +35,7 @@ import * as marketStateActions from '@/state/market/market-state.actions';
 
 import { upsertNotification } from '@/state/notification/notification.actions';
 
-import { environment } from 'src/environments/environment';
+import { environment } from '@environments/environment';
 
 import { filter, map, tap } from 'rxjs';
 import { openModal } from '@/state/modal/modal.actions';

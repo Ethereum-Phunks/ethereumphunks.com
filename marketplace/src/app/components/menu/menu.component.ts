@@ -31,7 +31,7 @@ import { from, map, switchMap, tap } from 'rxjs';
 
 import anime from 'animejs';
 
-import { environment } from '@/../environments/environment';
+import { environment } from '@environments/environment';
 
 @Component({
   selector: 'app-menu',

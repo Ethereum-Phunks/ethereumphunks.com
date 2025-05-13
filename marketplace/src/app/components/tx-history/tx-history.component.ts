@@ -17,7 +17,7 @@ import { DataService } from '@/services/data.service';
 import { EventType, GlobalState } from '@/models/global-state';
 import { Phunk } from '@/models/db';
 
-import { environment } from 'src/environments/environment';
+import { environment } from '@environments/environment';
 import { ZERO_ADDRESS } from '@/constants/utils';
 
 import { BehaviorSubject, catchError, filter, map, of, switchMap } from 'rxjs';

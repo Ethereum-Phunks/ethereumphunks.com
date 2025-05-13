@@ -9,7 +9,7 @@ import { hexToString } from 'viem';
 import { Web3Service } from '@/services/web3.service';
 import { ImageService } from '@/services/image.service';
 
-import { environment } from 'src/environments/environment';
+import { environment } from '@environments/environment';
 
 @Component({
   standalone: true,

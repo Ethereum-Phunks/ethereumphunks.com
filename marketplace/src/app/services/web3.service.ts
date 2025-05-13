@@ -2,8 +2,6 @@ import { Injectable, NgZone } from '@angular/core';
 
 import { Store } from '@ngrx/store';
 
-import { environment } from 'src/environments/environment';
-
 import { GlobalState } from '@/models/global-state';
 import { Phunk } from '@/models/db';
 
@@ -31,6 +29,8 @@ import { PublicClient, TransactionReceipt, WatchBlockNumberReturnType, WatchCont
 
 import { selectIsBanned } from '@/state/app/app-state.selectors';
 
+import { environment } from '@environments/environment';
+
 const marketAddress = environment.marketAddress;
 const marketAddressL2 = environment.marketAddressL2;
 const pointsAddress = environment.pointsAddress;
@@ -55,7 +55,6 @@ const themeVariables = {
 @Injectable({
   providedIn: 'root'
 })
-
 export class Web3Service {
 
   maxCooldown = 4;

@@ -4,7 +4,7 @@ import { Action, ActionReducer, createReducer, on } from '@ngrx/store';
 import { Theme } from '@/models/theme';
 
 import * as actions from '../app/app-state.actions';
-import { environment } from 'src/environments/environment';
+import { environment } from '@environments/environment';
 
 export const initialState: AppState = {
   connected: false,

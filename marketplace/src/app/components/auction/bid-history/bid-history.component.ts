@@ -7,7 +7,7 @@ import { WalletAddressDirective } from '@/directives/wallet-address.directive';
 
 import { WeiToEthPipe } from '@/pipes/wei-to-eth.pipe';
 
-import { environment } from 'src/environments/environment';
+import { environment } from '@environments/environment';
 
 import { Auction } from '@/models/db';
 

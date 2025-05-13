@@ -23,7 +23,7 @@ import * as dataStateSelectors from '@/state/data/data-state.selectors';
 
 import * as appStateActions from '@/state/app/app-state.actions';
 
-import { environment } from '@/../environments/environment';
+import { environment } from '@environments/environment';
 import { LazyLoadImageModule } from 'ng-lazyload-image';
 
 @Component({

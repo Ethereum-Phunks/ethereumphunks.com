@@ -5,7 +5,7 @@ import { LazyLoadImageModule } from 'ng-lazyload-image';
 import { Web3Service } from '@/services/web3.service';
 import { DataService } from '@/services/data.service';
 
-import { environment } from 'src/environments/environment';
+import { environment } from '@environments/environment';
 
 @Component({
   standalone: true,
