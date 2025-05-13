@@ -25,7 +25,7 @@ export class LoginComponent {
       const signedIn = await this.chatSvc.signInToXmtp();
       this.store.dispatch(setChat({ active: signedIn }));
     } catch (error) {
-      console.error('Error signing in to XMTP', error);
+      // console.error('Error signing in to XMTP', error);
     }
   }
 }

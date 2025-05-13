@@ -1,39 +1,39 @@
 @charset 'UTF-8';
 
-@use 'tippy.js/dist/tippy.css';
+@use 'tippy.js/dist/tippy.css' as tippy-base;
 @use 'tippy.js/themes/translucent.css';
 @use 'tippy.js/animations/shift-away-subtle.css';
 @use 'tippy.js/dist/svg-arrow.css';
 @use 'tippy.js/dist/border.css';
 
 // 1. Configuration and helpers
-@use 'abstracts/variables';
-@use 'abstracts/functions';
-@use 'abstracts/mixins';
-@use 'abstracts/animations';
+@use './abstracts/_variables';
+@use './abstracts/_functions';
+@use './abstracts/_mixins';
+@use './abstracts/_animations';
 
 // 2. Vendors
-@use 'vendor/normalize';
+@use './vendor/_normalize';
 
 // 3. Base stuff
-@use 'base/base';
-@use 'base/fonts';
-@use 'base/typography';
-@use 'base/helpers';
-@use 'base/components';
+@use './base/_base';
+@use './base/_fonts';
+@use './base/_typography';
+@use './base/_helpers';
+@use './base/_components';
 
 // 4. Layout-related sections
-@use 'layout/header';
-@use 'layout/layout';
+@use './layout/_header';
+@use './layout/_layout';
 
 // 5. Components
-@use 'components/button';
-@use 'components/form';
-@use 'components/pagination';
-@use 'components/web3modal';
-@use 'components/ng-select';
-@use 'components/tippy' as tippy2;
-@use 'components/app-address';
+@use './components/_button';
+@use './components/_form';
+@use './components/_pagination';
+@use './components/_web3modal';
+@use './components/_ng-select';
+@use './components/_tippy' as tippy-custom;
+@use './components/_app-address';
 
 // 6. Themes
-@use 'themes/default';
+@use './themes/_default';

@@ -1,16 +1,14 @@
 import { Injectable } from '@angular/core';
 import { Store } from '@ngrx/store';
 
-import { Client, Conversation } from '@xmtp/xmtp-js';
+import { Client, Conversation } from '@xmtp/browser-sdk';
 
 import { Observable } from 'rxjs';
 
-import { GlobalState, Notification } from '@/models/global-state';
+import { GlobalState } from '@/models/global-state';
 
 import { Web3Service } from './web3.service';
 import { UtilService } from './util.service';
-
-import { upsertNotification } from '@/state/notification/notification.actions';
 
 /**
  * Service for handling XMTP messaging functionality
@@ -28,7 +26,7 @@ export class ChatService {
 
   /** XMTP client configuration options */
   clientOptions: any = {
-    env: 'production',
+    env: 'dev',
   };
 
   constructor(
@@ -42,36 +40,39 @@ export class ChatService {
    * @returns Promise resolving to boolean indicating success
    */
   async signInToXmtp(): Promise<boolean> {
-    console.time('signInToXmtp');
     try {
-      const signer = await this.web3Svc.getActiveWalletClient();
-      const address = signer?.account.address;
-
-      if (!address) throw new Error('No address found');
-
-      let keys = this.loadKeys(address);
-      if (!keys) {
-        keys = await Client.getKeys(signer as any, {
-          ...this.clientOptions
-        });
-        this.storeKeys(address, keys);
+      const walletClient = await this.web3Svc.getActiveWalletClient();
+      if (!walletClient?.account?.address) {
+        throw new Error('No wallet address found');
       }
 
-      this.client = await Client.create(null, {
-        ...this.clientOptions,
-        privateKeyOverride: keys
+      const signer = {
+        type: "EOA" as const,
+        getIdentifier: () => ({
+          identifierKind: "Ethereum",
+          identifier: walletClient.account.address.toLowerCase()
+        }),
+        signMessage: async (message: string) => {
+          const signature = await walletClient.signMessage({
+            message
+          });
+          return new Uint8Array(Buffer.from(signature.slice(2), 'hex'));
+        }
+      };
+
+      const dbEncryptionKey = window.crypto.getRandomValues(new Uint8Array(32));
+
+      this.client = await Client.create(signer as any, {
+        dbEncryptionKey
       });
 
-      this.streamAllMessages();
-
       if (this.client) {
-        console.timeEnd('signInToXmtp');
         return true;
       }
     } catch (error) {
       console.error('Error signing in to XMTP', error);
     }
-    console.timeEnd('signInToXmtp');
+
     return false;
   }
 
@@ -81,25 +82,25 @@ export class ChatService {
    * @returns Promise resolving to boolean indicating success
    */
   async reconnectXmtp(address: string): Promise<boolean> {
-    console.time('reconnectXmtp');
-    let keys = this.loadKeys(address);
-    if (!keys) {
-      console.timeEnd('reconnectXmtp');
-      return false;
-    }
+    // console.time('reconnectXmtp');
+    // let keys = this.loadKeys(address);
+    // if (!keys) {
+    //   console.timeEnd('reconnectXmtp');
+    //   return false;
+    // }
 
-    this.client = await Client.create(null, {
-      ...this.clientOptions,
-      privateKeyOverride: keys
-    });
+    // this.client = await Client.create(null, {
+    //   ...this.clientOptions,
+    //   privateKeyOverride: keys
+    // });
 
-    this.streamAllMessages();
+    // this.streamAllMessages();
 
-    if (this.client) {
-      console.timeEnd('reconnectXmtp');
-      return true;
-    }
-    console.timeEnd('reconnectXmtp');
+    // if (this.client) {
+    //   console.timeEnd('reconnectXmtp');
+    //   return true;
+    // }
+    // console.timeEnd('reconnectXmtp');
     return false;
   }
 
@@ -109,9 +110,10 @@ export class ChatService {
    * @returns Promise resolving to the created Conversation
    */
   async createConversationWithUser(userAddress: string): Promise<Conversation> {
-    if (!this.client) await this.signInToXmtp();
-    const conversation = await this.client.conversations.newConversation(userAddress);
-    return conversation;
+    return {} as Conversation;
+    // if (!this.client) await this.signInToXmtp();
+    // const conversation = await this.client.conversations.newConversation(userAddress);
+    // return conversation;
   }
 
   /**
@@ -120,11 +122,12 @@ export class ChatService {
    * @returns Promise resolving to array of messages
    */
   async getChatMessagesFromConversation(conversation: Conversation): Promise<any> {
-    console.time(`getChatMessagesFromConversation:${conversation.peerAddress}`);
-    const messages = await conversation.messages();
-    console.timeEnd(`getChatMessagesFromConversation:${conversation.peerAddress}`);
-    console.log(`Fetched messages for ${conversation.peerAddress}:`, messages.length);
-    return messages;
+    return [];
+    // console.time(`getChatMessagesFromConversation:${conversation.peerAddress}`);
+    // const messages = await conversation.messages();
+    // console.timeEnd(`getChatMessagesFromConversation:${conversation.peerAddress}`);
+    // console.log(`Fetched messages for ${conversation.peerAddress}:`, messages.length);
+    // return messages;
   }
 
   /**
@@ -133,8 +136,9 @@ export class ChatService {
    * @returns Promise resolving to boolean indicating if user can be messaged
    */
   async checkCanMessageUser(userAddress: string): Promise<boolean> {
-    const canMessage = await this.client.canMessage(userAddress);
-    return canMessage;
+    return false;
+    // const canMessage = await this.client.canMessage(userAddress);
+    // return canMessage;
   }
 
   /**
@@ -142,7 +146,8 @@ export class ChatService {
    * @returns Promise resolving to contacts list
    */
   async getContacts(): Promise<any> {
-    return this.client.contacts;
+    return [];
+    // return this.client.contacts;
   }
 
   /**
@@ -154,14 +159,15 @@ export class ChatService {
     conversation: Conversation,
     message: string | null
   ): Promise<void> {
-    if (!message) return;
-    const preparedMsg = await conversation.prepareMessage(message);
+    return;
+    // if (!message) return;
+    // const preparedMsg = await conversation.prepareMessage(message);
 
-    try {
-      preparedMsg.send();
-    } catch (e) {
-      console.error(e);
-    }
+    // try {
+    //   preparedMsg.send();
+    // } catch (e) {
+    //   console.error(e);
+    // }
   }
 
   /**
@@ -173,15 +179,16 @@ export class ChatService {
     user: string,
     message: string | null
   ) {
-    if (!message) return;
-    if (!this.client) await this.signInToXmtp();
+    return;
+    // if (!message) return;
+    // if (!this.client) await this.signInToXmtp();
 
-    const conversations = await this.getConversations();
-    const conversation = conversations.filter(
-      (conv) => conv.peerAddress.toLowerCase() === user.toLowerCase()
-    )[0];
+    // const conversations = await this.getConversations();
+    // const conversation = conversations.filter(
+    //   (conv) => conv.peerAddress.toLowerCase() === user.toLowerCase()
+    // )[0];
 
-    await this.sendMessageToConversation(conversation, message);
+    // await this.sendMessageToConversation(conversation, message);
   }
 
   /**
@@ -190,21 +197,22 @@ export class ChatService {
    * @returns Observable of messages
    */
   streamMessages(conversation: Conversation): Observable<any> {
-    return new Observable(subscriber => {
-      (async () => {
-        console.time(`streamMessages:${conversation.peerAddress}`);
-        let count = 0;
-        for await (const message of await conversation.streamMessages()) {
-          subscriber.next(message);
-          count++;
-        }
-        console.timeEnd(`streamMessages:${conversation.peerAddress}`);
-        console.log(`streamMessages processed messages for ${conversation.peerAddress}:`, count);
-      })().catch(err => subscriber.error(err));
-      return () => {
-        // Teardown logic here
-      };
-    });
+    return new Observable();
+    // return new Observable(subscriber => {
+    //   (async () => {
+    //     console.time(`streamMessages:${conversation.peerAddress}`);
+    //     let count = 0;
+    //     for await (const message of await conversation.streamMessages()) {
+    //       subscriber.next(message);
+    //       count++;
+    //     }
+    //     console.timeEnd(`streamMessages:${conversation.peerAddress}`);
+    //     console.log(`streamMessages processed messages for ${conversation.peerAddress}:`, count);
+    //   })().catch(err => subscriber.error(err));
+    //   return () => {
+    //     // Teardown logic here
+    //   };
+    // });
   }
 
   /**
@@ -212,39 +220,41 @@ export class ChatService {
    * @returns Promise resolving to array of conversations
    */
   async getConversations(): Promise<Conversation[]> {
-    if (!this.client) await this.signInToXmtp();
-    console.time('getConversations');
-    const conversations = await this.client.conversations.list();
-    console.timeEnd('getConversations');
-    console.log('Fetched conversations:', conversations.length);
-    return conversations;
+    return [];
+    // if (!this.client) await this.signInToXmtp();
+    // console.time('getConversations');
+    // const conversations = await this.client.conversations.list();
+    // console.timeEnd('getConversations');
+    // console.log('Fetched conversations:', conversations.length);
+    // return conversations;
   }
 
   /**
    * Streams all incoming messages and creates notifications
    */
   async streamAllMessages() {
-    console.time('streamAllMessages');
-    let count = 0;
-    for await (const message of await this.client.conversations.streamAllMessages()) {
-      if (message.senderAddress === this.client.address) continue;
+    return;
+    // console.time('streamAllMessages');
+    // let count = 0;
+    // for await (const message of await this.client.conversations.streamAllMessages()) {
+    //   if (message.senderAddress === this.client.address) continue;
 
-      const isOld = new Date(message.sent).getTime() < (new Date().getTime() - 10000);
-      if (isOld) continue;
+    //   const isOld = new Date(message.sent).getTime() < (new Date().getTime() - 10000);
+    //   if (isOld) continue;
 
-      let notification: Notification = {
-        id: this.utilSvc.createIdFromString(message.id),
-        timestamp: new Date(message.sent).getTime(),
-        type: 'chat',
-        function: 'chatMessage',
-        chatAddress: message.senderAddress,
-      };
+    //   let notification: Notification = {
+    //     id: this.utilSvc.createIdFromString(message.id),
+    //     timestamp: new Date(message.sent).getTime(),
+    //     type: 'chat',
+    //     function: 'chatMessage',
+    //     chatAddress: message.senderAddress,
+    //   };
 
-      this.store.dispatch(upsertNotification({ notification }));
-      count++;
-    }
-    console.timeEnd('streamAllMessages');
-    console.log('streamAllMessages processed messages:', count);
+    //   this.store.dispatch(upsertNotification({ notification }));
+    //   count++;
+    // }
+    // console.timeEnd('streamAllMessages');
+    // console.log('streamAllMessages processed messages:', count);
   }
 
   /**
