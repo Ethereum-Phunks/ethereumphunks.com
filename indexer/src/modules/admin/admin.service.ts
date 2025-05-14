@@ -1,4 +1,4 @@
-import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { HttpException, HttpStatus, Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 
 import { StorageService } from '@/modules/storage/storage.service';
 import { Web3Service } from '@/modules/shared/services/web3.service';
@@ -366,7 +366,7 @@ export class AdminService implements OnModuleInit {
     try {
       return JSON.parse(await readFile(`./metadata/${slug}.json`, 'utf8'));
     } catch (error) {
-      throw new Error(`The collection "${slug}" does not have a metadata file. Create one with generateNewCollectionMetadata.`);
+      throw new HttpException(`The collection '${slug}' does not have a metadata file. Generate one with /admin/generate-collection-metadata.`, HttpStatus.BAD_REQUEST);
     }
   }
 }

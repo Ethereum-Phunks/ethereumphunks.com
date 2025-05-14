@@ -11,6 +11,11 @@ export class AdminController {
     private readonly processingSvc: ProcessingService,
   ) {}
 
+  @Post('has-access')
+  async hasAccess(@Body() body: { address: `0x${string}` }): Promise<boolean> {
+    return true;
+  }
+
   /**
    * Reindexes a specific block.
    *
