@@ -3,8 +3,7 @@ import { HttpModule } from '@nestjs/axios';
 
 import { AdminService } from "./admin.service";
 
-import { DataService } from '@/services/data.service';
-import { ProcessingService } from '@/services/processing.service';
+import { ProcessingService } from '@/modules/processing/processing.service';
 import { Web3Service } from '@/modules/shared/services/web3.service';
 
 import { NotifsModule } from '@/modules/notifs/notifs.module';
@@ -14,6 +13,7 @@ import { CommentsModule } from '@/modules/comments/comments.module';
 import { EthscriptionsModule } from '@/modules/ethscriptions/ethscriptions.module';
 
 import { AdminController } from './admin.controller';
+import { ProcessingModule } from '../processing/processing.module';
 
 @Module({
   controllers: [
@@ -25,16 +25,12 @@ import { AdminController } from './admin.controller';
     SharedModule,
     EthscriptionsModule,
     CommentsModule,
-    NotifsModule
+    NotifsModule,
+    ProcessingModule
   ],
   providers: [
     AdminService,
-    DataService,
-    ProcessingService,
-    {
-      provide: 'WEB3_SERVICE_L1',
-      useFactory: () => new Web3Service('l1'),
-    },
+    ProcessingService
   ],
   exports: []
 })

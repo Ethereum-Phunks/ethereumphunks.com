@@ -1,7 +1,7 @@
 import { Body, Controller, HttpException, HttpStatus, Post } from "@nestjs/common";
 
 import { AdminService } from './admin.service';
-import { ProcessingService } from '@/services/processing.service';
+import { ProcessingService } from '@/modules/processing/processing.service';
 
 @Controller('admin')
 export class AdminController {
@@ -11,6 +11,11 @@ export class AdminController {
     private readonly processingSvc: ProcessingService,
   ) {}
 
+  /**
+   * Checks if the user has access to admin endpoints
+   * @param body - The request body containing the address.
+   * @returns A promise that resolves to true if the user has access, otherwise false.
+   */
   @Post('has-access')
   async hasAccess(@Body() body: { address: `0x${string}` }): Promise<boolean> {
     return true;
@@ -18,15 +23,19 @@ export class AdminController {
 
   /**
    * Reindexes a specific block.
-   *
    * @param body - The request body containing the block number.
-    * @returns A promise that resolves to the result of re-indexing the block.
+   * @returns A promise that resolves to the result of re-indexing the block.
    */
   @Post('reindex-block')
   async reindexBlock(@Body() body: { blockNumber: number }): Promise<void> {
     return await this.processingSvc.processBlock(body.blockNumber, false);
   }
 
+  /**
+   * Reindexes a specific transaction.
+   * @param body - The request body containing the transaction hash.
+   * @returns A promise that resolves to the result of re-indexing the transaction.
+   */
   @Post('reindex-transaction')
   async reindexTransaction(@Body() body: { hash: `0x${string}` }): Promise<void> {
     return await this.processingSvc.processSingleTransaction(body.hash);

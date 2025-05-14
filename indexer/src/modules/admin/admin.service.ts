@@ -2,7 +2,7 @@ import { HttpException, HttpStatus, Inject, Injectable, Logger, OnModuleInit } f
 
 import { StorageService } from '@/modules/storage/storage.service';
 import { Web3Service } from '@/modules/shared/services/web3.service';
-import { DataService } from '@/services/data.service';
+import { DataService } from '@/modules/shared/services/data.service';
 
 import { Collection } from '@/modules/storage/models/db';
 import { CollectionMetadata } from './models/collection-metadata';

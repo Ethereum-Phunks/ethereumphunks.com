@@ -13,16 +13,17 @@ import { BridgeL2Module } from '@/modules/bridge-l2/bridge-l2.module';
 import { EthscriptionsModule } from '@/modules/ethscriptions/ethscriptions.module';
 import { TxPoolModule } from '@/modules/tx-pool/tx-pool.module';
 import { MintModule } from '@/modules/mint/mint.module';
+import { AdminModule } from '@/modules/admin/admin.module';
+import { ProcessingModule } from '@/modules/processing/processing.module';
 
 import { AppService } from '@/app.service';
 import { AppController } from '@/app.controller';
 import { AppGateway } from '@/app.gateway';
 
-import { DataService } from '@/services/data.service';
-import { ProcessingService } from '@/services/processing.service';
+import { DataService } from '@/modules/shared/services/data.service';
+import { ProcessingService } from '@/modules/processing/processing.service';
 
 import { ApiKeyMiddleware } from '@/middleware/api-key.middleware';
-import { AdminModule } from './modules/admin/admin.module';
 
 @Module({
   imports: [
@@ -43,7 +44,8 @@ import { AdminModule } from './modules/admin/admin.module';
 
     CommentsModule,
     StorageModule,
-    AdminModule
+    AdminModule,
+    ProcessingModule
   ],
   controllers: [AppController],
   providers: [
@@ -73,6 +75,11 @@ export class AppModule {
       {
         path: '/bridge-l1/*',
         method: RequestMethod.POST
-      });
+      },
+      {
+        path: '/queue/*',
+        method: RequestMethod.POST
+      }
+    );
   }
 }

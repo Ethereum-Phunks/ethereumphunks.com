@@ -11,7 +11,7 @@ import { SharedModule } from '@/modules/shared/shared.module';
 import { TxPoolModule } from '@/modules/tx-pool/tx-pool.module';
 import { StorageModule } from '@/modules/storage/storage.module';
 
-import { DataService } from '@/services/data.service';
+import { DataService } from '@/modules/shared/services/data.service';
 @Module({
   controllers: [
     MintController,

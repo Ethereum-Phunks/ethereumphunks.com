@@ -15,7 +15,7 @@ import { BlockProcessingQueue } from '@/modules/queue/queues/block-processing.qu
 import { BridgeProcessingQueue } from '@/modules/queue/queues/bridge-processing.queue';
 import { NotifsModule } from '@/modules/notifs/notifs.module';
 
-import { ProcessingService } from '@/services/processing.service';
+import { ProcessingService } from '@/modules/processing/processing.service';
 
 import { chain } from '@/constants/ethereum';
 

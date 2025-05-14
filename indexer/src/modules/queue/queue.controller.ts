@@ -14,7 +14,7 @@ export class QueueController {
    *
     * @returns A promise that resolves when the block queue is paused.
    */
-  @Post('pause-block-queue')
+  @Post('pause')
   async pauseQueue(): Promise<void> {
     return await this.blockQueue.pauseQueue();
   }
@@ -24,7 +24,7 @@ export class QueueController {
    *
     * @returns A promise that resolves when the block queue is resumed.
    */
-  @Post('resume-block-queue')
+  @Post('resume')
   async resumeQueue(): Promise<void> {
     return await this.blockQueue.resumeQueue();
   }

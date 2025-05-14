@@ -5,7 +5,7 @@ import crypto, { createHash } from 'crypto';
 
 import { StorageService } from '@/modules/storage/storage.service';
 import { TxPoolService } from '@/modules/tx-pool/tx-pool.service';
-import { DataService } from '@/services/data.service';
+import { DataService } from '@/modules/shared/services/data.service';
 
 import { MintRequestResponse, MetadataCollection } from './models/mint';
 

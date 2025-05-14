@@ -6,8 +6,6 @@ import { NotifsModule } from '@/modules/notifs/notifs.module';
 import { QueueModule } from '@/modules/queue/queue.module';
 import { StorageModule } from '@/modules/storage/storage.module';
 
-import { DataService } from '@/services/data.service';
-
 import { EthscriptionsController } from './ethscriptions.controller';
 import { EthscriptionsService } from './ethscriptions.service';
 
@@ -24,9 +22,7 @@ import { EthscriptionsService } from './ethscriptions.service';
     EthscriptionsController
   ],
   providers: [
-    EthscriptionsService,
-
-    DataService
+    EthscriptionsService
   ],
   exports: [
     EthscriptionsService

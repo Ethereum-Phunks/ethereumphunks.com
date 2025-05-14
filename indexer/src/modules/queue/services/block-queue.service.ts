@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { InjectQueue, OnQueueActive, OnQueueCompleted, OnQueueError, OnQueueFailed, OnQueuePaused, OnQueueResumed, OnQueueWaiting, Process, Processor } from '@nestjs/bull';
 
 // import { UtilityService } from '@/services/utility.service';
-import { ProcessingService } from '@/services/processing.service';
+import { ProcessingService } from '@/modules/processing/processing.service';
 
 import { chain } from '@/constants/ethereum';
 

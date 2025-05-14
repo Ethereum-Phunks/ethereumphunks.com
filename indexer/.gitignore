@@ -5,6 +5,7 @@ failed
 node_modules
 .env
 .data
+metadata
 
 lastBlock-*.txt
 twitter-cookies.json
