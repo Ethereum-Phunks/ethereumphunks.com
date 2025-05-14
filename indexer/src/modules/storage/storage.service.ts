@@ -295,6 +295,82 @@ export class StorageService implements OnModuleInit {
     return null;
   }
 
+  /**
+   * Fetches a collection by its slug
+   * @param slug - The slug of the collection
+   * @returns The collection
+   */
+  async fetchCollection(slug: string): Promise<any> {
+    const response = await this.supabase
+      .from('collections' + this.suffix)
+      .select('*')
+      .eq('slug', slug);
+
+    const { data, error } = response;
+    if (error) throw error;
+    if (data?.length) return data[0];
+    return null;
+  }
+
+  /**
+   * Creates a new collection and sets it to inactive
+   * @param collection - The collection to create
+   */
+  async createCollection(collection: db.Collection): Promise<void> {
+    const response: db.CollectionResponse = await this.supabase
+      .from('collections' + this.suffix)
+      .insert({
+        ...collection,
+        active: false
+      });
+
+    const { error } = response;
+    if (error) throw error;
+    Logger.log('Collection added', collection.slug);
+  }
+
+  /**
+   * Fetches all ethscriptions
+   * @param slug - The slug of the collection
+   * @returns All ethscriptions
+   */
+  async fetchAllEthscriptions(
+    slug?: string,
+  ): Promise<Ethscription[]> {
+    const pageSize = 1000; // Max rows per request
+
+    let allPhunks: any[] = [];
+    let hasMore = true;
+    let page = 0;
+
+    while (hasMore) {
+      const req = this.supabase
+        .from('ethscriptions' + this.suffix)
+        .select('hashId, creator, owner, prevOwner, slug, tokenId, sha')
+        .order('tokenId', { ascending: true })
+        .range(page * pageSize, (page + 1) * pageSize - 1);
+
+      if (slug) req.eq('slug', slug);
+
+      const { data, error } = await req;
+
+      if (error) {
+        console.error('Error fetching data:', error);
+        throw error;
+      }
+
+      if (data) {
+        allPhunks = allPhunks.concat(data);
+        hasMore = data.length === pageSize;
+        page++;
+      } else {
+        hasMore = false;
+      }
+    }
+
+    return allPhunks;
+  }
+
   ////////////////////////////////////////////////////////////////////////////////
   // Storage /////////////////////////////////////////////////////////////////////
   ////////////////////////////////////////////////////////////////////////////////
@@ -336,24 +412,42 @@ export class StorageService implements OnModuleInit {
 
   /**
    * Uploads an image to storage
-   * @param sha - The SHA of the image
    * @param imageBuffer - The image data buffer
-   * @param contentType - The content type of the image
-   * @returns Object containing the storage path
+   * @param sha - The SHA of the image
+   * @param extension - The extension of the image
+   * @param slug - The slug of the collection
    */
   async uploadImage(
-    sha: string,
     imageBuffer: Buffer,
-    contentType: string
-  ): Promise<{ path: string }> {
+    sha: string,
+    extension: string,
+    slug: string
+  ): Promise<void> {
     const { data, error } = await this.supabase.storage
-      .from('images')
-      .upload(`${sha}.${contentType.split('/')[1]}`, imageBuffer, {
-        contentType,
-      });
+      .from('static/images')
+      .upload(
+        sha,
+        imageBuffer,
+        { contentType: `image/${extension}`, metadata: { slug }, upsert: true }
+      );
 
-    if (error) console.error('Error uploading image:', error);
-    return data;
+    if (error) Logger.error(error.message, 'Error uploading image');
+    if (data) Logger.log('Uploaded image', `${sha}`);
+  }
+
+  /**
+   * Uploads an attributes file to storage
+   * @param slug - The slug of the collection
+   * @param attributesFile - The attributes file buffer
+   */
+  async uploadAttributesFile(slug: string, attributesFile: Buffer) {
+    const fileName = `${slug}_attributes.json`;
+    const { data, error } = await this.supabase.storage
+      .from('data')
+      .upload(fileName, attributesFile, {upsert: true});
+
+    if (error) Logger.error(error.message, 'Error uploading attributes file');
+    if (data) Logger.log('Uploaded attributes file', `${fileName}`);
   }
 
   /**
@@ -594,6 +688,17 @@ export class StorageService implements OnModuleInit {
     if (error) throw error;
     if (data?.length) return data[0];
     return null;
+  }
+
+  async addAttributesNew(data: db.AttributeItem[]) {
+    const res = await this.supabase
+      .from('attributes_new')
+      .upsert(data);
+
+    const { error } = res;
+    if (error) throw error;
+
+    Logger.log('Added attributes', `${data.length} items`);
   }
 
   /**

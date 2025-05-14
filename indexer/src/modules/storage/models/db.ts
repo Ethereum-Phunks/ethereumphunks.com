@@ -71,12 +71,25 @@ export interface Ethscription {
 }
 
 export interface Collection {
+  slug: string;
+  createdAt: Date;
+  posterHashId?: string;
   name: string;
-  singleName: string;
+  description?: string;
+  image?: string;
+  singleName?: string;
+  active: boolean;
+  supply: number;
   id: number;
-  notifications: boolean;
+  website?: string;
+  twitter?: string;
+  discord?: string;
   isMinting: boolean;
+  hasBackgrounds: boolean;
+  notifications: boolean;
   mintEnabled: boolean;
+  defaultBackground?: string;
+  standalone: boolean;
 }
 
 export interface Event {

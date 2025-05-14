@@ -22,6 +22,7 @@ import { DataService } from '@/services/data.service';
 import { ProcessingService } from '@/services/processing.service';
 
 import { ApiKeyMiddleware } from '@/middleware/api-key.middleware';
+import { AdminModule } from './modules/admin/admin.module';
 
 @Module({
   imports: [
@@ -42,6 +43,7 @@ import { ApiKeyMiddleware } from '@/middleware/api-key.middleware';
 
     CommentsModule,
     StorageModule,
+    AdminModule
   ],
   controllers: [AppController],
   providers: [
