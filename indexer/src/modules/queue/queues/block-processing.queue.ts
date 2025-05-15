@@ -4,20 +4,23 @@ import { InjectQueue } from '@nestjs/bull';
 
 import Bull, { Queue } from 'bull';
 
-import { chain } from '@/constants/ethereum';
+import { AppConfigService } from '@/config/config.service';
+
+import { BLOCK_PROCESSING_QUEUE } from '../constants/queue.constants';
 
 @Injectable()
 export class BlockProcessingQueue {
 
   constructor(
-    @InjectQueue(`${chain}__BlockProcessingQueue`) private readonly queue: Queue
+    @InjectQueue(BLOCK_PROCESSING_QUEUE) private readonly queue: Queue,
+    private readonly configSvc: AppConfigService,
   ) {}
 
   async addBlockToQueue(
     blockNum: number,
     timestamp: number,
   ) {
-    const jobId = `${chain}__block_${blockNum}`.toUpperCase();
+    const jobId = `${this.configSvc.chain.chainIdL1}__block_${blockNum}`;
     const maxRetries = 69;
 
     const existingJob = await this.queue.getJob(jobId);
@@ -27,12 +30,12 @@ export class BlockProcessingQueue {
     }
 
     await this.queue.add(
-      `${chain}__BlockNumQueue`,
-      { blockNum, chain, timestamp, retryCount: 0, maxRetries },
+      `${this.configSvc.chain.chainIdL1}__BlockNumQueue`,
+      { blockNum, chain: this.configSvc.chain.chainIdL1, timestamp, retryCount: 0, maxRetries },
       { jobId, removeOnComplete: true, removeOnFail: true }
     );
 
-    if (blockNum % 1000 === 0) Logger.debug(`Added block ${blockNum} to queue`, `${chain.toUpperCase()}`);
+    if (blockNum % 1000 === 0) Logger.debug(`Added block ${blockNum} to queue`);
   }
 
   async pauseQueue(): Promise<void> {

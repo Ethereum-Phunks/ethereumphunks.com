@@ -15,6 +15,7 @@ import { TxPoolModule } from '@/modules/tx-pool/tx-pool.module';
 import { MintModule } from '@/modules/mint/mint.module';
 import { AdminModule } from '@/modules/admin/admin.module';
 import { ProcessingModule } from '@/modules/processing/processing.module';
+import { EvmModule } from '@/modules/evm/evm.module';
 
 import { AppService } from '@/app.service';
 import { AppController } from '@/app.controller';
@@ -24,12 +25,13 @@ import { DataService } from '@/modules/shared/services/data.service';
 import { ProcessingService } from '@/modules/processing/processing.service';
 
 import { ApiKeyMiddleware } from '@/middleware/api-key.middleware';
-
+import { AppConfigModule } from '@/config/config.module';
 @Module({
   imports: [
-    ConfigModule.forRoot(),
+    AppConfigModule,
     HttpModule,
 
+    EvmModule,
     NftModule,
     BridgeL2Module,
 
@@ -39,8 +41,8 @@ import { ApiKeyMiddleware } from '@/middleware/api-key.middleware';
 
     NotifsModule,
     SharedModule,
-    ...(Number(process.env.TX_POOL) ? [TxPoolModule] : []),
-    ...(Number(process.env.MINT) ? [MintModule] : []),
+    TxPoolModule,
+    MintModule,
 
     CommentsModule,
     StorageModule,

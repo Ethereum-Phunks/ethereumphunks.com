@@ -3,8 +3,8 @@ import { HttpModule } from '@nestjs/axios';
 
 import { AdminService } from "./admin.service";
 
+import { AppConfigModule } from '@/config/config.module';
 import { ProcessingService } from '@/modules/processing/processing.service';
-import { Web3Service } from '@/modules/shared/services/web3.service';
 
 import { NotifsModule } from '@/modules/notifs/notifs.module';
 import { SharedModule } from '@/modules/shared/shared.module';
@@ -14,12 +14,12 @@ import { EthscriptionsModule } from '@/modules/ethscriptions/ethscriptions.modul
 
 import { AdminController } from './admin.controller';
 import { ProcessingModule } from '../processing/processing.module';
-
 @Module({
   controllers: [
     AdminController
   ],
   imports: [
+    AppConfigModule,
     HttpModule,
     StorageModule,
     SharedModule,

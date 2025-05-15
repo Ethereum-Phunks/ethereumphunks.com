@@ -6,7 +6,7 @@ import { ConnectedSocket, MessageBody, OnGatewayConnection, OnGatewayDisconnect,
 import { CustomLogger } from '@/modules/shared/services/logger.service';
 import { StorageService } from '@/modules/storage/storage.service';
 
-import { chain } from '@/constants/ethereum';
+import { AppConfigService } from '@/config/config.service';
 @WebSocketGateway({
   cors: {
     origin: (origin, callback) => {
@@ -20,10 +20,15 @@ export class AppGateway implements OnGatewayInit, OnGatewayConnection, OnGateway
 
   @WebSocketServer() server: Server;
 
+  private chainName: string;
+
   constructor(
     private readonly logger: CustomLogger,
-    private readonly storageService: StorageService
-  ) {}
+    private readonly storageService: StorageService,
+    private readonly configSvc: AppConfigService
+  ) {
+    this.chainName = this.configSvc.chain.chainIdL1 === 1 ? 'mainnet' : 'sepolia';
+  }
 
   afterInit(server: Server) {
     Logger.debug('Socket Server Initialized', 'AppGateway');
@@ -31,17 +36,17 @@ export class AppGateway implements OnGatewayInit, OnGatewayConnection, OnGateway
     if (!this.server) return;
 
     this.logger.singleLog$.subscribe((logItem) => {
-      if (logItem) this.server.emit(`log_${chain}`, logItem);
+      if (logItem) this.server.emit(`log_${this.chainName}`, logItem);
     });
 
     this.logger.logCollection$.subscribe((logItems) => {
-      if (logItems?.length) this.server.emit(`logs_${chain}`, logItems);
+      if (logItems?.length) this.server.emit(`logs_${this.chainName}`, logItems);
     });
   }
 
   handleConnection(client: Socket, ...args: any[]) {
     Logger.verbose(client.id, 'Client connected');
-    client.emit(`logs_${chain}`, this.logger.getLogs());
+    client.emit(`logs_${this.chainName}`, this.logger.getLogs());
   }
 
   handleDisconnect(client: Socket, ...args: any[]) {

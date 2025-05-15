@@ -4,6 +4,8 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import { hexToString, Transaction } from 'viem';
 import { createHash } from 'crypto';
 
+import { AppConfigService } from '@/config/config.service';
+
 export interface TxPoolState {
   pendingTransactions: Transaction[];
   queuedTransactions: Transaction[];
@@ -45,14 +47,15 @@ export class TxPoolService implements OnModuleInit {
   queuedInscriptionShas: Map<`0x${string}`, string> = new Map();
 
   constructor(
-    public readonly eventEmitter: EventEmitter2
+    public readonly eventEmitter: EventEmitter2,
+    private readonly configSvc: AppConfigService
   ) {}
 
   /**
    * Initializes the service by starting polling
    */
   async onModuleInit() {
-    if (Number(process.env.TX_POOL)) {
+    if (Number(this.configSvc.features.txPool)) {
       await this.startPolling();
     }
   }
@@ -119,7 +122,7 @@ export class TxPoolService implements OnModuleInit {
    * Updates internal maps of pending/queued transactions and inscriptions
    */
   async fetchTxpool() {
-    const rpc = process.env.RPC_URL_SEPOLIA;
+    const rpc = this.configSvc.chain.rpc.l1.primary;
     const response = await fetch(rpc, {
       method: 'POST',
       headers: {

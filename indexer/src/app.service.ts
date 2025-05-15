@@ -4,14 +4,11 @@ import { BlockProcessingQueue } from '@/modules/queue/queues/block-processing.qu
 import { BridgeProcessingQueue } from '@/modules/queue/queues/bridge-processing.queue';
 
 import { StorageService } from '@/modules/storage/storage.service';
+import { AppConfigService } from '@/config/config.service';
 
 import { UtilityService } from '@/modules/shared/services/utility.service';
 import { Web3Service } from '@/modules/shared/services/web3.service';
-
-import { chain, l1Client } from '@/constants/ethereum';
-
-const chainId = Number(process.env.CHAIN_ID);
-
+import { EvmService } from '@/modules/evm/evm.service';
 @Injectable()
 export class AppService implements OnModuleInit {
 
@@ -20,16 +17,18 @@ export class AppService implements OnModuleInit {
     @Optional() private readonly blockQueue: BlockProcessingQueue,
     @Optional() private readonly bridgeQueue: BridgeProcessingQueue,
     private readonly storageSvc: StorageService,
-    private readonly utilSvc: UtilityService
+    private readonly utilSvc: UtilityService,
+    private readonly configSvc: AppConfigService,
+    private readonly evmSvc: EvmService
   ) {}
 
   async onModuleInit() {
-    if (Number(process.env.INDEXER)) {
+    if (this.configSvc.features.indexer) {
       Promise.all([
         this.blockQueue.clearQueue(),
         this.bridgeQueue.clearQueue()
       ]).then(() => {
-        Logger.debug('Queue Cleared', chain.toUpperCase());
+        Logger.debug('Queue Cleared');
         this.startIndexer();
       });
     }
@@ -46,7 +45,7 @@ export class AppService implements OnModuleInit {
       await this.utilSvc.delay(10000);
       await this.blockQueue.pauseQueue();
 
-      const startBlock = (await this.storageSvc.getLastBlock(chainId));
+      const startBlock = (await this.storageSvc.getLastBlock(this.configSvc.chain.chainIdL1));
       await this.startBackfill(startBlock);
       await this.blockQueue.resumeQueue();
       await this.startPolling();
@@ -67,7 +66,7 @@ export class AppService implements OnModuleInit {
   async startBackfill(startBlock: number): Promise<void> {
     const latestBlock = await this.web3SvcL1.getBlock({});
 
-    Logger.debug('Starting Backfill', chain.toUpperCase());
+    Logger.debug('Starting Backfill');
 
     const latestBlockNum = Number(latestBlock.number);
     if (startBlock > latestBlockNum) throw new Error('RPC Error: Start block is greater than latest block');
@@ -85,11 +84,11 @@ export class AppService implements OnModuleInit {
    * @throws If an error occurs while polling.
    */
   async startPolling(): Promise<void> {
-    Logger.debug('Starting Block Watcher', chain.toUpperCase());
+    Logger.debug('Starting Block Watcher');
 
     return new Promise((resolve, reject) => {
       // Watch for new blocks and add them to the queue
-      const unwatch = l1Client.watchBlocks({
+      const unwatch = this.evmSvc.publicClientL1.watchBlocks({
         // blockTag: 'safe',
         emitOnBegin: true,
         emitMissed: true,

@@ -1,7 +1,13 @@
 import { Injectable, Logger } from '@nestjs/common';
 
 import { Transaction, TransactionReceipt, WriteContractParameters, getAddress, toHex } from 'viem';
-import { bridgeAbiL1, bridgeAddressL1, l1Client, l2Client, pointsAbiL1, pointsAddressL1 } from '@/constants/ethereum';
+// import { bridgeAbiL1, bridgeAddressL1, l1Client, l2Client, pointsAbiL1, pointsAddressL1 } from '@/constants/ethereum';
+
+import bridgeAbiL1 from '@/abi/EtherPhunksBridgeL1.json'
+import pointsAbiL1 from '@/abi/PointsL1.json'
+
+import { AppConfigService } from '@/config/config.service';
+import { EvmService } from '@/modules/evm/evm.service';
 
 interface GetBlockOptions {
   blockNumber?: number;
@@ -16,12 +22,14 @@ type GetBlockReturnType<T> = T & {
 @Injectable()
 export class Web3Service {
 
-  client: typeof l1Client | typeof l2Client = l1Client;
+  client: typeof this.evmSvc.publicClientL1;
 
   constructor(
     private readonly layer: 'l1' | 'l2',
+    private readonly evmSvc: EvmService,
+    private readonly configSvc: AppConfigService
   ) {
-    if (layer === 'l2') this.client = l2Client;
+    this.client = layer === 'l2' ? this.evmSvc.publicClientL2 : this.evmSvc.publicClientL1;
   }
 
   async getBlock({
@@ -63,7 +71,7 @@ export class Web3Service {
     const receipts: any = await this.client.request({
       method: 'eth_getBlockReceipts',
       params: [...params],
-      id: process.env.CHAIN_ID,
+      id: this.configSvc.chain.chainIdL1,
       jsonrpc: '2.0',
     });
 
@@ -126,9 +134,15 @@ export class Web3Service {
   // EtherPhunks smart contract interactions ////////////////////////////////////
   ///////////////////////////////////////////////////////////////////////////////
 
+  /**
+   * Retrieves the points for a given address.
+   * This is only on L1.
+   * @param address - The address to retrieve points for.
+   * @returns A Promise that resolves to the points for the given address.
+   */
   async getPoints(address: `0x${string}`): Promise<number> {
-    const points = await l1Client.readContract({
-      address: pointsAddressL1 as `0x${string}`,
+    const points = await this.evmSvc.publicClientL1.readContract({
+      address: this.configSvc.contracts.points.l1 as `0x${string}`,
       abi: pointsAbiL1,
       functionName: 'points',
       args: [`${address}`],
@@ -136,10 +150,15 @@ export class Web3Service {
     return points as number;
   }
 
+  /**
+   * Fetches the nonce for a given address.
+   * This is only on L1.
+   * @param address - The address to fetch the nonce for.
+   * @returns A Promise that resolves to the nonce for the given address.
+   */
   async fetchNonce(address: string): Promise<bigint> {
-    // return BigInt(0);
-    const nonce = await l1Client.readContract({
-      address: bridgeAddressL1 as `0x${string}`,
+    const nonce = await this.evmSvc.publicClientL1.readContract({
+      address: this.configSvc.contracts.bridge.l1 as `0x${string}`,
       abi: bridgeAbiL1,
       functionName: 'expectedNonce',
       args: [`${address}`],
@@ -152,7 +171,7 @@ export class Web3Service {
   ///////////////////////////////////////////////////////////////////////////////
 
   async getPunkImage(tokenId: number): Promise<any> {
-    const punkImage = await l1Client.readContract({
+    const punkImage = await this.evmSvc.publicClientL1.readContract({
       address: '0x6b34e63787610422f723c0ad919f2e07ce976f20' as `0x${string}`,
       abi: [{
         "inputs": [{ "internalType": "uint16", "name": "index", "type": "uint16" }],
@@ -168,7 +187,7 @@ export class Web3Service {
   }
 
   async getPunkAttributes(tokenId: number): Promise<any> {
-    const punkAttributes = await l1Client.readContract({
+    const punkAttributes = await this.evmSvc.publicClientL1.readContract({
       address: '0x6b34e63787610422f723c0ad919f2e07ce976f20' as `0x${string}`,
       abi: [{
         "inputs": [{ "internalType": "uint16", "name": "index", "type": "uint16" }],
@@ -194,7 +213,7 @@ export class Web3Service {
    */
   async getEnsFromAddress(address: string): Promise<string | null> {
     try {
-      return await l1Client.getEnsName({ address: address as `0x${string}` });
+      return await this.evmSvc.publicClientL1.getEnsName({ address: address as `0x${string}` });
     } catch (e) {
       return null;
     }
@@ -218,7 +237,7 @@ export class Web3Service {
    * @returns A promise that resolves to the estimated gas value as a number.
    */
   async estimateContractGasL2(request: WriteContractParameters): Promise<number> {
-    const gas = await l2Client.estimateContractGas(request);
+    const gas = await this.evmSvc.publicClientL2.estimateContractGas(request);
     return Number(gas);
   }
 }

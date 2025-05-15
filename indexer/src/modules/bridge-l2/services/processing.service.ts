@@ -2,25 +2,27 @@ import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 
 import { ParseEventLogsReturnType, erc721Abi } from 'viem';
 
-import { bridgeAddressL2, l2Client } from '@/constants/ethereum';
-
 import { StorageService } from '@/modules/storage/storage.service';
 
 import etherPhunksBridgeL2 from '@/abi/EtherPhunksBridgeL2.json';
 
 import { Observable, catchError, of, tap } from 'rxjs';
+import { AppConfigService } from '@/config/config.service';
+import { EvmService } from '@/modules/evm/evm.service';
 
 @Injectable()
 export class ProcessingService implements OnModuleInit {
 
   constructor(
-    private readonly storageSvc: StorageService
+    private readonly storageSvc: StorageService,
+    private readonly configSvc: AppConfigService,
+    private readonly evmSvc: EvmService
   ) {}
 
   async onModuleInit() {
     new Observable<ParseEventLogsReturnType>((observer) => {
-      l2Client.watchContractEvent({
-        address: bridgeAddressL2 as `0x${string}`,
+      this.evmSvc.publicClientL2.watchContractEvent({
+        address: this.configSvc.chain.contracts.bridge.l2 as `0x${string}`,
         abi: etherPhunksBridgeL2,
         onLogs(logs: ParseEventLogsReturnType) { observer.next(logs) },
         onError(error) { observer.error(error) },
@@ -78,7 +80,7 @@ export class ProcessingService implements OnModuleInit {
   }
 
   async readContract(address: string, functionName: string) {
-    const data = await l2Client.readContract({
+    const data = await this.evmSvc.publicClientL2.readContract({
       address: address as `0x${string}`,
       abi: erc721Abi,
       functionName: functionName as any,

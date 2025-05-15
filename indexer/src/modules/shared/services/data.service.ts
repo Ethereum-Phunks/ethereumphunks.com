@@ -3,15 +3,18 @@ import { HttpService } from '@nestjs/axios';
 
 import { catchError, firstValueFrom, map, of, tap } from 'rxjs';
 
+import { AppConfigService } from '@/config/config.service';
+
 @Injectable()
 export class DataService {
 
   constructor(
-    private readonly http: HttpService
+    private readonly http: HttpService,
+    private readonly configSvc: AppConfigService
   ) {}
 
   checkConsensus(owner: string, hashId: string): any {
-    const prefix = process.env.CHAIN_ID === '1' ? '' : 'sepolia-';
+    const prefix = this.configSvc.chain.chainIdL1 === 1 ? '' : 'sepolia-';
     const url = `https://${prefix}api-v2.ethscriptions.com/api/ethscriptions/${hashId}`;
 
     return firstValueFrom(
@@ -28,7 +31,7 @@ export class DataService {
   }
 
   async getEthscriptionByHashId(hashId: string): Promise<any> {
-    const prefix = process.env.CHAIN_ID === '1' ? '' : '-sepolia';
+    const prefix = this.configSvc.chain.chainIdL1 === 1 ? '' : '-sepolia';
     const url = `https://ethscriptions-api${prefix}.flooredape.io/ethscriptions/${hashId}`;
 
     return firstValueFrom(
@@ -43,7 +46,7 @@ export class DataService {
   }
 
   async getEthscriptionBySha(sha: string): Promise<any> {
-    const prefix = process.env.CHAIN_ID === '1' ? '' : 'sepolia-';
+    const prefix = this.configSvc.chain.chainIdL1 === 1 ? '' : 'sepolia-';
     const url = `https://${prefix}api-v2.ethscriptions.com/api/ethscriptions?content_sha=0x${sha}`;
 
     return firstValueFrom(

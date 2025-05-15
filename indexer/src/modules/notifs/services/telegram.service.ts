@@ -5,21 +5,23 @@ import { HttpService } from '@nestjs/axios';
 import { catchError, firstValueFrom, map } from 'rxjs';
 import FormData from 'form-data';
 
+import { AppConfigService } from '@/config/config.service';
+
 /**
  * Service for sending messages and photos to Telegram using the Telegram Bot API
  */
 @Injectable()
 export class TelegramService {
 
-  private readonly botToken = process.env.TELEGRAM_BOT_TOKEN;
-  private readonly chatId = '-1002530066767';
+  private readonly botToken: string;
+  private readonly chatId: string;
 
   constructor(
-    private http: HttpService
+    private readonly http: HttpService,
+    private readonly configSvc: AppConfigService
   ) {
-    // setInterval(() => {
-    //   this.sendMessage('Status:', 'Hello, world!');
-    // }, 10000);
+    this.botToken = this.configSvc.notifications.telegram.botToken;
+    this.chatId = this.configSvc.notifications.telegram.chatId;
   }
 
   /**

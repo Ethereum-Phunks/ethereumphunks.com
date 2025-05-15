@@ -1,6 +1,8 @@
 import { Module, forwardRef } from '@nestjs/common';
 import { HttpModule } from '@nestjs/axios';
 
+import { AppConfigModule } from '@/config/config.module';
+
 import { SharedModule } from '@/modules/shared/shared.module';
 import { NotifsModule } from '@/modules/notifs/notifs.module';
 import { QueueModule } from '@/modules/queue/queue.module';
@@ -11,6 +13,8 @@ import { EthscriptionsService } from './ethscriptions.service';
 
 @Module({
   imports: [
+    AppConfigModule,
+
     HttpModule,
     SharedModule,
     NotifsModule,

@@ -4,6 +4,8 @@ import { NotificationMessage } from '../models/message.model';
 
 import { AttachmentBuilder, Client, codeBlock, EmbedBuilder, Events, GatewayIntentBits, TextChannel } from 'discord.js';
 
+import { AppConfigService } from '@/config/config.service';
+
 /**
  * Service for interacting with Discord to send notifications
  */
@@ -12,6 +14,10 @@ export class DiscordService {
 
   /** Discord client instance */
   private client: Client;
+
+  constructor(
+    private readonly configSvc: AppConfigService
+  ) {}
 
   /**
    * Initializes the Discord bot client
@@ -29,7 +35,7 @@ export class DiscordService {
         resolve();
       });
 
-      this.client.login(process.env.DISCORD_BOT_TOKEN);
+      this.client.login(this.configSvc.notifications.discord.botToken);
     })
   }
 
@@ -39,11 +45,11 @@ export class DiscordService {
    * @returns Promise that resolves when the message is sent
    */
   async postMessage(data: NotificationMessage): Promise<void> {
-    if (Number(process.env.DISCORD)) await this.initializeBot();
+    if (this.configSvc.features.discord) await this.initializeBot();
     else return;
 
     // Get appropriate channel based on chain ID
-    const chainId = Number(process.env.CHAIN_ID);
+    const chainId = this.configSvc.chain.chainIdL1;
     const channel = this.client.channels.cache.get(chainId === 1 ? '1202621714127912994' : '1227387575723888722') as TextChannel;
 
     // Create image attachment

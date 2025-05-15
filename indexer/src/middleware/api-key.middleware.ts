@@ -1,8 +1,12 @@
 import { Injectable, NestMiddleware } from '@nestjs/common';
 import { Request, Response, NextFunction } from 'express';
 
+import { AppConfigService } from '@/config/config.service';
+
 @Injectable()
 export class ApiKeyMiddleware implements NestMiddleware {
+
+  constructor(private readonly configSvc: AppConfigService) {}
 
   /**
    * Middleware function to validate the API key in the request headers.
@@ -14,7 +18,7 @@ export class ApiKeyMiddleware implements NestMiddleware {
    */
   use(req: Request, res: Response, next: NextFunction) {
     const apiKey = req.headers['x-api-key'] as string;
-    if (apiKey !== process.env.API_PRIVATE_KEY) {
+    if (apiKey !== this.configSvc.api.privateKey) {
       res.status(401).json({ message: 'Invalid API key' });
       return;
     }

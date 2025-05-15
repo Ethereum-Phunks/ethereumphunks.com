@@ -2,12 +2,15 @@ import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 
 import { ParseEventLogsReturnType, zeroAddress } from 'viem';
 
-import { bridgeAbiL2, bridgeAddressL2, l2Client, marketAbiL2, marketAddressL2 } from '@/constants/ethereum';
+import bridgeAbiL2 from '@/abi/EtherPhunksBridgeL2.json';
+import marketAbiL2 from '@/abi/EtherPhunksNftMarket.json';
 
 import { StorageService } from '@/modules/storage/storage.service';
+import { Web3Service } from '@/modules/shared/services/web3.service';
+import { EvmService } from '@/modules/evm/evm.service';
+import { AppConfigService } from '@/config/config.service';
 
 import { Observable, catchError, of, tap } from 'rxjs';
-import { Web3Service } from '../shared/services/web3.service';
 
 @Injectable()
 export class NftService implements OnModuleInit {
@@ -15,12 +18,14 @@ export class NftService implements OnModuleInit {
   constructor(
     @Inject('WEB3_SERVICE_L2') private readonly web3SvcL2: Web3Service,
     private readonly storageSvc: StorageService,
+    private readonly evmSvc: EvmService,
+    private readonly configSvc: AppConfigService,
   ) {}
 
   async onModuleInit() {
     new Observable<ParseEventLogsReturnType>((observer) => {
-      l2Client.watchContractEvent({
-        address: marketAddressL2 as `0x${string}`,
+      this.evmSvc.publicClientL2.watchContractEvent({
+        address: this.configSvc.chain.contracts.market.l2 as `0x${string}`,
         abi: marketAbiL2,
         onLogs(logs: ParseEventLogsReturnType) { observer.next(logs) },
         onError(error) { observer.error(error) },
@@ -111,8 +116,8 @@ export class NftService implements OnModuleInit {
   }
 
   async readMarketContract(functionName: string, args: (string | undefined)[]) {
-    const data = await l2Client.readContract({
-      address: marketAddressL2 as `0x${string}`,
+    const data = await this.evmSvc.publicClientL2.readContract({
+      address: this.configSvc.chain.contracts.market.l2 as `0x${string}`,
       abi: marketAbiL2,
       functionName: functionName as any,
       args: args as any,
@@ -121,8 +126,8 @@ export class NftService implements OnModuleInit {
   }
 
   async readTokenContract(functionName: any, args: (string | undefined)[]): Promise<any> {
-    const call: any = await l2Client.readContract({
-      address: bridgeAddressL2 as `0x${string}`,
+    const call: any = await this.evmSvc.publicClientL2.readContract({
+      address: this.configSvc.chain.contracts.bridge.l2 as `0x${string}`,
       abi: bridgeAbiL2,
       functionName,
       args: args as any,

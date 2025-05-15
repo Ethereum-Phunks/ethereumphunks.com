@@ -12,12 +12,13 @@ import { NotifsController } from './notifs.controller';
 import { TwitterService } from './services/twitter.service';
 
 import { StorageModule } from '@/modules/storage/storage.module';
-
+import { AppConfigModule } from '@/config/config.module';
 @Module({
   controllers: [
     NotifsController
   ],
   imports: [
+    AppConfigModule,
     HttpModule,
     SharedModule,
     StorageModule,

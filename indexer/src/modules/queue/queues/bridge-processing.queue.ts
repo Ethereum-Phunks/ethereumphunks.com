@@ -3,20 +3,23 @@ import { Injectable, Logger } from '@nestjs/common';
 import { InjectQueue } from '@nestjs/bull';
 import { Queue } from 'bull';
 
-import { chain, l2Chain } from '@/constants/ethereum';
+import { AppConfigService } from '@/config/config.service';
+
+import { BRIDGE_PROCESSING_QUEUE } from '../constants/queue.constants';
 
 @Injectable()
 export class BridgeProcessingQueue {
 
   constructor(
-    @InjectQueue(`${chain}__BridgeProcessingQueue`) private readonly bridgeQueue: Queue
+    @InjectQueue(BRIDGE_PROCESSING_QUEUE) private readonly bridgeQueue: Queue,
+    private readonly configSvc: AppConfigService,
   ) {}
 
   async addHashLockedToQueue(
     hashId: string,
     owner: string,
   ) {
-    const jobId = `${chain}__hash_${hashId}`.toUpperCase();
+    const jobId = `${this.configSvc.chain.chainIdL1}__hash_${hashId}`.toUpperCase();
     const maxRetries = 69;
 
     const existingJob = await this.bridgeQueue.getJob(jobId);
@@ -26,7 +29,7 @@ export class BridgeProcessingQueue {
     }
 
     await this.bridgeQueue.add(
-      `${chain}__BridgeQueue`,
+      `${this.configSvc.chain.chainIdL1}__BridgeQueue`,
       { hashId, owner, retryCount: 0, maxRetries, delay: 2000 },
       { jobId, removeOnComplete: true, removeOnFail: false, }
     );

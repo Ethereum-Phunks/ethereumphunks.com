@@ -7,9 +7,12 @@ import { UtilityService } from './services/utility.service';
 import { Web3Service } from './services/web3.service';
 import { DataService } from './services/data.service';
 
+import { AppConfigModule } from '@/config/config.module';
+
 @Module({
   imports: [
     HttpModule,
+    AppConfigModule,
   ],
   providers: [
     {

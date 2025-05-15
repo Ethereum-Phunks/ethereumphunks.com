@@ -8,8 +8,10 @@ import { ImageUriService } from '@/modules/bridge-l1/services/image-uri.service'
 import { StorageService } from '@/modules/storage/storage.service';
 import { Web3Service } from '@/modules/shared/services/web3.service';
 import { UtilityService } from '@/modules/shared/services/utility.service';
+import { AppConfigService } from '@/config/config.service';
+import { EvmService } from '@/modules/evm/evm.service';
 
-import { bridgeAbiL2, l2Client, l2WalletClient } from '@/constants/ethereum';
+import bridgeL2Abi from '@/abi/EtherPhunksBridgeL2.json';
 
 @Injectable()
 export class MintService {
@@ -23,7 +25,9 @@ export class MintService {
     private readonly http: HttpService,
     private readonly storageSvc: StorageService,
     private readonly imageSvc: ImageUriService,
-    private readonly utilSvc: UtilityService
+    private readonly utilSvc: UtilityService,
+    private readonly configSvc: AppConfigService,
+    private readonly evmSvc: EvmService
   ) {}
 
   /**
@@ -38,7 +42,7 @@ export class MintService {
     owner: string
   ): Promise<void> {
     try {
-      await this.web3SvcL1.waitNBlocks(Number(process.env.BRIDGE_L1_BLOCK_DELAY));
+      await this.web3SvcL1.waitNBlocks(this.configSvc.bridgeBlockDelayL1);
       await this.addMintRequest(hashId, owner);
     } catch (error) {
       console.error(error);
@@ -47,11 +51,11 @@ export class MintService {
 
   async mintToken(request: WriteContractParameters) {
     try {
-      const hash = await l2WalletClient.writeContract(request);
+      const hash = await this.evmSvc.walletClientL2.writeContract(request);
       const receipt = await this.web3SvcL2.waitForTransactionReceipt(hash);
 
       const logs = parseEventLogs({
-        abi: bridgeAbiL2,
+        abi: bridgeL2Abi,
         logs: receipt.logs,
       });
 
@@ -63,11 +67,11 @@ export class MintService {
 
   async burnToken(request: WriteContractParameters) {
     try {
-      const hash = await l2WalletClient.writeContract(request);
+      const hash = await this.evmSvc.walletClientL2.writeContract(request);
       const receipt = await this.web3SvcL2.waitForTransactionReceipt(hash);
 
       const logs = parseEventLogs({
-        abi: bridgeAbiL2,
+        abi: bridgeL2Abi,
         logs: receipt.logs,
       });
 
@@ -100,10 +104,10 @@ export class MintService {
 
     // console.log({ hashId, owner, tokenId });
 
-    const { request } = await l2Client.simulateContract({
-      account: l2WalletClient.account,
-      address: process.env.BRIDGE_ADDRESS_SEPOLIA_L2 as `0x${string}`,
-      abi: bridgeAbiL2,
+    const { request } = await this.evmSvc.publicClientL2.simulateContract({
+      account: this.evmSvc.walletClientL2.account,
+      address: this.configSvc.chain.contracts.bridge.l2,
+      abi: bridgeL2Abi,
       functionName: 'mintToken',
       args: [
         owner,
@@ -122,15 +126,15 @@ export class MintService {
    * @returns A Promise that resolves to the response containing the token URI.
    */
   async validateTokenMint(hashId: string) {
-    const { request } = await l2Client.simulateContract({
-      account: l2WalletClient.account,
-      address: process.env.BRIDGE_ADDRESS_L2 as `0x${string}`,
-      abi: bridgeAbiL2,
+    const { request } = await this.evmSvc.publicClientL2.simulateContract({
+      account: this.evmSvc.walletClientL2.account,
+      address: this.configSvc.chain.contracts.bridge.l2,
+      abi: bridgeL2Abi,
       functionName: 'tokenURIByHashId',
       args: [hashId]
     });
 
-    const response = await l2Client.readContract(request);
+    const response = await this.evmSvc.publicClientL2.readContract(request);
     return response;
   }
 
@@ -174,7 +178,7 @@ export class MintService {
       }
     });
 
-    const marketPrefix = Number(process.env.CHAIN_ID) === 11155111 ? 'sepolia.' : '';
+    const marketPrefix = this.configSvc.chain.chainIdL1 === 11155111 ? 'sepolia.' : '';
 
     const metadata = {
       name: `${singleName} #${tokenId}`,

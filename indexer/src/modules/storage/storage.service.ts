@@ -9,17 +9,23 @@ import * as db from '@/modules/storage/models/db';
 import { Ethscription } from '@/modules/storage/models/db';
 
 import { TIC } from '@/modules/comments/models/tic';
-
+import { AppConfigService } from '@/config/config.service';
 @Injectable()
 export class StorageService implements OnModuleInit {
 
   supabase: SupabaseClient;
-  suffix = process.env.CHAIN_ID === '1' ? '' : '_sepolia';
+  suffix: string;
+
+  constructor(
+    private readonly configSvc: AppConfigService
+  ) {
+    this.suffix = this.configSvc.chain.chainIdL1 === 1 ? '' : '_sepolia';
+  }
 
   onModuleInit() {
     this.supabase = createClient(
-      process.env.SUPABASE_URL,
-      process.env.SUPABASE_SERVICE_ROLE
+      this.configSvc.supabase.url,
+      this.configSvc.supabase.serviceRoleKey
     );
   }
 
@@ -32,7 +38,7 @@ export class StorageService implements OnModuleInit {
     const response = await this.supabase
       .from('blocks')
       .upsert({
-        network: process.env.CHAIN_ID,
+        network: this.configSvc.chain.chainIdL1,
         blockNumber,
         createdAt,
       });

@@ -5,6 +5,8 @@ import { NotificationMessage } from '../models/message.model';
 import * as fs from 'fs';
 import * as path from 'path';
 
+import { AppConfigService } from '@/config/config.service';
+
 /**
  * Service for interacting with Twitter to send tweets and manage authentication
  */
@@ -15,7 +17,9 @@ export class TwitterService {
   /** Path to store Twitter authentication cookies */
   private readonly COOKIES_PATH = path.join(process.cwd(), 'twitter-cookies.json');
 
-  constructor() {
+  constructor(
+    private readonly configSvc: AppConfigService
+  ) {
     this.scraper = new Scraper();
   }
 
@@ -33,10 +37,10 @@ export class TwitterService {
       // If no valid cookies, perform fresh login
       console.log('Performing fresh login...');
       await this.scraper.login(
-        process.env.TWITTER_USERNAME,
-        process.env.TWITTER_PASSWORD,
+        this.configSvc.notifications.twitter.username,
+        this.configSvc.notifications.twitter.password,
         undefined,
-        process.env.TWITTER_TWO_FACTOR_SECRET
+        this.configSvc.notifications.twitter.twoFactorSecret
       );
 
       // Save the new cookies
@@ -100,7 +104,7 @@ export class TwitterService {
    * @throws Error if tweet fails to send
    */
   async sendTweet(data: NotificationMessage): Promise<void> {
-    if (!Number(process.env.TWITTER)) return;
+    if (!this.configSvc.features.twitter) return;
 
     try {
       await this.initialize();

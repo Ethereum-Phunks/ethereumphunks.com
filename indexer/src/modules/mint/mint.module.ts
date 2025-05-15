@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { ThrottlerModule, seconds } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
 import { HttpModule } from '@nestjs/axios';
+import { ConditionalModule } from '@nestjs/config';
 
 import { MintService } from './mint.service';
 import { MintController } from './mint.controller';
@@ -12,6 +13,7 @@ import { TxPoolModule } from '@/modules/tx-pool/tx-pool.module';
 import { StorageModule } from '@/modules/storage/storage.module';
 
 import { DataService } from '@/modules/shared/services/data.service';
+
 @Module({
   controllers: [
     MintController,
@@ -37,3 +39,5 @@ import { DataService } from '@/modules/shared/services/data.service';
   ],
 })
 export class MintModule {}
+
+ConditionalModule.registerWhen(MintModule, 'MINT');

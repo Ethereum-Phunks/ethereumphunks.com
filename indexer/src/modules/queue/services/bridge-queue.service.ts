@@ -3,13 +3,19 @@ import { InjectQueue, OnQueueActive, OnQueueCompleted, OnQueueError, OnQueueFail
 import { Job, Queue } from 'bull';
 
 import { MintService } from '@/modules/bridge-l1/services/mint.service';
-import { chain } from '@/constants/ethereum';
+
+import { BRIDGE_PROCESSING_QUEUE } from '../constants/queue.constants';
 
 @Injectable()
-@Processor(`${chain}__BridgeProcessingQueue`)
+@Processor(BRIDGE_PROCESSING_QUEUE)
 export class BridgeQueueService {
 
-  @Process({ name: `${chain}__BridgeQueue`, concurrency: 5 })
+  constructor(
+    @InjectQueue(BRIDGE_PROCESSING_QUEUE) private readonly bridgeQueue: Queue,
+    private mintSvc: MintService
+  ) {}
+
+  @Process({ name: 'BridgeQueue', concurrency: 5 })
   async handleBridgeQueue(job: Job<any>) {
     Logger.debug(`Processing job ${job.id}`);
     // if (!Number(process.env.QUEUE)) return;
@@ -17,13 +23,13 @@ export class BridgeQueueService {
     await this.mintSvc.processLayer2Mint(hashId, owner);
   }
 
-  @OnQueueCompleted({ name: `${chain}__BridgeQueue` })
+  @OnQueueCompleted({ name: 'BridgeQueue' })
   async onCompleted(job: Job<any>) {
     // if (!Number(process.env.QUEUE)) return;
     Logger.debug(`Completed job ${job.id}`);
   }
 
-  @OnQueueFailed({ name: `${chain}__BridgeQueue` })
+  @OnQueueFailed({ name: 'BridgeQueue' })
   async onBlockFailed(job: Job<any>, error: Error) {
     // if (!Number(process.env.QUEUE)) return;
 
@@ -33,12 +39,12 @@ export class BridgeQueueService {
     // this.queue.resume();
   }
 
-  @OnQueueError({ name: `${chain}__BridgeQueue` })
+  @OnQueueError({ name: 'BridgeQueue' })
   async onBlockError(error: Error) {
     // Logger.error(`Error ${error}`);
   }
 
-  @OnQueueActive({ name: `${chain}__BridgeQueue` })
+  @OnQueueActive({ name: 'BridgeQueue' })
   async onBlockActive(job: Job<any>) {
     // When a job is processing
     // Logger.debug(`Active job ${job.id}`);
@@ -62,9 +68,4 @@ export class BridgeQueueService {
   async onWaiting(jobId: number | string) {
     // Logger.debug(`Waiting job ${jobId}`);
   }
-
-  constructor(
-    @InjectQueue(`${chain}__BridgeProcessingQueue`) private readonly bridgeQueue: Queue,
-    private mintSvc: MintService
-  ) {}
 }

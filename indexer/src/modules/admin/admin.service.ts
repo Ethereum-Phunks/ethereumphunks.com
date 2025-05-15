@@ -1,5 +1,7 @@
 import { HttpException, HttpStatus, Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 
+import { AppConfigService } from '@/config/config.service';
+
 import { StorageService } from '@/modules/storage/storage.service';
 import { Web3Service } from '@/modules/shared/services/web3.service';
 import { DataService } from '@/modules/shared/services/data.service';
@@ -21,6 +23,7 @@ export class AdminService implements OnModuleInit {
     @Inject('WEB3_SERVICE_L1') private readonly web3SvcL1: Web3Service,
     private readonly dbSvc: StorageService,
     private readonly dataSvc: DataService,
+    private readonly configSvc: AppConfigService
   ) {}
 
   async onModuleInit() {
@@ -100,7 +103,7 @@ export class AdminService implements OnModuleInit {
     const collection = await this.dbSvc.fetchCollection(slug);
     if (!collection) throw new Error('Collection not found');
 
-    const collectionAttributes = await fetch(`${process.env.SUPABASE_URL}/storage/v1/object/public/data/${slug}_attributes.json`)
+    const collectionAttributes = await fetch(`${this.configSvc.supabase.url}/storage/v1/object/public/data/${slug}_attributes.json`)
     const collectionAttributesData = await collectionAttributes.json();
 
     const collectionMetadata = {
@@ -303,7 +306,7 @@ export class AdminService implements OnModuleInit {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-api-key': process.env.API_KEY
+          'x-api-key': this.configSvc.relay.apiKey
         },
         body: JSON.stringify({ hash: transfer.transaction_hash })
       });

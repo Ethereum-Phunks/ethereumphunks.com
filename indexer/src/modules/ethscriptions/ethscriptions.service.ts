@@ -3,13 +3,15 @@ import { Inject, Injectable, Logger, Optional } from '@nestjs/common';
 import { UtilityService } from '@/modules/shared/services/utility.service';
 import { Web3Service } from '@/modules/shared/services/web3.service';
 import { StorageService } from '@/modules/storage/storage.service';
+import { AppConfigService } from '@/config/config.service';
 
 import { BridgeProcessingQueue } from '@/modules/queue/queues/bridge-processing.queue';
 
 import { esip1Abi, esip2Abi } from '@/abi/EthscriptionsProtocol';
 import * as esips from '@/constants/esips';
-
-import { bridgeAbiL1, chain, marketAbiL1, marketAddressL1, pointsAbiL1, pointsAddressL1 } from '@/constants/ethereum';
+import bridgeL1Abi from '@/abi/EtherPhunksBridgeL1.json';
+import marketL1Abi from '@/abi/EtherPhunksMarketL1.json';
+import pointsL1Abi from '@/abi/PointsL1.json';
 
 import { AttributeItem, Ethscription, Event } from '@/modules/storage/models/db';
 
@@ -26,7 +28,8 @@ export class EthscriptionsService {
     @Inject('WEB3_SERVICE_L1') private readonly web3SvcL1: Web3Service,
     @Inject('WEB3_SERVICE_L2') private readonly web3SvcL2: Web3Service,
     private readonly storageSvc: StorageService,
-    private readonly utilitySvc: UtilityService
+    private readonly utilitySvc: UtilityService,
+    private readonly configSvc: AppConfigService
   ) {}
 
   /**
@@ -128,7 +131,7 @@ export class EthscriptionsService {
 
     // Filter logs for EtherPhunk Marketplace events
     const marketplaceLogs = receipt.logs.filter(
-      (log: any) => log.address.toLowerCase() === marketAddressL1.toLowerCase()
+      (log: any) => log.address.toLowerCase() === this.configSvc.contracts.market.l1.toLowerCase()
     );
     if (marketplaceLogs.length) {
       Logger.debug(
@@ -162,11 +165,11 @@ export class EthscriptionsService {
     // }
 
     const pointsLogs = receipt.logs.filter(
-      (log: any) => log.address.toLowerCase() === pointsAddressL1.toLowerCase()
+      (log: any) => log.address.toLowerCase() === this.configSvc.contracts.points.l1.toLowerCase()
     );
     if (pointsLogs.length) {
       Logger.debug(
-        `Processing Points event (${chain})`,
+        `Processing Points event (Chain: ${this.configSvc.chain.chainIdL1})`,
         transaction.hash
       );
       await this.processPointsEvent(pointsLogs);
@@ -218,7 +221,7 @@ export class EthscriptionsService {
   async processBridgeMainnetEvents(bridgeMainnetLogs: any[]): Promise<void> {
     for (const log of bridgeMainnetLogs) {
       const decoded = decodeEventLog({
-        abi: bridgeAbiL1,
+        abi: bridgeL1Abi,
         data: log.data,
         topics: log.topics,
       });
@@ -267,7 +270,7 @@ export class EthscriptionsService {
 
     for (const log of pointsLogs) {
       const decoded = decodeEventLog({
-        abi: pointsAbiL1,
+        abi: pointsL1Abi,
         data: log.data,
         topics: log.topics,
       });
@@ -292,15 +295,9 @@ export class EthscriptionsService {
    * @param fromAddress The address from which the points will be distributed.
    * @returns A Promise that resolves when the points are successfully distributed.
    */
-  async distributePoints(
-    fromAddress: `0x${string}`,
-    layer: 'l1' | 'l2' = 'l1'
-  ): Promise<void> {
+  async distributePoints(fromAddress: `0x${string}`): Promise<void> {
     try {
-      const points = layer === 'l1' ?
-        await this.web3SvcL1.getPoints(fromAddress) :
-        await this.web3SvcL2.getPoints(fromAddress);
-
+      const points = await this.web3SvcL1.getPoints(fromAddress);
       await this.storageSvc.updateUserPoints(fromAddress, Number(points));
       Logger.log(
         `Updated user points for ${points.toString()}`,
@@ -566,12 +563,12 @@ export class EthscriptionsService {
 
     const events = [];
     for (const log of marketplaceLogs) {
-      if (!marketAddressL1.includes(log.address?.toLowerCase())) continue;
+      if (!this.configSvc.contracts.market.l1.includes(log.address?.toLowerCase())) continue;
 
       let decoded: DecodeEventLogReturnType;
       try {
         decoded = decodeEventLog({
-          abi: marketAbiL1,
+          abi: marketL1Abi,
           data: log.data,
           topics: log.topics,
         });

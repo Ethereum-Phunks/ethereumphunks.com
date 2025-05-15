@@ -9,8 +9,6 @@ import { TimeService } from '@/modules/shared/services/time.service';
 import { EthscriptionsService } from '@/modules/ethscriptions/ethscriptions.service';
 import { CommentsService } from '@/modules/comments/comments.service';
 
-import { chain } from '@/constants/ethereum';
-
 import { Event } from '@/modules/storage/models/db';
 
 import { FormattedTransaction, GetBlockReturnType, Transaction, TransactionReceipt } from 'viem';
@@ -108,7 +106,7 @@ export class ProcessingService {
    */
   async retryBlock(blockNumber: number): Promise<void> {
     try {
-      Logger.debug(`Retrying block ${blockNumber} (${chain})`);
+      Logger.debug(`Retrying block ${blockNumber}`);
 
       // Pause for 5 seconds
       await this.utilSvc.delay(5000);

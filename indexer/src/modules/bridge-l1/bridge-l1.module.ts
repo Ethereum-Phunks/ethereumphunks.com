@@ -4,6 +4,7 @@ import { CacheModule } from '@nestjs/cache-manager';
 
 import { SharedModule } from '@/modules/shared/shared.module';
 import { StorageModule } from '@/modules/storage/storage.module';
+import { AppConfigModule } from '@/config/config.module';
 
 import { BridgeController } from '@/modules/bridge-l1/bridge-l1.controller';
 
@@ -14,6 +15,7 @@ import { VerificationService } from '@/modules/bridge-l1/services/verification.s
 
 @Module({
   imports: [
+    AppConfigModule,
     HttpModule,
     CacheModule.register(),
 

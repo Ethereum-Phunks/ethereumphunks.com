@@ -1,34 +1,42 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectQueue, OnQueueActive, OnQueueCompleted, OnQueueError, OnQueueFailed, OnQueuePaused, OnQueueResumed, OnQueueWaiting, Process, Processor } from '@nestjs/bull';
 
+import { BLOCK_PROCESSING_QUEUE } from '../constants/queue.constants';
+
 // import { UtilityService } from '@/services/utility.service';
 import { ProcessingService } from '@/modules/processing/processing.service';
 
-import { chain } from '@/constants/ethereum';
-
 import { Job, Queue } from 'bull';
 
+import { AppConfigService } from '@/config/config.service';
+
 @Injectable()
-@Processor(`${chain}__BlockProcessingQueue`)
+@Processor(BLOCK_PROCESSING_QUEUE)
 export class BlockQueueService {
 
-  @Process({ name: `${chain}__BlockNumQueue`, concurrency: 1 })
+  constructor(
+    @InjectQueue(BLOCK_PROCESSING_QUEUE) private readonly blockQueue: Queue,
+    private readonly processSvc: ProcessingService,
+    private readonly configSvc: AppConfigService
+  ) {}
+
+  @Process({ name: 'BlockNumQueue', concurrency: 1 })
   async handleBlockNumberQueue(job: Job<any>) {
-    if (!Number(process.env.QUEUE)) return;
+    if (!this.configSvc.features.queue) return;
 
     const { blockNum } = job.data;
     await this.processSvc.processBlock(blockNum);
   }
 
-  @OnQueueCompleted({ name: `${chain}__BlockNumQueue` })
+  @OnQueueCompleted({ name: 'BlockNumQueue' })
   async onCompleted(job: Job<any>) {
-    if (!Number(process.env.QUEUE)) return;
+    if (!this.configSvc.features.queue) return;
     // Logger.debug(`Completed job ${job.id}`);
   }
 
-  @OnQueueFailed({ name: `${chain}__BlockNumQueue` })
+  @OnQueueFailed({ name: 'BlockNumQueue' })
   async onBlockFailed(job: Job<any>, error: Error) {
-    if (!Number(process.env.QUEUE)) return;
+    if (!this.configSvc.features.queue) return;
 
     const { blockNum } = job.data;
 
@@ -39,12 +47,12 @@ export class BlockQueueService {
     this.blockQueue.resume();
   }
 
-  @OnQueueError({ name: `${chain}__BlockNumQueue` })
+  @OnQueueError({ name: 'BlockNumQueue' })
   async onBlockError(error: Error) {
     // Logger.error(`Error ${error}`);
   }
 
-  @OnQueueActive({ name: `${chain}__BlockNumQueue` })
+  @OnQueueActive({ name: 'BlockNumQueue' })
   async onBlockActive(job: Job<any>) {
     // When a job is proccessing
     // Logger.debug(`Active job ${job.id}`);
@@ -52,14 +60,14 @@ export class BlockQueueService {
 
   @OnQueuePaused()
   async onPaused() {
-    if (!Number(process.env.QUEUE)) return;
+    if (!this.configSvc.features.queue) return;
 
     Logger.warn('Queue paused');
   }
 
   @OnQueueResumed()
   async onResumed() {
-    if (!Number(process.env.QUEUE)) return;
+    if (!this.configSvc.features.queue) return;
 
     Logger.warn('Queue resumed');
   }
@@ -68,10 +76,4 @@ export class BlockQueueService {
   async onWaiting(jobId: number | string) {
     // Logger.debug(`Waiting job ${jobId}`);
   }
-
-  constructor(
-    @InjectQueue(`${chain}__BlockProcessingQueue`) private readonly blockQueue: Queue,
-    private readonly processSvc: ProcessingService
-    // private readonly appSvc: AppService
-  ) {}
 }

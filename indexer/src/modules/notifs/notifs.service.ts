@@ -13,6 +13,8 @@ import { DiscordService } from './services/discord.service';
 import { Web3Service } from '../shared/services/web3.service';
 import { TwitterService } from './services/twitter.service';
 
+import { AppConfigService } from '@/config/config.service';
+
 /**
  * Service for handling notifications about marketPlace sales
  */
@@ -28,6 +30,7 @@ export class NotifsService implements OnModuleInit {
     private readonly twitterSvc: TwitterService,
     private readonly discordSvc: DiscordService,
     private readonly storageSvc: StorageService,
+    private readonly configSvc: AppConfigService
   ) {}
 
   async onModuleInit() {
@@ -80,7 +83,7 @@ export class NotifsService implements OnModuleInit {
   ): Promise<NotificationMessage> {
     const { ethscription, collection } = ethscriptionData;
 
-    const chainId = Number(process.env.CHAIN_ID);
+    const chainId = this.configSvc.chain.chainIdL1;
     const baseUrl = chainId === 1 ? 'https://etherphunks.eth.limo' : 'https://sepolia.etherphunks.eth.limo';
 
     const imageBuffer = await this.imgSvc.generateImage(ethscriptionData);
