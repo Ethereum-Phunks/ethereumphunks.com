@@ -1,5 +1,5 @@
 // ESIP-1 start block: 17672762
-export const esip1Abi = [
+export const esip1 = [
   {
     anonymous: false,
     inputs: [
@@ -22,7 +22,7 @@ export const esip1Abi = [
 ];
 
 // ESIP-2 start block: 17764910
-export const esip2Abi = [
+export const esip2 = [
   {
     anonymous: false,
     inputs: [

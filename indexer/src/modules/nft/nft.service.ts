@@ -2,8 +2,7 @@ import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 
 import { ParseEventLogsReturnType, zeroAddress } from 'viem';
 
-import bridgeAbiL2 from '@/abi/EtherPhunksBridgeL2.json';
-import marketAbiL2 from '@/abi/EtherPhunksNftMarket.json';
+import { bridgeL2, marketL2 } from '@/abi';
 
 import { StorageService } from '@/modules/storage/storage.service';
 import { Web3Service } from '@/modules/shared/services/web3.service';
@@ -26,7 +25,7 @@ export class NftService implements OnModuleInit {
     new Observable<ParseEventLogsReturnType>((observer) => {
       this.evmSvc.publicClientL2.watchContractEvent({
         address: this.configSvc.chain.contracts.market.l2 as `0x${string}`,
-        abi: marketAbiL2,
+        abi: marketL2,
         onLogs(logs: ParseEventLogsReturnType) { observer.next(logs) },
         onError(error) { observer.error(error) },
       });
@@ -118,7 +117,7 @@ export class NftService implements OnModuleInit {
   async readMarketContract(functionName: string, args: (string | undefined)[]) {
     const data = await this.evmSvc.publicClientL2.readContract({
       address: this.configSvc.chain.contracts.market.l2 as `0x${string}`,
-      abi: marketAbiL2,
+      abi: marketL2,
       functionName: functionName as any,
       args: args as any,
     });
@@ -128,7 +127,7 @@ export class NftService implements OnModuleInit {
   async readTokenContract(functionName: any, args: (string | undefined)[]): Promise<any> {
     const call: any = await this.evmSvc.publicClientL2.readContract({
       address: this.configSvc.chain.contracts.bridge.l2 as `0x${string}`,
-      abi: bridgeAbiL2,
+      abi: bridgeL2,
       functionName,
       args: args as any,
     });

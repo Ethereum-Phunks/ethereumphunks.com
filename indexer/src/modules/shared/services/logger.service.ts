@@ -8,7 +8,7 @@ export interface LogItem {
   type: LogType;
 }
 
-export type LogType = 'log' | 'debug' | 'error';
+export type LogType = 'log' | 'debug' | 'error' | 'warn';
 
 @Injectable()
 export class CustomLogger extends ConsoleLogger {
@@ -57,6 +57,20 @@ export class CustomLogger extends ConsoleLogger {
     });
 
     super.debug(message, ...optionalParams);
+  }
+
+  warn(message: any, ...optionalParams: [...any, string?, string?]): void {
+    const shortenedMessage = this.shortenHexStrings(message) as string;
+    const shortenedOptionalParams = optionalParams.map((param) => this.shortenHexStrings(param));
+
+    this.singleLog.next({
+      message: shortenedMessage,
+      optionalParams: shortenedOptionalParams,
+      timestamp: new Date().toISOString(),
+      type: 'warn',
+    });
+
+    super.warn(message, ...optionalParams);
   }
 
   error(message: any, ...optionalParams: [...any, string?, string?]): void {

@@ -4,7 +4,7 @@ import { ParseEventLogsReturnType, erc721Abi } from 'viem';
 
 import { StorageService } from '@/modules/storage/storage.service';
 
-import etherPhunksBridgeL2 from '@/abi/EtherPhunksBridgeL2.json';
+import { bridgeL2 } from '@/abi';
 
 import { Observable, catchError, of, tap } from 'rxjs';
 import { AppConfigService } from '@/config/config.service';
@@ -23,7 +23,7 @@ export class ProcessingService implements OnModuleInit {
     new Observable<ParseEventLogsReturnType>((observer) => {
       this.evmSvc.publicClientL2.watchContractEvent({
         address: this.configSvc.chain.contracts.bridge.l2 as `0x${string}`,
-        abi: etherPhunksBridgeL2,
+        abi: bridgeL2,
         onLogs(logs: ParseEventLogsReturnType) { observer.next(logs) },
         onError(error) { observer.error(error) },
       });

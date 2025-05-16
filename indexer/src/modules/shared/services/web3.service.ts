@@ -2,8 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 
 import { Account, Chain, ParseAccount, PublicClient, RpcSchema, Transaction, TransactionReceipt, Transport, WriteContractParameters, getAddress, toHex } from 'viem';
 
-import bridgeAbiL1 from '@/abi/EtherPhunksBridgeL1.json'
-import pointsAbiL1 from '@/abi/PointsL1.json'
+import { bridgeL1, pointsL1 } from '@/abi';
 
 import { AppConfigService } from '@/config/config.service';
 import { EvmService } from '@/modules/evm/evm.service';
@@ -149,14 +148,14 @@ export class Web3Service {
    * @param address - The address to retrieve points for.
    * @returns A Promise that resolves to the points for the given address.
    */
-  async getPoints(address: `0x${string}`): Promise<number> {
+  async getPoints(address: `0x${string}`): Promise<bigint> {
     const points = await this.evmSvc.publicClientL1.readContract({
       address: this.configSvc.contracts.points.l1 as `0x${string}`,
-      abi: pointsAbiL1,
+      abi: pointsL1,
       functionName: 'points',
-      args: [`${address}`],
+      args: [address as `0x${string}`],
     });
-    return points as number;
+    return points;
   }
 
   /**
@@ -168,9 +167,9 @@ export class Web3Service {
   async fetchNonce(address: string): Promise<bigint> {
     const nonce = await this.evmSvc.publicClientL1.readContract({
       address: this.configSvc.contracts.bridge.l1 as `0x${string}`,
-      abi: bridgeAbiL1,
+      abi: bridgeL1,
       functionName: 'expectedNonce',
-      args: [`${address}`],
+      args: [address as `0x${string}`],
     });
     return nonce as bigint;
   }

@@ -7,15 +7,12 @@ import { AppConfigService } from '@/config/config.service';
 
 import { BridgeProcessingQueue } from '@/modules/queue/queues/bridge-processing.queue';
 
-import { esip1Abi, esip2Abi } from '@/abi/EthscriptionsProtocol';
 import * as esips from '@/modules/ethscriptions/constants/esips';
-import bridgeL1Abi from '@/abi/EtherPhunksBridgeL1.json';
-import marketL1Abi from '@/abi/EtherPhunksMarketL1.json';
-import pointsL1Abi from '@/abi/PointsL1.json';
+import { esip1, esip2, bridgeL1, marketL1, pointsL1 } from '@/abi';
 
 import { AttributeItem, Ethscription, Event } from '@/modules/storage/models/db';
 
-import { DecodeEventLogReturnType, Log, Transaction, TransactionReceipt, decodeEventLog, hexToString, zeroAddress } from 'viem';
+import { ContractEventName, DecodeEventLogReturnType, Log, Transaction, TransactionReceipt, decodeEventLog, hexToString, zeroAddress } from 'viem';
 
 import { mkdir, writeFile } from 'fs/promises';
 import { createHash } from 'crypto';
@@ -70,7 +67,7 @@ export class EthscriptionsService {
       const isDuplicate = await this.storageSvc.checkEthscriptionExistsBySha(sha);
       if (isDuplicate) return
 
-      Logger.debug('Processing ethscription', transaction.hash);
+      Logger.debug('Processing new ethscription', transaction.hash);
       const event = await this.processEthscriptionCreationEvent(transaction as Transaction, createdAt, attributesData);
       return [event];
     }
@@ -169,7 +166,7 @@ export class EthscriptionsService {
     );
     if (pointsLogs.length) {
       Logger.debug(
-        `Processing Points event (Chain: ${this.configSvc.chain.chainIdL1})`,
+        `Processing Points event (L1)`,
         transaction.hash
       );
       await this.processPointsEvent(pointsLogs);
@@ -221,14 +218,12 @@ export class EthscriptionsService {
   async processBridgeMainnetEvents(bridgeMainnetLogs: any[]): Promise<void> {
     for (const log of bridgeMainnetLogs) {
       const decoded = decodeEventLog({
-        abi: bridgeL1Abi,
+        abi: bridgeL1,
         data: log.data,
         topics: log.topics,
       });
 
-      const { eventName } = decoded;
-      const { args } = decoded as any;
-
+      const { args, eventName } = decoded as any;
       if (!eventName || !args) return;
 
       if (eventName === 'HashLocked') {
@@ -270,13 +265,12 @@ export class EthscriptionsService {
 
     for (const log of pointsLogs) {
       const decoded = decodeEventLog({
-        abi: pointsL1Abi,
+        abi: pointsL1,
         data: log.data,
         topics: log.topics,
       });
 
-      const { eventName } = decoded;
-      const { args } = decoded as any;
+      const { args, eventName } = decoded as any;
 
       if (!eventName || !args) return;
       if (eventName === 'PointsAdded') {
@@ -300,7 +294,7 @@ export class EthscriptionsService {
       const points = await this.web3SvcL1.getPoints(fromAddress);
       await this.storageSvc.updateUserPoints(fromAddress, Number(points));
       Logger.log(
-        `Updated user points for ${points.toString()}`,
+        `Updated user points to ${points.toString()}`,
         fromAddress
       );
     } catch (error) {
@@ -343,7 +337,7 @@ export class EthscriptionsService {
     // Update the eth phunk owner
     await this.storageSvc.updateEthscriptionOwner(hashId, ethscript.owner, txn.to);
     Logger.log(
-      `Updated ethscript owner to ${txn.to} (transfer event)`,
+      `Updated ethscription owner to ${txn.to} (Transfer event)`,
       ethscript.hashId
     );
 
@@ -402,7 +396,7 @@ export class EthscriptionsService {
     // Update the eth phunk owner
     await this.storageSvc.updateEthscriptionOwner(ethscript.hashId, ethscript.owner, to);
     Logger.log(
-      `Updated ethscript owner to ${to} (contract event)`,
+      `Updated ethscript owner to ${to} (Contract event)`,
       ethscript.hashId
     );
 
@@ -438,7 +432,7 @@ export class EthscriptionsService {
     const events = [];
     for (const log of ethscriptionTransfers) {
       const decoded = decodeEventLog({
-        abi: esip1Abi,
+        abi: esip1,
         data: log.data,
         topics: log.topics,
       });
@@ -480,7 +474,7 @@ export class EthscriptionsService {
     const events = [];
     for (const log of previousOwnerTransfers) {
       const decoded = decodeEventLog({
-        abi: esip2Abi,
+        abi: esip2,
         data: log.data,
         topics: log.topics,
       });
@@ -565,10 +559,11 @@ export class EthscriptionsService {
     for (const log of marketplaceLogs) {
       if (!this.configSvc.contracts.market.l1.includes(log.address?.toLowerCase())) continue;
 
-      let decoded: DecodeEventLogReturnType;
+    // DecodeEventLogReturnType<typeof marketL1, ContractEventName<typeof marketL1>>
+      let decoded: DecodeEventLogReturnType<typeof marketL1, ContractEventName<typeof marketL1>>;
       try {
         decoded = decodeEventLog({
-          abi: marketL1Abi,
+          abi: marketL1,
           data: log.data,
           topics: log.topics,
         });
@@ -586,7 +581,6 @@ export class EthscriptionsService {
 
       if (event) events.push(event);
     }
-
     return events;
   }
 
@@ -602,7 +596,7 @@ export class EthscriptionsService {
   async processEtherPhunkMarketplaceEvent(
     txn: Transaction,
     createdAt: Date,
-    decoded: DecodeEventLogReturnType,
+    decoded: DecodeEventLogReturnType<typeof marketL1, ContractEventName<typeof marketL1>>,
     log: Log
   ): Promise<Event> {
     const { eventName } = decoded;

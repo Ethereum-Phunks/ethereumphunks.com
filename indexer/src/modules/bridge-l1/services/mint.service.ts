@@ -11,7 +11,7 @@ import { UtilityService } from '@/modules/shared/services/utility.service';
 import { AppConfigService } from '@/config/config.service';
 import { EvmService } from '@/modules/evm/evm.service';
 
-import bridgeL2Abi from '@/abi/EtherPhunksBridgeL2.json';
+import { bridgeL2 } from '@/abi';
 
 @Injectable()
 export class MintService {
@@ -55,7 +55,7 @@ export class MintService {
       const receipt = await this.web3SvcL2.waitForTransactionReceipt(hash);
 
       const logs = parseEventLogs({
-        abi: bridgeL2Abi,
+        abi: bridgeL2,
         logs: receipt.logs,
       });
 
@@ -71,7 +71,7 @@ export class MintService {
       const receipt = await this.web3SvcL2.waitForTransactionReceipt(hash);
 
       const logs = parseEventLogs({
-        abi: bridgeL2Abi,
+        abi: bridgeL2,
         logs: receipt.logs,
       });
 
@@ -107,12 +107,12 @@ export class MintService {
     const { request } = await this.evmSvc.publicClientL2.simulateContract({
       account: this.evmSvc.walletClientL2.account,
       address: this.configSvc.chain.contracts.bridge.l2,
-      abi: bridgeL2Abi,
+      abi: bridgeL2,
       functionName: 'mintToken',
       args: [
-        owner,
-        tokenId,
-        hashId,
+        owner as `0x${string}`,
+        BigInt(tokenId),
+        hashId as `0x${string}`,
         metadata
       ]
     });
@@ -129,9 +129,9 @@ export class MintService {
     const { request } = await this.evmSvc.publicClientL2.simulateContract({
       account: this.evmSvc.walletClientL2.account,
       address: this.configSvc.chain.contracts.bridge.l2,
-      abi: bridgeL2Abi,
-      functionName: 'tokenURIByHashId',
-      args: [hashId]
+      abi: bridgeL2,
+      functionName: 'tokenURIByHashId' as any, // Viem is broken or something
+      args: [hashId as `0x${string}`]
     });
 
     const response = await this.evmSvc.publicClientL2.readContract(request);
