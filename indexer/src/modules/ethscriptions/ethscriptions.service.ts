@@ -8,7 +8,7 @@ import { AppConfigService } from '@/config/config.service';
 import { BridgeProcessingQueue } from '@/modules/queue/queues/bridge-processing.queue';
 
 import { esip1Abi, esip2Abi } from '@/abi/EthscriptionsProtocol';
-import * as esips from '@/constants/esips';
+import * as esips from '@/modules/ethscriptions/constants/esips';
 import bridgeL1Abi from '@/abi/EtherPhunksBridgeL1.json';
 import marketL1Abi from '@/abi/EtherPhunksMarketL1.json';
 import pointsL1Abi from '@/abi/PointsL1.json';

@@ -8,7 +8,7 @@ import { catchError, firstValueFrom, of } from 'rxjs';
 import { readFile } from 'fs/promises';
 import path from 'path';
 
-import { rarityData } from '../constants/collections';
+import { rarityData } from '../constants/rarity';
 
 /**
  * Service for generating notification images

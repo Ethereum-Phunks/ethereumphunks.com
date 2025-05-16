@@ -18,21 +18,19 @@ export class BridgeQueueService {
   @Process({ name: 'BridgeQueue', concurrency: 5 })
   async handleBridgeQueue(job: Job<any>) {
     Logger.debug(`Processing job ${job.id}`);
-    // if (!Number(process.env.QUEUE)) return;
+
     const { hashId, owner } = job.data;
     await this.mintSvc.processLayer2Mint(hashId, owner);
   }
 
   @OnQueueCompleted({ name: 'BridgeQueue' })
   async onCompleted(job: Job<any>) {
-    // if (!Number(process.env.QUEUE)) return;
+
     Logger.debug(`Completed job ${job.id}`);
   }
 
   @OnQueueFailed({ name: 'BridgeQueue' })
   async onBlockFailed(job: Job<any>, error: Error) {
-    // if (!Number(process.env.QUEUE)) return;
-
     Logger.error('❌', `Failed job ${job.id} with error ${error}`);
     // this.queue.pause();
     // await this.processSvc.retryBlock(job.data.blockNum);
@@ -52,15 +50,11 @@ export class BridgeQueueService {
 
   @OnQueuePaused()
   async onPaused() {
-    // if (!Number(process.env.QUEUE)) return;
-
     Logger.warn('Queue paused');
   }
 
   @OnQueueResumed()
   async onResumed() {
-    // if (!Number(process.env.QUEUE)) return;
-
     Logger.warn('Queue resumed');
   }
 

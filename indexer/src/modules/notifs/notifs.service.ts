@@ -6,7 +6,7 @@ import { Event } from '@/modules/storage/models/db';
 import { StorageService } from '@/modules/storage/storage.service';
 import { NotificationMessage, NotifItemData } from './models/message.model';
 
-import { rarityData } from './constants/collections';
+import { rarityData } from './constants/rarity';
 
 import { ImageService } from './services/image.service';
 import { DiscordService } from './services/discord.service';

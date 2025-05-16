@@ -28,6 +28,8 @@ export class TwitterService {
    * @throws Error if initialization fails
    */
   async initialize(): Promise<void> {
+    if (!this.configSvc.features.twitter) return;
+
     try {
       // Try to load existing cookies
       if (await this.loadCookies()) {

@@ -15,7 +15,10 @@ import { AppConfigService } from './config.service';
         allowUnknown: true,
         abortEarly: true,
       },
-      envFilePath: process.env.ENV_FILE || '.env',
+      envFilePath: [
+        `.env.${process.env.NETWORK}`,
+        `.env.supabase`,
+      ],
       cache: true,
       expandVariables: true,
     }),

@@ -4,21 +4,32 @@ import Joi from 'joi';
 import { AppConfig } from './models/configuration.types';
 
 export const validationSchema = Joi.object({
-  NODE_ENV: Joi.string().valid('development', 'production', 'test').default('development'),
+  NODE_ENV: Joi.string().valid('development', 'production').default('development'),
   PORT: Joi.number().default(3069),
   ALLOWED_ORIGINS: Joi.string().required(),
-  BRIDGE_BLOCK_DELAY_L1: Joi.number().default(10),
+  BRIDGE_BLOCK_DELAY: Joi.number().default(10),
 
   // Features
   QUEUE: Joi.number().valid(0, 1).required(),
   DISCORD: Joi.number().valid(0, 1).default(0),
   TWITTER: Joi.number().valid(0, 1).default(0),
+  TELEGRAM: Joi.number().valid(0, 1).default(0),
   TX_POOL: Joi.number().valid(0, 1).default(0),
   MINT: Joi.number().valid(0, 1).default(0),
 
   // Supabase
   SUPABASE_URL: Joi.string().required(),
   SUPABASE_SERVICE_ROLE: Joi.string().required(),
+  SUPABASE_URL_PROD: Joi.string().when('NODE_ENV', {
+    is: 'production',
+    then: Joi.required(),
+    otherwise: Joi.optional(),
+  }),
+  SUPABASE_SERVICE_ROLE_PROD: Joi.string().when('NODE_ENV', {
+    is: 'production',
+    then: Joi.required(),
+    otherwise: Joi.optional(),
+  }),
 
   // RPCs
   RPC_URL_L1: Joi.string().required(),
@@ -63,22 +74,24 @@ export const validationSchema = Joi.object({
 });
 
 export default registerAs('app', (): AppConfig => {
+  const isProd = process.env.NODE_ENV === 'production';
 
   const config = {
     nodeEnv: process.env.NODE_ENV || 'development',
     port: Number(process.env.PORT) || 3069,
-    allowedOrigins: process.env.ALLOWED_ORIGINS.split(','),
-    bridgeBlockDelayL1: Number(process.env.BRIDGE_BLOCK_DELAY_L1) || 10,
+    allowedOrigins: process.env.ALLOWED_ORIGINS?.split(',').map(o => o.trim()) || [],
+    bridgeBlockDelay: Number(process.env.BRIDGE_BLOCK_DELAY) || 10,
 
     supabase: {
-      url: process.env.SUPABASE_URL,
-      serviceRoleKey: process.env.SUPABASE_SERVICE_ROLE,
+      url: isProd ? process.env.SUPABASE_URL_PROD : process.env.SUPABASE_URL,
+      serviceRoleKey: isProd ? process.env.SUPABASE_SERVICE_ROLE_PROD : process.env.SUPABASE_SERVICE_ROLE,
     },
 
     features: {
       queue: Number(process.env.QUEUE) || 0,
       discord: Number(process.env.DISCORD) || 0,
       twitter: Number(process.env.TWITTER) || 0,
+      telegram: Number(process.env.TELEGRAM) || 0,
       txPool: Number(process.env.TX_POOL) || 0,
       mint: Number(process.env.MINT) || 0,
     },

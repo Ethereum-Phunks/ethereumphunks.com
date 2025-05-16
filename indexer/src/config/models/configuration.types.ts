@@ -2,7 +2,7 @@ export type AppConfig = {
   nodeEnv: string;
   port: number;
   allowedOrigins: string[];
-  bridgeBlockDelayL1: number;
+  bridgeBlockDelay: number;
   features: Features;
   chain: ChainConfig;
   relay: RelayConfig;
@@ -20,6 +20,7 @@ export type Features = {
   queue: number;
   discord: number;
   twitter: number;
+  telegram: number;
   txPool: number;
   mint: number;
 };

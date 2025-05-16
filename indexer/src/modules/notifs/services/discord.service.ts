@@ -45,8 +45,9 @@ export class DiscordService {
    * @returns Promise that resolves when the message is sent
    */
   async postMessage(data: NotificationMessage): Promise<void> {
-    if (this.configSvc.features.discord) await this.initializeBot();
-    else return;
+    if (!this.configSvc.features.discord) return;
+
+    await this.initializeBot();
 
     // Get appropriate channel based on chain ID
     const chainId = this.configSvc.chain.chainIdL1;

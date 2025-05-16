@@ -6,7 +6,8 @@ import { Account, Chain, createPublicClient, createWalletClient, fallback, http,
 import { privateKeyToAccount } from 'viem/accounts';
 import { mainnet, sepolia } from 'viem/chains';
 
-import { magma } from '@/constants/magma.chain';
+import { magma } from './chains/magma.chain';
+
 @Injectable()
 export class EvmService {
 
@@ -68,7 +69,7 @@ export class EvmService {
     return createWalletClient({
       chain,
       transport: http(this.configSvc.chain.rpc.l2.primary),
-      account: privateKeyToAccount(`0x${process.env.L2_RELAY_SIGNER_PK}`),
+      account: privateKeyToAccount(`0x${this.configSvc.relay.l2.privateKey}`),
     });
   }
 

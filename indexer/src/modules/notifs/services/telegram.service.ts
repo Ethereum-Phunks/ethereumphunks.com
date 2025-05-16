@@ -30,6 +30,8 @@ export class TelegramService {
    * @returns Promise resolving to the Telegram API response
    */
   async sendMessage(prefix: string, message: string): Promise<void> {
+    if (!this.configSvc.features.telegram) return;
+
     const apiUrl = `https://api.telegram.org/bot${this.botToken}/sendMessage`;
     const params = {
       chat_id: this.chatId,
