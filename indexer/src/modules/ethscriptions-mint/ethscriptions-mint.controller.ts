@@ -1,18 +1,20 @@
 // nestjs controller
 import { BadRequestException, Controller, Get, Inject, Query } from '@nestjs/common';
 
+import { AppConfigService } from '@/config/config.service';
 import { Web3Service } from '@/modules/shared/services/web3.service';
 
-import { MintService } from './mint.service';
+import { EthscriptionsMintService } from './ethscriptions-mint.service';
 
 import dotenv from 'dotenv';
 dotenv.config();
 
 @Controller('mint')
-export class MintController {
+export class EthscriptionsMintController {
   constructor(
     @Inject('WEB3_SERVICE_L1') private readonly web3SvcL1: Web3Service,
-    private readonly mintService: MintService,
+    private readonly mintService: EthscriptionsMintService,
+    private readonly configSvc: AppConfigService
   ) {}
 
   /**
@@ -26,7 +28,7 @@ export class MintController {
     @Query('slug') slug: string,
     @Query('address') address: string,
   ) {
-    if (!Number(process.env.MINT)) {
+    if (!this.configSvc.features.mint) {
       throw new BadRequestException('Minting is disabled');
     }
 

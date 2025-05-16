@@ -49,7 +49,9 @@ export class TxPoolService implements OnModuleInit {
   constructor(
     public readonly eventEmitter: EventEmitter2,
     private readonly configSvc: AppConfigService
-  ) {}
+  ) {
+    console.log('TX POOL SERVICE INIT');
+  }
 
   /**
    * Initializes the service by starting polling

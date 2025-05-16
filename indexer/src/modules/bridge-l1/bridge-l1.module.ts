@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { HttpModule } from '@nestjs/axios';
 import { CacheModule } from '@nestjs/cache-manager';
 
+import { EvmModule } from '@/modules/evm/evm.module';
 import { SharedModule } from '@/modules/shared/shared.module';
 import { StorageModule } from '@/modules/storage/storage.module';
 import { AppConfigModule } from '@/config/config.module';
@@ -15,12 +16,13 @@ import { VerificationService } from '@/modules/bridge-l1/services/verification.s
 
 @Module({
   imports: [
+    CacheModule.register(),
     AppConfigModule,
     HttpModule,
-    CacheModule.register(),
 
     SharedModule,
     StorageModule,
+    EvmModule
   ],
   controllers: [
     BridgeController

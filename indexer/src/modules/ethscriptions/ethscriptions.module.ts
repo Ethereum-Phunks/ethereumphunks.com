@@ -10,6 +10,7 @@ import { StorageModule } from '@/modules/storage/storage.module';
 
 import { EthscriptionsController } from './ethscriptions.controller';
 import { EthscriptionsService } from './ethscriptions.service';
+import { ConditionalModule } from '@nestjs/config';
 
 @Module({
   imports: [
@@ -20,7 +21,10 @@ import { EthscriptionsService } from './ethscriptions.service';
     NotifsModule,
     StorageModule,
 
-    forwardRef(() => QueueModule)
+    ConditionalModule.registerWhen(
+      forwardRef(() => QueueModule),
+      (config) => (!!Number(config['QUEUE']))
+    ),
   ],
   controllers: [
     EthscriptionsController

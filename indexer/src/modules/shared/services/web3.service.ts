@@ -1,7 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 
-import { Transaction, TransactionReceipt, WriteContractParameters, getAddress, toHex } from 'viem';
-// import { bridgeAbiL1, bridgeAddressL1, l1Client, l2Client, pointsAbiL1, pointsAddressL1 } from '@/constants/ethereum';
+import { Account, Chain, ParseAccount, PublicClient, RpcSchema, Transaction, TransactionReceipt, Transport, WriteContractParameters, getAddress, toHex } from 'viem';
 
 import bridgeAbiL1 from '@/abi/EtherPhunksBridgeL1.json'
 import pointsAbiL1 from '@/abi/PointsL1.json'
@@ -22,14 +21,24 @@ type GetBlockReturnType<T> = T & {
 @Injectable()
 export class Web3Service {
 
-  client: typeof this.evmSvc.publicClientL1;
+  layer: 'L1' | 'L2';
+  client: PublicClient<Transport, Chain, ParseAccount<Account>, RpcSchema>;
 
   constructor(
-    private readonly layer: 'l1' | 'l2',
     private readonly evmSvc: EvmService,
     private readonly configSvc: AppConfigService
-  ) {
-    this.client = layer === 'l2' ? this.evmSvc.publicClientL2 : this.evmSvc.publicClientL1;
+  ) {}
+
+  /**
+   * Creates a new Web3Service instance for a specific layer.
+   * @param layer - The layer to create the service for ('L1' or 'L2').
+   * @returns A new Web3Service instance for the specified layer.
+   */
+  forLayer(layer: 'L1' | 'L2'): Web3Service {
+    const service = new Web3Service(this.evmSvc, this.configSvc);
+    service.layer = layer;
+    service.client = layer === 'L1' ? this.evmSvc.publicClientL1 : this.evmSvc.publicClientL2;
+    return service;
   }
 
   async getBlock({

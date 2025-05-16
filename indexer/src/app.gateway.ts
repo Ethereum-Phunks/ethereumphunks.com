@@ -7,6 +7,7 @@ import { CustomLogger } from '@/modules/shared/services/logger.service';
 import { StorageService } from '@/modules/storage/storage.service';
 
 import { AppConfigService } from '@/config/config.service';
+
 @WebSocketGateway({
   cors: {
     origin: (origin, callback) => {
@@ -26,7 +27,9 @@ export class AppGateway implements OnGatewayInit, OnGatewayConnection, OnGateway
     private readonly logger: CustomLogger,
     private readonly storageService: StorageService,
     private readonly configSvc: AppConfigService
-  ) {
+  ) {}
+
+  onGatewayInit(server: Server) {
     this.chainName = this.configSvc.chain.chainIdL1 === 1 ? 'mainnet' : 'sepolia';
   }
 

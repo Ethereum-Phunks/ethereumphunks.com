@@ -20,8 +20,8 @@ export class TelegramService {
     private readonly http: HttpService,
     private readonly configSvc: AppConfigService
   ) {
-    this.botToken = this.configSvc.notifications.telegram.botToken;
-    this.chatId = this.configSvc.notifications.telegram.chatId;
+    this.botToken = this.configSvc.notifications?.telegram?.botToken || '';
+    this.chatId = this.configSvc.notifications?.telegram?.chatId || '';
   }
 
   /**

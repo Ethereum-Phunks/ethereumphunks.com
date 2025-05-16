@@ -7,10 +7,10 @@ import { StorageService } from '@/modules/storage/storage.service';
 import { TxPoolService } from '@/modules/tx-pool/tx-pool.service';
 import { DataService } from '@/modules/shared/services/data.service';
 
-import { MintRequestResponse, MetadataCollection } from './models/mint';
+import { MintRequestResponse, MetadataCollection } from './models/ethscriptions-mint';
 
 @Injectable()
-export class MintService implements OnModuleInit {
+export class EthscriptionsMintService implements OnModuleInit {
 
   private metadata: MetadataCollection;
 
@@ -25,9 +25,6 @@ export class MintService implements OnModuleInit {
     private readonly dataSvc: DataService,
   ) {}
 
-  /**
-   * Initializes the service by loading metadata for the Call Data Comrades collection
-   */
   async onModuleInit() {
     this.metadata = await this.storageSvc.getCollectionData('call-data-comrades');
 

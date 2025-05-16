@@ -1,15 +1,13 @@
 export type AppConfig = {
   nodeEnv: string;
-  mode: 'backfill' | 'poll';
   port: number;
-  features: FeatureFlags;
   allowedOrigins: string[];
   bridgeBlockDelayL1: number;
+  features: Features;
   chain: ChainConfig;
   relay: RelayConfig;
   notifications: NotificationsConfig;
   api: ApiConfig;
-  twitter?: TwitterConfig;
   supabase: SupabaseConfig;
 };
 
@@ -18,8 +16,7 @@ export type SupabaseConfig = {
   serviceRoleKey: string;
 };
 
-export type FeatureFlags = {
-  indexer: number;
+export type Features = {
   queue: number;
   discord: number;
   twitter: number;
@@ -69,20 +66,20 @@ export type RelayConfig = {
 
 export type NotificationsConfig = {
   telegram?: {
+    chatId: string;
     botToken: string;
   };
   discord?: {
     botToken: string;
+  };
+  twitter: {
+    username: string;
+    password: string;
+    twoFactorSecret: string;
   };
 };
 
 export type ApiConfig = {
   publicKey: string;
   privateKey: string;
-};
-
-export type TwitterConfig = {
-  username: string;
-  password: string;
-  twoFactorSecret: string;
 };

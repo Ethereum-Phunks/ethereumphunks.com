@@ -3,6 +3,7 @@ import { BadRequestException, Inject, Injectable } from '@nestjs/common';
 import { encodePacked, formatEther, keccak256, recoverTypedDataAddress } from 'viem';
 import { privateKeyToAccount } from 'viem/accounts'
 
+import { AppConfigService } from '@/config/config.service';
 import { StorageService } from '@/modules/storage/storage.service';
 import { Web3Service } from '@/modules/shared/services/web3.service';
 
@@ -11,8 +12,6 @@ import { MintService } from '@/modules/bridge-l1/services/mint.service';
 
 import { SignatureBody } from '@/modules/bridge-l1/models/bridge.model';
 
-const prefix = process.env.CHAIN_ID === '1' ? '' : 'sepolia-';
-
 @Injectable()
 export class VerificationService {
 
@@ -20,7 +19,8 @@ export class VerificationService {
     @Inject('WEB3_SERVICE_L1') private readonly web3Svc: Web3Service,
     private readonly storageSvc: StorageService,
     private readonly nonceSvc: NonceService,
-    private readonly mintSvc: MintService
+    private readonly mintSvc: MintService,
+    private readonly configSvc: AppConfigService
   ) {}
 
   /**
@@ -34,7 +34,6 @@ export class VerificationService {
    */
   async verifySignature(body: SignatureBody): Promise<{
     signature: any,
-    prefix: string,
     hashId: string,
     owner: string,
     prevOwner: string,
@@ -106,7 +105,6 @@ export class VerificationService {
     // get signature for contract verification
     const nonce = await this.web3Svc.fetchNonce(address);
     const contractSignature = await this.signMessage({
-      prefix,
       hashId: hashId as `0x${string}`,
       owner: address as `0x${string}`,
       nonce,
@@ -114,7 +112,6 @@ export class VerificationService {
 
     return {
       signature: contractSignature,
-      prefix,
       hashId,
       owner: item.owner,
       prevOwner: item.prevOwner,
@@ -133,14 +130,13 @@ export class VerificationService {
    */
   private async signMessage(
     data: {
-      prefix: string,
       hashId: `0x${string}`,
       owner: `0x${string}`,
       nonce: bigint
     }
   ): Promise<any> {
     // Define the message to sign for the smart contract verification
-    const { prefix, hashId, nonce, owner } = data;
+    const { hashId, owner, nonce } = data;
 
     const message = keccak256(
       encodePacked(
@@ -149,7 +145,7 @@ export class VerificationService {
       )
     );
 
-    const account = privateKeyToAccount('0x' + process.env.L1_RELAY_SIGNER_PK as `0x${string}`);
+    const account = privateKeyToAccount('0x' + this.configSvc.relay.l1.privateKey as `0x${string}`);
     const signature = await account.signMessage({ message: { raw: message as `0x${string}` } });
 
     const r = signature.substring(0, 66);

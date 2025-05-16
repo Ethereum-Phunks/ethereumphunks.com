@@ -1,7 +1,7 @@
-import { AppConfigModule } from '@/config/config.module';
 import { Module } from '@nestjs/common';
 
 import { EvmService } from './evm.service';
+import { AppConfigModule } from '@/config/config.module';
 
 @Module({
   imports: [

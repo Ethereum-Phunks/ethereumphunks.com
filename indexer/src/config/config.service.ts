@@ -1,56 +1,56 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 
-import { AppConfig, ChainConfig, SupabaseConfig } from './configuration.types';
+import { AppConfig, ChainConfig, SupabaseConfig, Features, ApiConfig, NotificationsConfig, RelayConfig } from './models/configuration.types';
 
 @Injectable()
 export class AppConfigService {
   constructor(
-    private configService: ConfigService<AppConfig>
+    private configService: ConfigService
   ) {}
 
   get nodeEnv(): string {
-    return this.configService.get('nodeEnv');
+    return this.configService.get('app.nodeEnv') as string;
   }
 
   get mode(): 'backfill' | 'poll' {
-    return this.configService.get('mode');
+    return this.configService.get('app.mode') as 'backfill' | 'poll';
   }
 
   get port(): number {
-    return this.configService.get('port');
+    return this.configService.get('app.port') as number;
   }
 
   get allowedOrigins(): string[] {
-    return this.configService.get('allowedOrigins');
+    return this.configService.get('app.allowedOrigins') as string[];
   }
 
   get bridgeBlockDelayL1(): number {
-    return this.configService.get('bridgeBlockDelayL1');
+    return this.configService.get('app.bridgeBlockDelayL1') as number;
   }
 
   get chain(): ChainConfig {
-    return this.configService.get('chain');
+    return this.configService.get('app.chain') as ChainConfig;
   }
 
   get supabase(): SupabaseConfig {
-    return this.configService.get('supabase');
+    return this.configService.get('app.supabase') as SupabaseConfig;
   }
 
   get relay() {
-    return this.configService.get('relay');
+    return this.configService.get('app.relay') as RelayConfig;
   }
 
   get notifications() {
-    return this.configService.get('notifications');
+    return this.configService.get('app.notifications') as NotificationsConfig;
   }
 
   get api() {
-    return this.configService.get('api');
+    return this.configService.get('app.api') as ApiConfig;
   }
 
-  get twitter() {
-    return this.configService.get('twitter');
+  get features() {
+    return this.configService.get('app.features') as Features;
   }
 
   // Helper methods for common operations
@@ -60,9 +60,5 @@ export class AppConfigService {
 
   get rpc() {
     return this.chain.rpc;
-  }
-
-  get features() {
-    return this.configService.get('features');
   }
 }

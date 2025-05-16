@@ -19,7 +19,7 @@ export class BridgeProcessingQueue {
     hashId: string,
     owner: string,
   ) {
-    const jobId = `${this.configSvc.chain.chainIdL1}__hash_${hashId}`.toUpperCase();
+    const jobId = `hash_${hashId}`.toUpperCase();
     const maxRetries = 69;
 
     const existingJob = await this.bridgeQueue.getJob(jobId);
@@ -29,7 +29,7 @@ export class BridgeProcessingQueue {
     }
 
     await this.bridgeQueue.add(
-      `${this.configSvc.chain.chainIdL1}__BridgeQueue`,
+      'BridgeQueue',
       { hashId, owner, retryCount: 0, maxRetries, delay: 2000 },
       { jobId, removeOnComplete: true, removeOnFail: false, }
     );

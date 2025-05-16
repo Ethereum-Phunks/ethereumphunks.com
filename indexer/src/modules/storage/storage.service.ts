@@ -10,6 +10,7 @@ import { Ethscription } from '@/modules/storage/models/db';
 
 import { TIC } from '@/modules/comments/models/tic';
 import { AppConfigService } from '@/config/config.service';
+
 @Injectable()
 export class StorageService implements OnModuleInit {
 
@@ -18,11 +19,11 @@ export class StorageService implements OnModuleInit {
 
   constructor(
     private readonly configSvc: AppConfigService
-  ) {
-    this.suffix = this.configSvc.chain.chainIdL1 === 1 ? '' : '_sepolia';
-  }
+  ) {}
 
   onModuleInit() {
+    this.suffix = this.configSvc.chain.chainIdL1 === 1 ? '' : '_sepolia';
+
     this.supabase = createClient(
       this.configSvc.supabase.url,
       this.configSvc.supabase.serviceRoleKey

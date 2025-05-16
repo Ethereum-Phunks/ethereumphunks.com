@@ -1,6 +1,6 @@
 import { MiddlewareConsumer, Module, RequestMethod } from '@nestjs/common';
 import { HttpModule } from '@nestjs/axios';
-import { ConfigModule } from '@nestjs/config';
+import { ConditionalModule } from '@nestjs/config';
 
 import { StorageModule } from '@/modules/storage/storage.module';
 import { CommentsModule } from '@/modules/comments/comments.module';
@@ -12,7 +12,7 @@ import { NftModule } from '@/modules/nft/nft.module';
 import { BridgeL2Module } from '@/modules/bridge-l2/bridge-l2.module';
 import { EthscriptionsModule } from '@/modules/ethscriptions/ethscriptions.module';
 import { TxPoolModule } from '@/modules/tx-pool/tx-pool.module';
-import { MintModule } from '@/modules/mint/mint.module';
+import { EthscriptionsMintModule } from '@/modules/ethscriptions-mint/ethscriptions-mint.module';
 import { AdminModule } from '@/modules/admin/admin.module';
 import { ProcessingModule } from '@/modules/processing/processing.module';
 import { EvmModule } from '@/modules/evm/evm.module';
@@ -36,20 +36,34 @@ import { AppConfigModule } from '@/config/config.module';
     BridgeL2Module,
 
     EthscriptionsModule,
-    QueueModule,
     BridgeL1Module,
 
     NotifsModule,
     SharedModule,
-    TxPoolModule,
-    MintModule,
 
     CommentsModule,
     StorageModule,
     AdminModule,
-    ProcessingModule
+    ProcessingModule,
+
+    ConditionalModule.registerWhen(
+      EthscriptionsMintModule,
+      (config) => (!!Number(config['MINT']))
+    ),
+
+    ConditionalModule.registerWhen(
+      QueueModule,
+      (config) => (!!Number(config['QUEUE']))
+    ),
+
+    ConditionalModule.registerWhen(
+      TxPoolModule,
+      (config) => (!!Number(config['TX_POOL']))
+    ),
   ],
-  controllers: [AppController],
+  controllers: [
+    AppController
+  ],
   providers: [
     AppService,
     AppGateway,

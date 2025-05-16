@@ -20,7 +20,7 @@ export class BlockProcessingQueue {
     blockNum: number,
     timestamp: number,
   ) {
-    const jobId = `${this.configSvc.chain.chainIdL1}__block_${blockNum}`;
+    const jobId = `block_${blockNum}`;
     const maxRetries = 69;
 
     const existingJob = await this.queue.getJob(jobId);
@@ -30,7 +30,7 @@ export class BlockProcessingQueue {
     }
 
     await this.queue.add(
-      `${this.configSvc.chain.chainIdL1}__BlockNumQueue`,
+      'BlockNumQueue',
       { blockNum, chain: this.configSvc.chain.chainIdL1, timestamp, retryCount: 0, maxRetries },
       { jobId, removeOnComplete: true, removeOnFail: true }
     );

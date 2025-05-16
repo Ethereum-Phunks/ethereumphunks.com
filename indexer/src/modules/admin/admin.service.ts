@@ -306,7 +306,7 @@ export class AdminService implements OnModuleInit {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-api-key': this.configSvc.relay.apiKey
+          'x-api-key': this.configSvc.api.privateKey
         },
         body: JSON.stringify({ hash: transfer.transaction_hash })
       });

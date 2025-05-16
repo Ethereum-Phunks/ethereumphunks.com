@@ -26,9 +26,7 @@ export class EvmService {
 
   constructor(
     private readonly configSvc: AppConfigService
-  ) {}
-
-  async onModuleInit() {
+  ) {
     this.publicClientL1 = this.createPublicClientL1();
     this.publicClientL2 = this.createPublicClientL2();
     this.walletClientL2 = this.createWalletClientL2();

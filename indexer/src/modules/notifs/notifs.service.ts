@@ -10,8 +10,8 @@ import { rarityData } from './constants/collections';
 
 import { ImageService } from './services/image.service';
 import { DiscordService } from './services/discord.service';
-import { Web3Service } from '../shared/services/web3.service';
 import { TwitterService } from './services/twitter.service';
+import { Web3Service } from '@/modules/shared/services/web3.service';
 
 import { AppConfigService } from '@/config/config.service';
 

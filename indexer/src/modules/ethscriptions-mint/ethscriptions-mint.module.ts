@@ -2,21 +2,21 @@ import { Module } from '@nestjs/common';
 import { ThrottlerModule, seconds } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
 import { HttpModule } from '@nestjs/axios';
-import { ConditionalModule } from '@nestjs/config';
 
-import { MintService } from './mint.service';
-import { MintController } from './mint.controller';
+import { EthscriptionsMintService } from './ethscriptions-mint.service';
+import { EthscriptionsMintController } from './ethscriptions-mint.controller';
 import { IPThrottlerGuard } from './guards/ip-throttle.guard';
 
 import { SharedModule } from '@/modules/shared/shared.module';
 import { TxPoolModule } from '@/modules/tx-pool/tx-pool.module';
 import { StorageModule } from '@/modules/storage/storage.module';
+import { AppConfigModule } from '@/config/config.module';
 
 import { DataService } from '@/modules/shared/services/data.service';
 
 @Module({
   controllers: [
-    MintController,
+    EthscriptionsMintController,
   ],
   imports: [
     ThrottlerModule.forRoot([{
@@ -24,13 +24,14 @@ import { DataService } from '@/modules/shared/services/data.service';
       ttl: seconds(30),
       limit: 60,
     }]),
+    AppConfigModule,
     SharedModule,
     TxPoolModule,
     HttpModule,
     StorageModule,
   ],
   providers: [
-    MintService,
+    EthscriptionsMintService,
     DataService,
     {
       provide: APP_GUARD,
@@ -38,6 +39,4 @@ import { DataService } from '@/modules/shared/services/data.service';
     },
   ],
 })
-export class MintModule {}
-
-ConditionalModule.registerWhen(MintModule, 'MINT');
+export class EthscriptionsMintModule {}

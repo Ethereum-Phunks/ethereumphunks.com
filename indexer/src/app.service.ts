@@ -23,14 +23,16 @@ export class AppService implements OnModuleInit {
   ) {}
 
   async onModuleInit() {
-    if (this.configSvc.features.indexer) {
-      Promise.all([
+    if (this.configSvc.features.queue) {
+      // Clear the queue
+      await Promise.all([
         this.blockQueue.clearQueue(),
         this.bridgeQueue.clearQueue()
-      ]).then(() => {
-        Logger.debug('Queue Cleared');
-        this.startIndexer();
-      });
+      ]);
+      Logger.debug('Queue Cleared');
+
+      // Start the indexer
+      this.startIndexer().catch(console.error);
     }
   }
 
