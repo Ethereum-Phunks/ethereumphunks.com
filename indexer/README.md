@@ -1,6 +1,6 @@
 # Ethereum Phunks Indexer
 
-A specialized blockchain indexer built with NestJS that primarily indexes ethscriptions curated by the Ethereum Phunks marketplace. The indexer strictly follows all rules and specifications set by the [Ethscriptions Protocol](https://ethscriptions.com), ensuring accurate and compliant ethscription processing. It processes and tracks marketplace-specific events including transfers, contract events, points, comments, and other marketplace activities. It supports both Ethereum Mainnet and Sepolia testnet.
+An EVM inscriptions indexer that indexes collections curated by the Ethereum Phunks marketplace. The indexer strictly follows all rules and specifications set by the [Ethscriptions Protocol](https://ethscriptions.com), ensuring accurate and compliant ethscription processing. It processes and tracks marketplace-specific events including transfers, contract events, points, comments, and other marketplace activities. It supports both Ethereum Mainnet and Sepolia testnet.
 
 ## Protocol Compliance
 
@@ -30,7 +30,7 @@ The indexer implements the complete Ethscriptions Protocol specification, includ
 - **Transaction Pool Monitoring**: Optional module for tracking transactions in the mempool
 - **Queue-based Processing**: Uses Bull queues for reliable block and event processing
 - **WebSocket Support**: Real-time updates via Socket.IO
-- **API Security**: Protected endpoints with API key middleware
+- **API**: Protected endpoints with API key middleware for admin tasks and other operations
 - **Modular Architecture**: Separated into distinct modules for different functionalities
 
 ## Core Modules
@@ -49,10 +49,11 @@ The indexer implements the complete Ethscriptions Protocol specification, includ
 6. **Notifications Module**: Manages system notifications
 7. **Transaction Pool Module**: Optional module for transaction pool monitoring
 8. **Mint Module**: Optional module for minting operations
+9. **Config Module**: Manages configuration settings
 
 ## Prerequisites
 
-- Node.js (v16 or higher)
+- Node.js (v20 or higher)
 - Yarn package manager
 - Redis (for queue management)
 - Supabase (for data storage)
@@ -65,39 +66,66 @@ The indexer implements the complete Ethscriptions Protocol specification, includ
    ```bash
    yarn install
    ```
-3. Copy `.env.example` to `.env` and configure your environment variables
-4. Build the project:
-   ```bash
-   yarn build
-   ```
 
 ## Configuration
 
-The indexer can be configured through environment variables. Key configurations include:
+The indexer uses a structured environment configuration system that requires specific `.env` files for different networks and services:
 
-- `CHAIN_ID`: The Ethereum chain ID to index
-- `INDEXER`: Enable/disable the indexer
-- `TX_POOL`: Enable/disable transaction pool monitoring
-- `MINT`: Enable/disable minting operations
-- Database and API credentials
-- Redis configuration
+### Environment Files
+- `.env.mainnet`: Mainnet-specific configuration
+- `.env.sepolia`: Sepolia testnet configuration
+- `.env.supabase`: Supabase database configuration
 
-## Running the Indexer
+### Required Environment Variables
 
-### Development Mode
+#### Network Configuration (in .env.mainnet and .env.sepolia)
+- `ALLOWED_ORIGINS`: Comma-separated list of allowed CORS origins
+- `CHAIN_ID_L1`: Ethereum chain ID (1 for mainnet, 11155111 for Sepolia)
+- `CHAIN_ID_L2`: Layer 2 chain ID
+- `PORT`: Service port (default: 3002 for mainnet, 3003 for Sepolia)
+
+#### Feature Flags
+- `QUEUE`: Enable/disable queue processing (0/1)
+- `TX_POOL`: Enable/disable transaction pool monitoring (0/1)
+- `MINT`: Enable/disable minting operations (0/1)
+- `DISCORD`: Enable/disable Discord integration (0/1)
+- `TWITTER`: Enable/disable Twitter integration (0/1)
+- `TELEGRAM`: Enable/disable Telegram integration (0/1)
+
+#### Supabase Configuration (in .env.supabase)
+- `SUPABASE_URL`: Development/Local Supabase project URL
+- `SUPABASE_SERVICE_ROLE`: Development/Local Supabase service role key
+- `SUPABASE_URL_PROD`: Production Supabase URL
+- `SUPABASE_SERVICE_ROLE_PROD`: Production service role key
+
+### Running the Indexer
+
+#### Development Mode (Local)
 ```bash
-yarn start:dev
+# For mainnet
+yarn start:dev:mainnet
+
+# For Sepolia
+yarn start:dev:sepolia
 ```
 
-### Production Mode
+#### Production Mode (PM2)
+
+Run all networks with PM2:
 ```bash
 yarn engage
 ```
 
-This will:
-1. Build the project
-2. Start the PM2 process manager
-3. Show logs
+Run individual networks:
+```bash
+# Mainnet only
+yarn build:mainnet && pm2 start pm2.config.js --only mainnet
+
+# Sepolia only
+yarn build:sepolia && pm2 start pm2.config.js --only sepolia
+```
+
+For more PM2 commands and configuration options, refer to the [PM2 Documentation](https://pm2.keymetrics.io/docs/usage/quick-start/).
 
 ## API Endpoints
 
@@ -109,19 +137,6 @@ The indexer provides several protected API endpoints:
 - `/bridge-l1/*`: Layer 1 bridge operations
 
 All POST endpoints are protected with API key middleware.
-
-## Architecture
-
-The indexer follows a modular architecture with the following key components:
-
-1. **App Service**: Core service that manages the indexer lifecycle
-2. **Block Processing Queue**: Handles block processing in the background
-3. **Ethscription Processing**: Primary service for handling ethscription events
-4. **Marketplace Event Processing**: Handles marketplace-specific events
-5. **Bridge Processing Queue**: Manages bridge-related operations
-6. **Web3 Service**: Interacts with the Ethereum blockchain
-7. **Storage Service**: Manages data persistence
-8. **Utility Service**: Provides common utilities
 
 ## Error Handling
 
@@ -143,6 +158,7 @@ Key dependencies include:
 
 ## Contributing
 
+Contributions are welcome. Please follow these steps:
 1. Fork the repository
 2. Create your feature branch
 3. Commit your changes
