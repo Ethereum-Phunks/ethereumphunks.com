@@ -1,6 +1,7 @@
 import { Module, forwardRef } from '@nestjs/common';
 import { HttpModule } from '@nestjs/axios';
 import { BullModule, getQueueToken } from '@nestjs/bull';
+import { Queue } from 'bull';
 
 import { NftModule } from '@/modules/nft/nft.module';
 import { SharedModule } from '@/modules/shared/shared.module';
@@ -20,17 +21,21 @@ import { BlockProcessingQueue } from '@/modules/queue/queues/block-processing.qu
 import { BridgeProcessingQueue } from '@/modules/queue/queues/bridge-processing.queue';
 
 import { BLOCK_PROCESSING_QUEUE, BRIDGE_PROCESSING_QUEUE } from './constants/queue.constants';
-import { Queue } from 'bull';
 
 @Module({
   imports: [
     AppConfigModule,
     HttpModule,
-    BullModule.forRoot({
-      redis: {
-        host: 'localhost',
-        port: 6379
-      }
+    BullModule.forRootAsync({
+      imports: [AppConfigModule],
+      useFactory: async (configService: AppConfigService) => ({
+        redis: {
+          host: 'localhost',
+          port: 6379,
+        },
+        prefix: `chain:${configService.chain.chainIdL1}`,
+      }),
+      inject: [AppConfigService],
     }),
     BullModule.registerQueue(
       {
