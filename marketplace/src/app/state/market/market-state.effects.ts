@@ -6,14 +6,14 @@ import { Store } from '@ngrx/store';
 
 import { combineLatest, distinctUntilChanged, filter, from, map, mergeMap, of, scan, switchMap, tap, withLatestFrom } from 'rxjs';
 
-import * as marketStateActions from '../actions/market-state.actions';
-import * as marketStateSelectors from '../selectors/market-state.selectors';
+import * as marketStateActions from '../market/market-state.actions';
+import * as marketStateSelectors from '../market/market-state.selectors';
 
-import * as dataStateActions from '../actions/data-state.actions';
-import * as dataStateSelectors from '../selectors/data-state.selectors';
+import * as dataStateActions from '../data/data-state.actions';
+import * as dataStateSelectors from '../data/data-state.selectors';
 
-import * as appStateActions from '../actions/app-state.actions';
-import * as appStateSelectors from '../selectors/app-state.selectors';
+import * as appStateActions from '../app/app-state.actions';
+import * as appStateSelectors from '../app/app-state.selectors';
 
 import { DataService } from '@/services/data.service';
 import { MarketState } from '@/models/market.state';

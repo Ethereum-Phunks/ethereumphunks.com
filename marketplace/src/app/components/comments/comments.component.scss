@@ -93,6 +93,9 @@ h2 {
         align-items: center;
         gap: 1rem;
 
+        text-decoration: none;
+        color: inherit;
+
         app-avatar {
           width: $avatar-size;
           height: $avatar-size;

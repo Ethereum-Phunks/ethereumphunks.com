@@ -1,8 +1,5 @@
 import { Injectable } from '@angular/core';
 import { Socket, SocketIoConfig } from 'ngx-socket-io';
-import { tap } from 'rxjs';
-
-import { environment } from 'src/environments/environment';
 
 export interface GasData {
   FastGasPrice: string;

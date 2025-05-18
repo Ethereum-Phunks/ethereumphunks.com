@@ -16,6 +16,7 @@ import { EthscriptionsMintModule } from '@/modules/ethscriptions-mint/ethscripti
 import { AdminModule } from '@/modules/admin/admin.module';
 import { ProcessingModule } from '@/modules/processing/processing.module';
 import { EvmModule } from '@/modules/evm/evm.module';
+import { AgentModule } from '@/modules/agent/agent.module';
 
 import { AppService } from '@/app.service';
 import { AppController } from '@/app.controller';
@@ -60,6 +61,7 @@ import { AppConfigModule } from '@/config/config.module';
       TxPoolModule,
       (config) => (!!Number(config['TX_POOL']))
     ),
+    AgentModule,
   ],
   controllers: [
     AppController

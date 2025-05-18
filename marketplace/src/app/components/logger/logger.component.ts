@@ -1,13 +1,19 @@
-import { AfterViewInit, ChangeDetectorRef, Component, ElementRef, effect, input, viewChild } from '@angular/core';
-import { DatePipe, LowerCasePipe } from '@angular/common';
-
-import { LogItem } from '@/services/socket.service';
+import { AfterViewInit, ChangeDetectorRef, Component, ElementRef, viewChild } from '@angular/core';
+import { DatePipe, LowerCasePipe, AsyncPipe, NgTemplateOutlet } from '@angular/common';
 
 import { TimeagoModule } from 'ngx-timeago';
+import { Store } from '@ngrx/store';
+import { tap } from 'rxjs';
+
+import { GlobalState } from '@/models/global-state';
+import { selectLogs } from '@/state/indexer-logs/indexer-logs.selectors';
+import { setLogsActive } from '@/state/indexer-logs/indexer-logs.actions';
 
 @Component({
   standalone: true,
   imports: [
+    AsyncPipe,
+    NgTemplateOutlet,
     LowerCasePipe,
     DatePipe,
     TimeagoModule
@@ -18,19 +24,16 @@ import { TimeagoModule } from 'ngx-timeago';
 })
 export class LoggerComponent implements AfterViewInit {
 
-  logs = input<LogItem[] | null>();
-
   scroller = viewChild<ElementRef<HTMLDivElement>>('scroller');
 
+  logs$ = this.store.select(selectLogs).pipe(
+    tap(() => this.scrollToBottom())
+  );
+
   constructor(
+    private store: Store<GlobalState>,
     private cdr: ChangeDetectorRef
-  ) {
-    effect(() => {
-      const logs = this.logs();
-      if (!logs) return;
-      this.scrollToBottom();
-    });
-  }
+  ) {}
 
   ngAfterViewInit(): void {
     this.scrollToBottom();
@@ -43,5 +46,9 @@ export class LoggerComponent implements AfterViewInit {
       this.scroller()!.nativeElement.scrollTop = this.scroller()!.nativeElement.scrollHeight;
       this.cdr.detectChanges();
     }, 100);
+  }
+
+  closeLogger(): void {
+    this.store.dispatch(setLogsActive({ logsActive: false }));
   }
 }

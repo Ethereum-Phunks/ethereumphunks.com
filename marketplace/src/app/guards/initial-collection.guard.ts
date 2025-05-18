@@ -4,7 +4,7 @@ import { CanActivate, Router } from '@angular/router';
 import { Observable, filter, map, take } from 'rxjs';
 import { Store } from '@ngrx/store';
 
-import { selectConfig } from '@/state/selectors/app-state.selectors';
+import { selectConfig } from '@/state/app/app-state.selectors';
 import { GlobalState } from '@/models/global-state';
 
 @Injectable({

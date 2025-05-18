@@ -114,11 +114,6 @@ export const selectIsSearchResult = createSelector(
   (appState: AppState) => appState.isSearchResult
 );
 
-export const selectModalActive = createSelector(
-  selectAppState,
-  (appState: AppState) => appState.modalActive
-);
-
 export const selectCollectionsMenuActive = createSelector(
   selectAppState,
   (appState: AppState) => appState.collectionsMenuActive

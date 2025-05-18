@@ -5,38 +5,6 @@
   display: flex;
   align-items: center;
   gap: 1rem;
-  background-color: rgba(var(--black), 1);
-  padding: 1rem 1.5rem;
-
-  height: 4.5rem;
-}
-
-.logger {
-
-  position: fixed;
-  bottom: 4.5rem;
-  right: 0;
-  z-index: 1000;
-
-  .title-bar {
-    display: flex;
-    align-items: center;
-    padding: .5rem 1rem;
-
-    font-family: var(--secondary-font-stack);
-    font-weight: 400;
-    font-size: 1rem;
-
-    color: rgba(var(--black), 1);
-    background-color: rgba(var(--base-color), 1);
-  }
-
-  app-logger {
-    max-width: 60rem;
-    height: 30rem;
-    border: .2rem solid rgba(var(--base-color), 1);
-    border-top: none;
-  }
 }
 
 .chat-button {

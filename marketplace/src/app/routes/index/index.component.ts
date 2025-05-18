@@ -19,9 +19,9 @@ import { ThemeService } from '@/services/theme.service';
 
 import { GlobalState } from '@/models/global-state';
 
-import * as dataStateSelectors from '@/state/selectors/data-state.selectors';
-import * as appStateSelectors from '@/state/selectors/app-state.selectors';
-import * as marketStateSelectors from '@/state/selectors/market-state.selectors';
+import * as dataStateSelectors from '@/state/data/data-state.selectors';
+import * as appStateSelectors from '@/state/app/app-state.selectors';
+import * as marketStateSelectors from '@/state/market/market-state.selectors';
 import { tap } from 'rxjs';
 
 @Component({

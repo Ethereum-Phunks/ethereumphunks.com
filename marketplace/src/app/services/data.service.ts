@@ -18,10 +18,10 @@ import { createClient, RealtimePostgresUpdatePayload, RealtimePostgresInsertPayl
 
 import { Observable, of, from, forkJoin, firstValueFrom, EMPTY, timer, merge, filter, share, catchError, debounceTime, expand, map, reduce, switchMap, takeWhile, tap, shareReplay } from 'rxjs';
 
-import { environment } from 'src/environments/environment';
+import { environment } from '@environments/environment';
 
-import * as dataStateActions from '@/state/actions/data-state.actions';
-import * as appStateActions from '@/state/actions/app-state.actions';
+import * as dataStateActions from '@/state/data/data-state.actions';
+import * as appStateActions from '@/state/app/app-state.actions';
 
 const supabaseUrl = environment.supabaseUrl;
 const supabaseKey = environment.supabaseKey;

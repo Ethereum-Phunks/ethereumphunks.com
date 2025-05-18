@@ -1,7 +1,7 @@
 import { DataState } from '@/models/data.state';
 import { Action, ActionReducer, createReducer, on } from '@ngrx/store';
 
-import * as actions from '../actions/data-state.actions';
+import * as actions from '../data/data-state.actions';
 
 export const initialState: DataState = {
   usd: null,

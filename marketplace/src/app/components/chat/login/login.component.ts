@@ -4,7 +4,7 @@ import { Store } from '@ngrx/store';
 import { ChatService } from '@/services/chat.service';
 
 import { GlobalState } from '@/models/global-state';
-import { setChat } from '@/state/actions/chat.actions';
+import { setChat } from '@/state/chat/chat.actions';
 
 @Component({
   selector: 'app-login',
@@ -25,7 +25,7 @@ export class LoginComponent {
       const signedIn = await this.chatSvc.signInToXmtp();
       this.store.dispatch(setChat({ active: signedIn }));
     } catch (error) {
-      console.error('Error signing in to XMTP', error);
+      // console.error('Error signing in to XMTP', error);
     }
   }
 }

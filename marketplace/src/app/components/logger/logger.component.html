@@ -1,0 +1,20 @@
+<button class="close-wrapper" (click)="closeLogger()">
+  <ng-template [ngTemplateOutlet]="closeIcon" />
+</button>
+
+<div class="title-bar">
+  <h2>Indexer Logs</h2>
+</div>
+
+<div #scroller class="scroller-wrapper">
+  @for (log of (logs$ | async); track log.timestamp + i; let i = $index) {
+    <div class="log-item" [class]="log.type | lowercase">
+      <span class="timestamp">{{ log.timestamp | date : 'HH:mm:ss' }}</span>
+      <span class="param">{{ log.optionalParams[0] ? '[' + log.optionalParams[0] + ']' : '' }}</span> {{ log.message }}
+    </div>
+  }
+</div>
+
+<ng-template #closeIcon>
+  <svg height="15" viewBox="0 0 15 15" width="15" xmlns="http://www.w3.org/2000/svg"><g fill="rgba(var(--dark-grey), 1)" fill-rule="evenodd"><path d="m6 6h3v3h-3z"/><path d="m3 3h3v3h-3z"/><path d="m3 9h3v3h-3z"/><path d="m0 0h3v3h-3z"/><path d="m0 12h3v3h-3z"/><path d="m12 3h-3v3h3z"/><path d="m12 9h-3v3h3z"/><path d="m15 0h-3v3h3z"/><path d="m15 12h-3v3h3z"/></g></svg>
+</ng-template>

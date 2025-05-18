@@ -1,24 +1,24 @@
-import { Component, Input } from '@angular/core';
+import { Component, signal } from '@angular/core';
+import { AsyncPipe, CommonModule } from '@angular/common';
+
+import { Store } from '@ngrx/store';
+import { Observable, map, switchMap } from 'rxjs';
 
 import { ConversationComponent } from './conversation/conversation.component';
 import { ConversationsComponent } from './conversations/conversations.component';
 import { LoginComponent } from './login/login.component';
 
-import { selectChatActive, selectChatConnected, selectChatState } from '@/state/selectors/chat.selectors';
+import { selectChatConnected, selectChatState } from '@/state/chat/chat.selectors';
+import { selectConfig } from '@/state/app/app-state.selectors';
+
+import { ViewType } from '@/models/chat';
 import { GlobalState } from '@/models/global-state';
-import { Store } from '@ngrx/store';
-
-import { Observable, map, switchMap, withLatestFrom } from 'rxjs';
-import { AsyncPipe } from '@angular/common';
-import { selectConfig } from '@/state/selectors/app-state.selectors';
-
-// import anime from 'animejs';
-
-type View = 'conversations' | 'conversation' | 'login' | 'disabled';
+import { setChat } from '@/state/chat/chat.actions';
 
 @Component({
   standalone: true,
   imports: [
+    CommonModule,
     AsyncPipe,
 
     LoginComponent,
@@ -31,15 +31,14 @@ type View = 'conversations' | 'conversation' | 'login' | 'disabled';
 })
 export class ChatComponent {
 
-  activeView$: Observable<View> = this.store.select(selectChatState).pipe(
+  activeViewTitle = signal<string | null>(null);
+
+  activeView$: Observable<ViewType> = this.store.select(selectChatState).pipe(
     switchMap(({ toAddress }) => {
       return this.store.select(selectConfig).pipe(
         switchMap((config) => {
           return this.store.select(selectChatConnected).pipe(
             map((connected) => {
-              // console.log({ toAddress, connected, config });
-
-              // if (!config.chat) return 'disabled';
               if (connected) return toAddress ? 'conversation' : 'conversations';
               return 'login';
             })
@@ -53,13 +52,11 @@ export class ChatComponent {
     private store: Store<GlobalState>,
   ) {}
 
-  // setView() {
-  //   anime.timeline({
-  //     easing: 'cubicBezier(0.785, 0.135, 0.15, 0.86)',
-  //     duration: 400,
-  //   }).add({
-  //     targets: this.el?.nativeElement,
-  //     translateX: this.active ? '0' : '100%',
-  //   });
-  // }
+  setChatTitle(title: string | null) {
+    this.activeViewTitle.set(title);
+  }
+
+  closeChat() {
+    this.store.dispatch(setChat({ active: false }));
+  }
 }

@@ -1,12 +1,14 @@
-<div class="comments-header">
-  <h2 i18n>Comments</h2>
-</div>
+@if (showTitle()) {
+  <div class="comments-header">
+    <h2 i18n>Comments</h2>
+  </div>
+}
 
 @if ((connectedAddress$ | async)) {
   <div class="main-comment-form-wrapper">
     <ng-container
       *ngTemplateOutlet="commentForm; context: {
-        topic: hashId(),
+        topic: mainTopic(),
         placeholder: 'Leave a comment...',
         help: true
       }"
@@ -15,7 +17,13 @@
 }
 
 <div class="comments-wrapper">
-  <ng-container *ngTemplateOutlet="commentsList; context: { $implicit: comments$ | async }" />
+  @if (comments$ | async; as comments) {
+    <ng-container *ngTemplateOutlet="commentsList; context: { $implicit: comments }" />
+  } @else {
+    <div class="empty">
+      <p>Loading...</p>
+    </div>
+  }
 </div>
 
 <ng-template #commentsList let-comments>
@@ -27,10 +35,14 @@
         [class.has-more]="comment.replies?.length">
 
         <div class="comment-header">
-          <span class="author">
+          <a
+            class="author"
+            [routerLink]="['/', 'curated', (activeCollection$ | async)?.slug, 'market', 'owned']"
+            [queryParams]="{ address: comment.from }">
+
             <app-avatar [address]="comment.from" />
             <app-address [address]="comment.from" />
-          </span>
+          </a>
 
           <span class="date">{{ comment.createdAt | date }}</span>
         </div>
@@ -121,7 +133,7 @@
         <button
           tippy
           data-tippy-placement="top"
-          data-tippy-content="TIC (Transaction Inscribed Comments) enables on-chain commenting capabilities through Ethereum transaction calldata. It provides a standardized way to associate comments with blockchain entities such as addresses, transaction hashes, or other on-chain identifiers. <a href='https://github.com/chopperdaddy/ethereumphunks.com/blob/sepolia/tic-protocol.md' target='_blank'>Learn more</a>."
+          data-tippy-content="TIC (Transaction Inscribed Comments) enables on-chain commenting capabilities through Ethereum transaction calldata. It provides a standardized way to associate comments with blockchain entities such as addresses, transaction hashes, or other on-chain identifiers. <a href='https://github.com/Ethereum-Phunks/tic-protocol' target='_blank'>Learn more</a>."
           class="help-button">
 
           ?

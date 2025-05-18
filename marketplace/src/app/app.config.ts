@@ -13,17 +13,20 @@ import { provideEffects } from '@ngrx/effects';
 import { provideRouterStore, routerReducer } from '@ngrx/router-store';
 import { provideStoreDevtools } from '@ngrx/store-devtools';
 
-import { appStateReducer } from '@/state/reducers/app-state.reducers';
-import { dataStateReducer } from '@/state/reducers/data-state.reducers';
-import { marketStateReducer } from '@/state/reducers/market-state.reducers';
-import { notificationReducer } from '@/state/reducers/notification.reducers';
-import { chatReducer } from '@/state/reducers/chat.reducers';
+import { appStateReducer } from '@/state/app/app-state.reducers';
+import { dataStateReducer } from '@/state/data/data-state.reducers';
+import { marketStateReducer } from '@/state/market/market-state.reducers';
+import { notificationReducer } from '@/state/notification/notification.reducers';
+import { chatReducer } from '@/state/chat/chat.reducers';
+import { modalReducer } from '@/state/modal/modal.reducers';
+import { indexerLogsReducer } from '@/state/indexer-logs/indexer-logs.reducers';
 
-import { AppStateEffects } from '@/state/effects/app-state.effects';
-import { DataStateEffects } from '@/state/effects/data-state.effects';
-import { MarketStateEffects } from '@/state/effects/market-state.effects';
-import { NotificationEffects } from '@/state/effects/notification.effects';
-import { ChatEffects } from '@/state/effects/chat.effects';
+import { AppStateEffects } from '@/state/app/app-state.effects';
+import { DataStateEffects } from '@/state/data/data-state.effects';
+import { MarketStateEffects } from '@/state/market/market-state.effects';
+import { NotificationEffects } from '@/state/notification/notification.effects';
+import { ChatEffects } from '@/state/chat/chat.effects';
+import { IndexerLogsEffects } from '@/state/indexer-logs/indexer-logs.effects';
 
 import { TokenIdParsePipe } from '@/pipes/token-id-parse.pipe';
 import { WeiToEthPipe } from '@/pipes/wei-to-eth.pipe';
@@ -43,14 +46,17 @@ export const config = {
       marketState: marketStateReducer,
       notificationState: notificationReducer,
       chatState: chatReducer,
-      router: routerReducer
+      modalState: modalReducer,
+      indexerLogsState: indexerLogsReducer,
+      router: routerReducer,
     }),
     provideEffects([
       AppStateEffects,
       DataStateEffects,
       MarketStateEffects,
       NotificationEffects,
-      ChatEffects
+      ChatEffects,
+      IndexerLogsEffects
     ]),
     provideStoreDevtools({
       maxAge: 25,

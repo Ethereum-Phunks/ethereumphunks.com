@@ -3,7 +3,7 @@
 // import { ApolloClientOptions, InMemoryCache } from '@apollo/client/core';
 // import { HttpLink } from 'apollo-angular/http';
 
-// import { environment } from 'src/environments/environment';
+// import { environment } from '@environments/environment';
 
 // const uri = environment.graphURI;
 

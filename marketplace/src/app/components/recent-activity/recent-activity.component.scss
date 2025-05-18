@@ -1,5 +1,6 @@
 @use 'abstracts/variables' as *;
 @use 'abstracts/mixins' as *;
+@use 'sass:list';
 
 :host {
   display: block;
@@ -140,7 +141,7 @@ section {
     @each $events, $color in $event-color-groups {
       $selectors: ();
       @each $event in $events {
-        $selectors: append($selectors, "&.#{$event}", "comma");
+        $selectors: list.append($selectors, "&.#{$event}", "comma");
       }
 
       #{$selectors} {

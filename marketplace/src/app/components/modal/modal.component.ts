@@ -1,10 +1,14 @@
-import { Component, ElementRef, Input, OnInit } from '@angular/core';
+import { Component, input } from '@angular/core';
 import { CommonModule } from '@angular/common';
+
+import { toObservable, toSignal } from '@angular/core/rxjs-interop';
+
 import { Store } from '@ngrx/store';
+import { filter, switchMap, tap } from 'rxjs';
 
 import { GlobalState } from '@/models/global-state';
-
-import { setChat } from '@/state/actions/chat.actions';
+import { selectModalById, selectIsModalOpen } from '@/state/modal/modal.selectors';
+import { closeModal } from '@/state/modal/modal.actions';
 
 @Component({
   standalone: true,
@@ -15,22 +19,35 @@ import { setChat } from '@/state/actions/chat.actions';
   templateUrl: './modal.component.html',
   styleUrls: ['./modal.component.scss'],
   host: {
-    '[class.active]': 'active'
+    '[class.active]': 'isOpen()'
   }
 })
-export class ModalComponent implements OnInit {
+export class ModalComponent {
 
-  @Input() width!: number;
-  @Input() height!: number;
+  modalId = input.required<string>();
+  modalId$ = toObservable(this.modalId);
+
+  preventBackdropClose = input<boolean>(false);
+
+  isOpen$ = this.modalId$.pipe(
+    filter((id: string) => !!id),
+    switchMap((id: string) => this.store.select(selectIsModalOpen(id))),
+    tap((isOpen: boolean) => console.log({isOpen})),
+  );
+  isOpen = toSignal(this.isOpen$);
+
+  modalConfig$ = this.modalId$.pipe(
+    filter((id: string) => !!id),
+    switchMap((id: string) => this.store.select(selectModalById(id))),
+    tap((config) => console.log({config})),
+  );
+  modalConfig = toSignal(this.modalConfig$);
 
   constructor(
-    private store: Store<GlobalState>,
-    private el: ElementRef
+    private store: Store<GlobalState>
   ) {}
 
-  ngOnInit(): void {}
-
   close(): void {
-    this.store.dispatch(setChat({ active: false }));
+    this.store.dispatch(closeModal({ modalId: this.modalId() }));
   }
 }

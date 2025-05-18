@@ -29,6 +29,7 @@
     "@nestjs/websockets": "^10.3.8",
     "@openzeppelin/merkle-tree": "^1.0.5",
     "@supabase/supabase-js": "^2.32.0",
+    "@xmtp/node-sdk": "^2.0.9",
     "agent-twitter-client": "^0.0.17",
     "axios": "^1.6.3",
     "bull": "^4.11.4",

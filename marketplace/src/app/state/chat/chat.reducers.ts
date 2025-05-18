@@ -1,7 +1,7 @@
 import { AppState, ChatState } from '@/models/global-state';
 import { Action, ActionReducer, createReducer, on } from '@ngrx/store';
 
-import * as actions from '../actions/chat.actions';
+import * as actions from './chat.actions';
 
 export const initialState: ChatState = {
   active: false,

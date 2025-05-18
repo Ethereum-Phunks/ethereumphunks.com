@@ -1,8 +1,8 @@
 <div
   class="modal"
   [style]="{
-    'max-width': width ? width + 'px' : 'auto',
-    'max-height': height ? height + 'px' : 'auto',
+    'max-width': modalConfig()?.config?.width ? modalConfig()?.config?.width + 'px' : 'auto',
+    'max-height': modalConfig()?.config?.height ? modalConfig()?.config?.height + 'px' : 'auto',
   }">
   <button class="close" (click)="close()">
     <ng-template [ngTemplateOutlet]="closeIcon" />

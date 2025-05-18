@@ -3,8 +3,8 @@ import { Action, ActionReducer, createReducer, on } from '@ngrx/store';
 
 import { Theme } from '@/models/theme';
 
-import * as actions from '../actions/app-state.actions';
-import { environment } from 'src/environments/environment';
+import * as actions from '../app/app-state.actions';
+import { environment } from '@environments/environment';
 
 export const initialState: AppState = {
   connected: false,
@@ -35,7 +35,6 @@ export const initialState: AppState = {
   searchHistoryActive: false,
   isSearchResult: false,
 
-  modalActive: false,
   collectionsMenuActive: false,
 
   config: {
@@ -46,7 +45,10 @@ export const initialState: AppState = {
     defaultCollection: null
   },
 
-  linkedAccounts: []
+  linkedAccounts: [],
+
+  logsActive: false,
+  logs: []
 };
 
 export const appStateReducer: ActionReducer<AppState, Action> = createReducer(
@@ -227,13 +229,6 @@ export const appStateReducer: ActionReducer<AppState, Action> = createReducer(
       isSearchResult
     };
     return setIsSearchResult
-  }),
-  on(actions.setModalActive, (state, { modalActive }) => {
-    const setModalActive = {
-      ...state,
-      modalActive
-    };
-    return setModalActive
   }),
   on(actions.setCollectionsMenuActive, (state, { collectionsMenuActive }) => {
     const setCollectionsMenuActive = {

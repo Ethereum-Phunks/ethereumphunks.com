@@ -3,7 +3,7 @@ import { Action, ActionReducer, createReducer, on } from '@ngrx/store';
 import { MarketState } from '@/models/market.state';
 import { Phunk } from '@/models/db';
 
-import * as actions from '../actions/market-state.actions';
+import * as actions from '../market/market-state.actions';
 
 export const initialState: MarketState = {
   marketType: null,

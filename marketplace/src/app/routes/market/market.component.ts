@@ -27,17 +27,19 @@ import { WeiToEthPipe } from '@/pipes/wei-to-eth.pipe';
 import { CalcPipe } from '@/pipes/calculate.pipe';
 import { FormatCashPipe } from '@/pipes/format-cash.pipe';
 
-import { setChat } from '@/state/actions/chat.actions';
-import * as appStateSelectors from '@/state/selectors/app-state.selectors';
-import * as appStateActions from '@/state/actions/app-state.actions';
-import * as dataStateSelectors from '@/state/selectors/data-state.selectors';
-import * as marketStateSelectors from '@/state/selectors/market-state.selectors';
-import * as marketStateActions from '@/state/actions/market-state.actions';
-import { upsertNotification } from '@/state/actions/notification.actions';
+import * as appStateSelectors from '@/state/app/app-state.selectors';
+import * as appStateActions from '@/state/app/app-state.actions';
+import * as dataStateSelectors from '@/state/data/data-state.selectors';
+import * as marketStateSelectors from '@/state/market/market-state.selectors';
+import * as marketStateActions from '@/state/market/market-state.actions';
 
-import { environment } from 'src/environments/environment';
+import { upsertNotification } from '@/state/notification/notification.actions';
+
+import { environment } from '@environments/environment';
 
 import { filter, map, tap } from 'rxjs';
+import { openModal } from '@/state/modal/modal.actions';
+import { setChat } from '@/state/chat/chat.actions';
 
 const defaultActionState = {
   canList: false,
@@ -173,7 +175,7 @@ export class MarketComponent {
     public dataSvc: DataService,
     public web3Svc: Web3Service,
     private utilSvc: UtilService,
-    private fb: FormBuilder
+    private fb: FormBuilder,
   ) {}
 
   setSort($event: any): void {
@@ -307,7 +309,7 @@ export class MarketComponent {
     };
 
     this.store.dispatch(upsertNotification({ notification }));
-    this.closeModal();
+    this.closeSlideout();
 
     try {
       let toAddress: string | null = this.transferAddress.value;
@@ -367,7 +369,7 @@ export class MarketComponent {
     };
 
     this.store.dispatch(upsertNotification({ notification }));
-    this.closeModal();
+    this.closeSlideout();
 
     try {
       const hash = await this.web3Svc.batchOfferPhunkForSale(
@@ -428,7 +430,7 @@ export class MarketComponent {
     }
 
     this.store.dispatch(upsertNotification({ notification }));
-    this.closeModal();
+    this.closeSlideout();
 
     try {
       if (!hashIds?.length || hex === '0x') throw new Error('Invalid selection');
@@ -484,7 +486,7 @@ export class MarketComponent {
     };
 
     this.store.dispatch(upsertNotification({ notification }));
-    this.closeModal();
+    this.closeSlideout();
 
     try {
       if (!hashIds?.length) throw new Error('Invalid selection');
@@ -540,7 +542,7 @@ export class MarketComponent {
     };
 
     this.store.dispatch(upsertNotification({ notification }));
-    this.closeModal();
+    this.closeSlideout();
 
     try {
       if (!hashIds?.length) throw new Error('One or more items are no longer for sale.');
@@ -616,7 +618,7 @@ export class MarketComponent {
     this.actionsState = defaultActionState;
   }
 
-  closeModal(): void {
+  closeSlideout(): void {
     this.store.dispatch(appStateActions.setSlideoutActive({ slideoutActive: false }));
   }
 
@@ -635,8 +637,11 @@ export class MarketComponent {
     this.selectedPhunksFormArray = this.fb.array([]);
   }
 
-  setChat(toAddress: string) {
-    this.store.dispatch(setChat({ active: true, toAddress }));
+  openChat(toAddress: string) {
+    this.store.dispatch(setChat({
+      active: true,
+      toAddress,
+    }));
   }
 
   // Submissions

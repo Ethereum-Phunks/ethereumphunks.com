@@ -5,3 +5,5 @@ export interface Message {
   sender: string;
   self: boolean;
 }
+
+export type ViewType = 'conversations' | 'conversation' | 'login' | 'disabled';

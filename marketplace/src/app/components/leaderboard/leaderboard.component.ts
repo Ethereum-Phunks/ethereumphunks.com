@@ -9,7 +9,7 @@ import { WalletAddressDirective } from '@/directives/wallet-address.directive';
 
 import { GlobalState } from '@/models/global-state';
 
-import * as dataStateSelectors from '@/state/selectors/data-state.selectors';
+import * as dataStateSelectors from '@/state/data/data-state.selectors';
 import { RouterModule } from '@angular/router';
 
 @Component({

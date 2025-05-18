@@ -17,13 +17,13 @@ import { CollectionsComponent } from '@/components/collections/collections.compo
 
 import { WalletAddressDirective } from '@/directives/wallet-address.directive';
 
-import * as appStateActions from '@/state/actions/app-state.actions';
-import * as dataStateActions from '@/state/actions/data-state.actions';
+import * as appStateActions from '@/state/app/app-state.actions';
+import * as dataStateActions from '@/state/data/data-state.actions';
 
-import * as appStateSelectors from '@/state/selectors/app-state.selectors';
-import * as notificationSelectors from '@/state/selectors/notification.selectors';
-import * as dataStateSelectors from '@/state/selectors/data-state.selectors';
-import * as marketStateSelectors from '@/state/selectors/market-state.selectors';
+import * as appStateSelectors from '@/state/app/app-state.selectors';
+import * as notificationSelectors from '@/state/notification/notification.selectors';
+import * as dataStateSelectors from '@/state/data/data-state.selectors';
+import * as marketStateSelectors from '@/state/market/market-state.selectors';
 
 import { FormatCashPipe } from '@/pipes/format-cash.pipe';
 
@@ -31,7 +31,7 @@ import { from, map, switchMap, tap } from 'rxjs';
 
 import anime from 'animejs';
 
-import { environment } from '@/../environments/environment';
+import { environment } from '@environments/environment';
 
 @Component({
   selector: 'app-menu',

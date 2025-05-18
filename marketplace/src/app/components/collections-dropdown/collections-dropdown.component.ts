@@ -5,10 +5,10 @@ import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { Store } from '@ngrx/store';
 import { GlobalState } from '@/models/global-state';
 
-import * as dataStateSelectors from '@/state/selectors/data-state.selectors';
+import * as dataStateSelectors from '@/state/data/data-state.selectors';
 
-import * as appStateSelectors from '@/state/selectors/app-state.selectors';
-import * as appStateActions from '@/state/actions/app-state.actions';
+import * as appStateSelectors from '@/state/app/app-state.selectors';
+import * as appStateActions from '@/state/app/app-state.actions';
 
 import { firstValueFrom } from 'rxjs';
 

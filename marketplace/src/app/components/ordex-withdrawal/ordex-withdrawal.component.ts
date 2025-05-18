@@ -10,7 +10,7 @@ import { catchError, expand, EMPTY, firstValueFrom, map, Observable, of, reduce,
 
 import { OrdexMarketABI } from '@/abi/OrdexMarket';
 
-import { selectWalletAddress } from '@/state/selectors/app-state.selectors';
+import { selectWalletAddress } from '@/state/app/app-state.selectors';
 import { WalletAddressDirective } from '@/directives/wallet-address.directive';
 
 interface EthscriptionResponse {

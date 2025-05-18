@@ -11,14 +11,14 @@ import { Event } from '@/models/db';
 
 import { EMPTY, catchError, delay, map, of, switchMap, tap, withLatestFrom } from 'rxjs';
 
-import { environment } from 'src/environments/environment';
+import { environment } from '@environments/environment';
 import { DataService } from '@/services/data.service';
 
-import { selectNotifHoverState, selectNotifications } from '../selectors/notification.selectors';
-import { selectCurrentBlock, selectWalletAddress } from '../selectors/app-state.selectors';
+import { selectNotifHoverState, selectNotifications } from '../notification/notification.selectors';
+import { selectCurrentBlock, selectWalletAddress } from '../app/app-state.selectors';
 
-import { setCurrentBlock, setWalletAddress } from '../actions/app-state.actions';
-import { removeNotification, setNotifications, upsertNotification } from '../actions/notification.actions';
+import { setCurrentBlock, setWalletAddress } from '../app/app-state.actions';
+import { removeNotification, setNotifications, upsertNotification } from '../notification/notification.actions';
 import { UtilService } from '@/services/util.service';
 
 
