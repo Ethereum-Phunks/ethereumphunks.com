@@ -36,12 +36,15 @@
           height: 100%;
           cursor: pointer;
 
-          .check {
+          &:before {
             position: absolute;
             top: .8rem;
             right: .8rem;
+            bottom: auto;
+            left: auto;
             z-index: 2;
 
+            border: none;
             box-shadow: 0 0 0 .3rem rgba(var(--background), 1);
             background-color: rgba(var(--background), .3);
 
@@ -53,7 +56,7 @@
         &:checked {
           & + label {
             // border-color: rgba(var(--pink), 1);
-            .check {
+            &:before {
               background-color: rgba(var(--pink), 1);
             }
           }
