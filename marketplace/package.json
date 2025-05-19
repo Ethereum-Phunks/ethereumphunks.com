@@ -1,7 +1,6 @@
 {
   "name": "etherphunks-market",
   "version": "2.1.0",
-  "type": "module",
   "scripts": {
     "prebuild": "node prebuild.js",
     "ng": "ng",
@@ -70,6 +69,7 @@
     "zone.js": "~0.15.0"
   },
   "devDependencies": {
+    "@angular-builders/custom-esbuild": "^19.1.0",
     "@angular-devkit/build-angular": "^19.2.10",
     "@angular/build": "19.2.10",
     "@angular/cli": "19.2.10",
@@ -82,6 +82,8 @@
     "@types/react": "^18.3.3",
     "@types/tinycolor2": "^1.4.3",
     "@types/uuid": "^9.0.8",
-    "typescript": "5.5.4"
+    "esbuild-wasm": "^0.25.4",
+    "typescript": "5.5.4",
+    "vite": "^6.3.5"
   }
 }

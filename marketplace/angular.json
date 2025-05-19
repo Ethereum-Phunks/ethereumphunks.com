@@ -18,7 +18,7 @@
       "prefix": "app",
       "architect": {
         "build": {
-          "builder": "@angular/build:application",
+          "builder": "@angular-builders/custom-esbuild:application",
           "options": {
             "optimization": true,
             "outputPath": {
@@ -48,6 +48,13 @@
             "scripts": [],
             "serviceWorker": "ngsw-config.json",
             "webWorkerTsConfig": "tsconfig.worker.json",
+            "allowedCommonJsDependencies": [
+              "@xmtp/xmtp-js",
+              "@xmtp/proto",
+              "protobufjs/minimal",
+              "protobufjs"
+            ],
+            "preserveSymlinks": true,
             "browser": "src/main.ts"
           },
           "configurations": {
@@ -77,7 +84,7 @@
             },
             "sepolia": {
               "outputPath": {
-                "base": "dist/etherphunks-market-sepolia_may8"
+                "base": "dist/etherphunks-market-sepolia_may18"
               },
               "budgets": [
                 {
@@ -105,7 +112,7 @@
             },
             "mainnet": {
               "outputPath": {
-                "base": "dist/etherphunks-market-mainnet_may8"
+                "base": "dist/etherphunks-market-mainnet_may18"
               },
               "budgets": [
                 {
@@ -135,7 +142,7 @@
           "defaultConfiguration": "production"
         },
         "serve": {
-          "builder": "@angular/build:dev-server",
+          "builder": "@angular-builders/custom-esbuild:dev-server",
           "configurations": {
             "dev-sepolia": {
               "buildTarget": "etherphunks-market:build:dev-sepolia"
