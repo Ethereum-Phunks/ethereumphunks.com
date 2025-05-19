@@ -1,5 +1,5 @@
 import { defineConfig, loadEnv } from 'vite';
-import { resolve } from 'path';
+import { join, resolve } from 'path';
 
 import fs from 'fs';
 import moment from 'moment';
@@ -9,35 +9,38 @@ import angular from '@analogjs/vite-plugin-angular';
 // https://vitejs.dev/config/
 export default defineConfig(({ command, mode }) => {
 
-  console.log({ command, mode })
-
+  const chainName = mode.split('-')[1] || mode;
   const timestamp = moment().format('MMMD').toLowerCase();
+
+  console.log({ command, mode, chainName })
 
   // Environment configuration based on mode
   const envConfig = {
     'dev-sepolia': {
       envFile: `environment.${mode}.ts`,
       optimization: false,
-      sourcemap: true
+      sourcemap: true,
+      indexHtml: resolve(__dirname, `src/index.${chainName}.html`)
     },
     'dev-mainnet': {
       envFile: `environment.${mode}.ts`,
       optimization: false,
-      sourcemap: true
+      sourcemap: true,
+      indexHtml: resolve(__dirname, `src/index.${chainName}.html`)
     },
     'sepolia': {
       outDir: resolve(__dirname, `dist/etherphunks-market-${mode}_${timestamp}`),
       envFile: `environment.${mode}.ts`,
       optimization: true,
       sourcemap: false,
-      indexHtml: resolve(__dirname, `src/index.${mode}.html`)
+      indexHtml: resolve(__dirname, `src/index.${chainName}.html`)
     },
     'mainnet': {
       outDir: resolve(__dirname, `dist/etherphunks-market-${mode}_${timestamp}`),
       envFile: `environment.${mode}.ts`,
       optimization: true,
       sourcemap: false,
-      indexHtml: resolve(__dirname, `src/index.${mode}.html`)
+      indexHtml: resolve(__dirname, `src/index.${chainName}.html`)
     }
   };
 
@@ -56,7 +59,7 @@ export default defineConfig(({ command, mode }) => {
   return {
     root: 'src',
     base: '/',
-    publicDir: 'public',
+    publicDir: '../public',
 
     resolve: {
       mainFields: ['module', 'browser', 'main'],
@@ -113,7 +116,18 @@ export default defineConfig(({ command, mode }) => {
             resolve(__dirname, 'node_modules/@ng-select/ng-select/scss')
           ]
         }
-      })
+      }),
+      {
+        name: 'rename-html-after-build',
+        closeBundle() {
+          if (command !== 'build') return;
+          const outDir = currentEnv.outDir;
+          const htmlName = `index.${chainName}.html`;
+          const src = join(outDir, htmlName);
+          const dest = join(outDir, 'index.html');
+          if (fs.existsSync(src)) fs.copyFileSync(src, dest);
+        }
+      }
     ],
 
     server: {
