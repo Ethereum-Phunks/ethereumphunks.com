@@ -1,40 +1,43 @@
 import { defineConfig, loadEnv } from 'vite';
 import { resolve } from 'path';
-import angular from '@analogjs/vite-plugin-angular';
+
 import fs from 'fs';
+import moment from 'moment';
+
+import angular from '@analogjs/vite-plugin-angular';
 
 // https://vitejs.dev/config/
 export default defineConfig(({ command, mode }) => {
-  // Load env file based on `mode` in the current working directory.
-  const env = loadEnv(mode, process.cwd(), '');
+
+  console.log({ command, mode })
+
+  const timestamp = moment().format('MMMD').toLowerCase();
 
   // Environment configuration based on mode
   const envConfig = {
     'dev-sepolia': {
-      outDir: '../dist/etherphunks-market',
-      envFile: 'environment.dev-sepolia.ts',
+      envFile: `environment.${mode}.ts`,
       optimization: false,
       sourcemap: true
     },
     'dev-mainnet': {
-      outDir: '../dist/etherphunks-market',
-      envFile: 'environment.dev-mainnet.ts',
+      envFile: `environment.${mode}.ts`,
       optimization: false,
       sourcemap: true
     },
     'sepolia': {
-      outDir: '../dist/etherphunks-market-sepolia_may18',
-      envFile: 'environment.sepolia.ts',
+      outDir: resolve(__dirname, `dist/etherphunks-market-${mode}_${timestamp}`),
+      envFile: `environment.${mode}.ts`,
       optimization: true,
       sourcemap: false,
-      indexHtml: 'src/index.sepolia.html'
+      indexHtml: resolve(__dirname, `src/index.${mode}.html`)
     },
     'mainnet': {
-      outDir: '../dist/etherphunks-market-mainnet_may18',
-      envFile: 'environment.mainnet.ts',
+      outDir: resolve(__dirname, `dist/etherphunks-market-${mode}_${timestamp}`),
+      envFile: `environment.${mode}.ts`,
       optimization: true,
       sourcemap: false,
-      indexHtml: 'src/index.mainnet.html'
+      indexHtml: resolve(__dirname, `src/index.${mode}.html`)
     }
   };
 
@@ -53,7 +56,7 @@ export default defineConfig(({ command, mode }) => {
   return {
     root: 'src',
     base: '/',
-    publicDir: 'assets',
+    publicDir: 'public',
 
     resolve: {
       mainFields: ['module', 'browser', 'main'],
@@ -61,7 +64,6 @@ export default defineConfig(({ command, mode }) => {
         '@': resolve(__dirname, 'src/app'),
         '@scss': resolve(__dirname, 'src/scss'),
         '@app': resolve(__dirname, 'src/app'),
-        '@assets': resolve(__dirname, 'src/assets'),
         '@environments': resolve(__dirname, 'src/environments'),
         'abstracts': resolve(__dirname, 'src/scss/abstracts'),
         'qrcode': resolve(__dirname, 'node_modules/qrcode/lib/browser.js'),
@@ -125,14 +127,14 @@ export default defineConfig(({ command, mode }) => {
     },
 
     define: {
-      'process.env': env,
       'process.version': '"v16.0.0"',
       'process.platform': '"browser"',
       global: 'globalThis'
     },
 
     optimizeDeps: {
-      include: ['@web3modal/wagmi', 'qrcode', 'zone.js', '@ng-select/ng-select'],
+      include: ['@web3modal/wagmi', 'qrcode', 'zone.js', '@ng-select/ng-select', "@xmtp/proto"],
+      exclude: ["@xmtp/wasm-bindings", "@xmtp/browser-sdk"],
       esbuildOptions: {
         target: 'es2020',
         define: {
