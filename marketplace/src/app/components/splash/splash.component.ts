@@ -36,7 +36,7 @@ export class SplashComponent {
 
   readonly IMAGE_LIMIT = 9;
   readonly MAX_IMAGE_SIZE = 2000;
-  readonly defaultImage = { src: '/assets/loadingphunk.png', type: 'loading' };
+  readonly defaultImage = { src: '/loadingphunk.png', type: 'loading' };
   readonly defaultImages: Image[] = Array(this.IMAGE_LIMIT).fill(this.defaultImage);
 
   collection = input<Collection | null>();

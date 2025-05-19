@@ -7,5 +7,7 @@ import { config } from '@/app.config';
 
 import { environment } from '@environments/environment';
 
+import './scss/main.scss';
+
 if (environment.production) enableProdMode();
 bootstrapApplication(AppComponent, config).catch(err => console.error(err));

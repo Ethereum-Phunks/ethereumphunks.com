@@ -1,5 +1,6 @@
 @charset 'UTF-8';
 
+@use '@ng-select/ng-select/scss/default.theme' as ng-select-theme;
 @use 'tippy.js/dist/tippy.css' as tippy-base;
 @use 'tippy.js/themes/translucent.css';
 @use 'tippy.js/animations/shift-away-subtle.css';

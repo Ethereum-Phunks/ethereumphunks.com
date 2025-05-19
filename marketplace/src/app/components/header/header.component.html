@@ -3,8 +3,8 @@
   @if (isStandaloneMarket) {
     <a [routerLink]="['/']" class="logo standalone">
       <img
-        [lazyLoad]="(activeCollection$ | async)?.image || 'assets/loadingphunk.png'"
-        [defaultImage]="'assets/loadingphunk.png'"
+        [lazyLoad]="(activeCollection$ | async)?.image || '/loadingphunk.png'"
+        [defaultImage]="'/loadingphunk.png'"
         alt="logo" />
     </a>
   } @else {

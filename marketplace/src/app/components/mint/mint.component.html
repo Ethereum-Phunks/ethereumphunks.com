@@ -1,5 +1,5 @@
 <div class="collection-info-wrapper">
-  <img [src]="'/assets/collections/' + collection()?.slug + '/logo.png'" alt="">
+  <img [src]="'/collections/' + collection()?.slug + '/logo.png'" alt="">
 
   <div class="x-link">
     <a href="https://x.com/nomorelabs" target="_blank">
@@ -38,7 +38,7 @@
 
     @if (state().penaltyTimeout) {
       <div class="penalty-timeout">
-        <img src="/assets/idiot.gif" alt="you're an idiot" />
+        <img src="/idiot.gif" alt="you're an idiot" />
         <p>You've been placed in a penalty timeout for clicking too hard. Try again in <span>{{ state().retryAfter }}</span> seconds.</p>
       </div>
     }
@@ -102,7 +102,7 @@
 
 <ng-template #loading>
   <img
-    src="/assets/loader-C3FF00.gif"
+    src="/loader-C3FF00.gif"
     class="loader"
     width="19"
     height="19"

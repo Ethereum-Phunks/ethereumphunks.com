@@ -16,7 +16,7 @@
       <div class="item">
         <div class="item-link">
           <div class="image-wrapper">
-            <img [src]="'assets/loadingphunk.png'" width="50" height="50" />
+            <img [src]="'/loadingphunk.png'" width="50" height="50" />
           </div>
 
           @if (viewType === 'market') {
@@ -88,7 +88,7 @@
         <div class="image-wrapper">
           <img
             [lazyLoad]="phunk | imageUrlPipe"
-            [defaultImage]="'assets/loadingphunk.png'"
+            [defaultImage]="'/loadingphunk.png'"
             width="50"
             height="50"
           />

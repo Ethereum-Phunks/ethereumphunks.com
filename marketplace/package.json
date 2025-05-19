@@ -4,11 +4,12 @@
   "scripts": {
     "prebuild": "node prebuild.js",
     "ng": "ng",
-    "start:sepolia": "ng serve --configuration dev-sepolia --host 0.0.0.0 --port 4200",
-    "start:mainnet": "ng serve --configuration dev-mainnet --host 0.0.0.0 --port 4200",
+    "dev:sepolia": "vite --mode dev-sepolia",
+    "dev:mainnet": "vite --mode dev-mainnet",
+    "preview": "vite preview",
     "build": "yarn build:sepolia && yarn build:mainnet",
-    "build:sepolia": "yarn prebuild && ng build --configuration sepolia",
-    "build:mainnet": "yarn prebuild && ng build --configuration mainnet",
+    "build:sepolia": "yarn prebuild && vite build --mode sepolia",
+    "build:mainnet": "yarn prebuild && vite build --mode mainnet",
     "test": "ng test",
     "run-built": "http-server dist/etherphunks-market -p 8000",
     "translate": "ng extract-i18n --output-path src/locale",
@@ -69,6 +70,7 @@
     "zone.js": "~0.15.0"
   },
   "devDependencies": {
+    "@analogjs/vite-plugin-angular": "^1.16.1",
     "@angular-builders/custom-esbuild": "^19.1.0",
     "@angular-devkit/build-angular": "^19.2.10",
     "@angular/build": "19.2.10",
@@ -83,6 +85,7 @@
     "@types/tinycolor2": "^1.4.3",
     "@types/uuid": "^9.0.8",
     "esbuild-wasm": "^0.25.4",
+    "sass": "^1.89.0",
     "typescript": "5.5.4",
     "vite": "^6.3.5"
   }
