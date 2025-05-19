@@ -110,6 +110,7 @@ export default defineConfig(({ command, mode }) => {
         entryFile: resolve(__dirname, 'src/main.ts'),
         tsconfig: resolve(__dirname, 'tsconfig.app.json'),
         workspaceRoot: __dirname,
+        liveReload: true,
         stylePreprocessorOptions: {
           includePaths: [
             resolve(__dirname, 'src/scss'),
