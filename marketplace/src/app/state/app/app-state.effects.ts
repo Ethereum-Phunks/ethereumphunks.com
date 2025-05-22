@@ -62,8 +62,7 @@ export class AppStateEffects {
       const address = walletAddress?.toLowerCase();
       return [
         appStateActions.fetchUserPoints({ address }),
-        appStateActions.checkHasWithdrawal(),
-        appStateActions.reconnectChat(),
+        appStateActions.checkHasWithdrawal()
       ];
     }),
   ));
@@ -218,13 +217,6 @@ export class AppStateEffects {
       return appStateActions.setSearchHistory({ searchHistory });
     })
   ));
-
-  onReconnectChat$ = createEffect(() => this.actions$.pipe(
-    ofType(appStateActions.reconnectChat),
-    withLatestFrom(this.store.select(appStateSelectors.selectWalletAddress)),
-    filter(([action, address]) => !!address),
-    switchMap(([action, address]) => from(this.chatSvc.reconnectXmtp(address!))),
-  ), { dispatch: false });
 
   onSetLinkedAccounts$ = createEffect(() => this.actions$.pipe(
     ofType(appStateActions.setWalletAddress),

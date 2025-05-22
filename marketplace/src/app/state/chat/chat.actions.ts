@@ -1,23 +1,27 @@
-import { ChatState } from '@/models/global-state';
 import { createAction, props } from '@ngrx/store';
-import { Conversation } from '@xmtp/xmtp-js';
-
-export const setChat = createAction(
-  '[Chat] Set Chat Active',
-  props<{ active: boolean, toAddress?: ChatState['toAddress'] }>()
-);
+import { NormalizedConversation, NormalizedConversationWithMessages } from '@/models/chat';
 
 export const setChatConnected = createAction(
   '[Chat] Set Chat Connected',
-  props<{ connected: boolean }>()
+  props<{ connected: boolean, activeInboxId: string | undefined }>()
+);
+
+export const setChat = createAction(
+  '[Chat] Set Chat Active',
+  props<{ active: boolean, activeConversationId?: string | null }>()
+);
+
+export const setHasAccount = createAction(
+  '[Chat] Has Account',
+  props<{ hasAccount: boolean }>()
 );
 
 export const setConversations = createAction(
   '[Chat] Set Conversations',
-  props<{ conversations: Conversation[] }>()
+  props<{ conversations: NormalizedConversation[] }>()
 );
 
 export const setActiveConversation = createAction(
   '[Chat] Set Active Conversation',
-  props<{ activeConversation: Conversation }>()
+  props<{ conversation: NormalizedConversationWithMessages | undefined }>()
 );

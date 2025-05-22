@@ -38,6 +38,7 @@
 
   .conversation {
     display: flex;
+    height: 4rem;
     padding: 0;
     margin-bottom: .5rem;
 
@@ -45,6 +46,7 @@
     border-bottom: 1px solid rgba(var(--white), .1);
 
     cursor: pointer;
+    user-select: none;
 
     .profile-item {
       .image-wrapper {
@@ -61,21 +63,47 @@
       }
     }
 
-    .message-inner {
+    .item-inner {
       display: flex;
-      flex-direction: column;
-      justify-content: center;
+      align-items: center;
+      justify-content: space-between;
 
-      padding-left: .5rem;
+      width: 100%;
+      height: 100%;
+      padding-left: 1rem;
+
+      .left {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        gap: .15rem;
+      }
+
+      .right {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: flex-end;
+      }
+
+      .from-address {
+        font-size: 1.4rem;
+        font-weight: 400;
+      }
+
+      .message-preview {
+        font-size: 1rem;
+        font-weight: 400;
+        opacity: .65;
+
+        max-width: 20rem;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
 
       .timestamp {
         font-size: .8rem;
-        padding-bottom: .5rem;
-      }
-
-      .content {
-        font-size: 1.4rem;
-        font-weight: 400;
       }
     }
   }

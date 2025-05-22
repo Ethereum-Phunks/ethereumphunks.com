@@ -4,14 +4,19 @@ import { GlobalState, ChatState } from '@/models/global-state';
 
 export const selectChatState = (state: GlobalState) => state.chatState;
 
-export const selectChatActive = createSelector(
-  selectChatState,
-  (state: ChatState) => ({ active: state.active, toAddress: state.toAddress })
-);
-
 export const selectChatConnected = createSelector(
   selectChatState,
-  (state: ChatState) => state.connected
+  (state: ChatState) => ({ connected: state.connected, activeInboxId: state.activeInboxId })
+);
+
+export const selectChat = createSelector(
+  selectChatState,
+  (state: ChatState) => ({ active: state.active, activeConversationId: state.activeConversationId })
+);
+
+export const selectHasAccount = createSelector(
+  selectChatState,
+  (state: ChatState) => state.hasAccount
 );
 
 export const selectConversations = createSelector(

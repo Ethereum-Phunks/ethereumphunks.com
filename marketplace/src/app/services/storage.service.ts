@@ -13,19 +13,23 @@ export class StorageService {
     version: Number(environment.version.split('.').join('')),
   });
 
-  async getItem<T>(key: string): Promise<T | null> {
-    return await this.storage.getItem(`${key}:${environment.version}`);
+  private permanentStorage: LocalForage = createInstance({
+    name: 'ethereum-phunks-permanent',
+  });
+
+  async getItem<T>(key: string, permanent: boolean = false): Promise<T | null> {
+    return await (permanent ? this.permanentStorage : this.storage).getItem(permanent ? key : `${key}:${environment.version}`);
   }
 
-  async setItem<T>(key: string, value: T): Promise<T> {
-    return await this.storage.setItem(`${key}:${environment.version}`, value);
+  async setItem<T>(key: string, value: T, permanent: boolean = false): Promise<T> {
+    return await (permanent ? this.permanentStorage : this.storage).setItem(permanent ? key : `${key}:${environment.version}`, value);
   }
 
-  async removeItem(key: string): Promise<void> {
-    return await this.storage.removeItem(`${key}:${environment.version}`);
+  async removeItem(key: string, permanent: boolean = false): Promise<void> {
+    return await (permanent ? this.permanentStorage : this.storage).removeItem(permanent ? key : `${key}:${environment.version}`);
   }
 
-  async clear(): Promise<void> {
-    return await this.storage.clear();
+  async clear(permanent: boolean = false): Promise<void> {
+    return await (permanent ? this.permanentStorage : this.storage).clear();
   }
 }

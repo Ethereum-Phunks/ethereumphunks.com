@@ -697,9 +697,11 @@ export class ItemViewComponent {
   }
 
   async setChat() {
-    this.store.dispatch(setChat({
-      active: true,
-      toAddress: '0xf1Aa941d56041d47a9a18e99609A047707Fe96c7'
-    }));
+    // TODO: set chat
+    console.log('setChat');
+    // this.store.dispatch(setChat({
+    //   active: true,
+    //   conversationId: '0xf1Aa941d56041d47a9a18e99609A047707Fe96c7'
+    // }));
   }
 }

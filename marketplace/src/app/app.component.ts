@@ -30,8 +30,9 @@ import { asyncScheduler, fromEvent, debounceTime, filter, observeOn, scan, tap, 
 
 import { environment } from '@environments/environment';
 
-import { selectChatActive } from './state/chat/chat.selectors';
 import { setChat } from './state/chat/chat.actions';
+import { selectChat } from './state/chat/chat.selectors';
+
 @Component({
   standalone: true,
   imports: [
@@ -58,7 +59,7 @@ export class AppComponent implements OnInit {
 
   statusBarVisible = signal(true);
 
-  chatActive$ = this.store.select(selectChatActive).pipe(map(({ active }) => active));
+  chatActive$ = this.store.select(selectChat).pipe(map(({ active }) => active));
   logsActive$ = this.store.select(selectLogsActive);
 
   constructor(

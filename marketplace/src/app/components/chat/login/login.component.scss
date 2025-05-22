@@ -9,7 +9,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: space-between;
 
   width: 100%;
   height: 100%;
@@ -17,49 +17,152 @@
   padding: 3rem;
 }
 
-h2 {
-  font-size: 1.4rem;
-  font-weight: 400;
-  padding-bottom: 2rem;
-  color: rgba(var(--base-color), 1);
-}
-
-p {
-  font-family: var(--primary-font-stack);
-  font-size: 1.4rem;
-  font-weight: 600;
-  line-height: 1.35;
-
-  padding: 0;
-  margin: 0 0 1rem;
-
-  strong {
-    font-weight: 700;
-  }
-}
-
-.actions-wrapper {
+.header-wrapper {
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: 1rem;
 
-  padding-top: 2rem;
+  h2 {
+    font-size: 1.5rem;
+    font-weight: 400;
+    color: rgba(var(--base-color), 1);
+    text-align: left;
+    max-width: 18rem;
+  }
+
+  img {
+    width: 5rem;
+    height: 5rem;
+    background-color: rgba(var(--base-color), 1);
+    image-rendering: pixelated;
+  }
+}
+
+.footer-wrapper {
+  opacity: .65;
+  p {
+    font-size: 1rem;
+    font-weight: 400;
+    line-height: 1.35;
+
+    padding: 0;
+    margin: 0 0 1rem;
+  }
 
   a {
-    padding: 0 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
 
     font-size: 1rem;
     font-weight: 400;
-    text-decoration: none;
+    text-decoration: underline;
     color: rgba(var(--text-color), 1);
   }
+}
 
-  button {
-    background-color: rgba(var(--base-color), 1);
-    color: rgba(var(--black), 1);
+.passcode-form-wrapper {
+  position: relative;
+  padding: 1rem 0;
 
+  .loading-wrapper {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+    background-color: rgba(var(--dark-grey), .85);
+    backdrop-filter: blur(.25rem);
+
+    p {
+      font-size: 1rem;
+      font-weight: 400;
+    }
+  }
+
+  .form-title-wrapper {
+    h2 {
+      font-size: 1.3rem;
+      font-weight: 400;
+      line-height: 1.35;
+      color: rgba(var(--base-color), 1);
+    }
+
+    h3 {
+      font-size: 1rem;
+      font-weight: 400;
+      line-height: 1.35;
+    }
+  }
+
+  .passcode-form {
+    padding-top: 2rem;
+    padding-bottom: 2rem;
+
+    .passcode-section {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+
+      label {
+        font-family: var(--secondary-font-stack);
+        font-size: 1rem;
+        font-weight: 400;
+        line-height: 1.35;
+        padding-bottom: 0.5rem;
+      }
+
+      .inputs-row {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 1rem;
+
+      }
+    }
+  }
+
+  .passcode-input {
+    text-align: center;
+    font-size: 2.6rem;
     font-family: var(--secondary-font-stack);
     font-weight: 400;
+    padding: .5rem 1rem;
+
+    &:focus {
+      box-shadow: 0 0 0 0.2rem rgba(var(--base-color), 1);
+    }
+  }
+
+  .error-message {
+    font-family: var(--secondary-font-stack);
     font-size: 1.2rem;
+    font-weight: 400;
+    line-height: 1.35;
+    color: rgba(var(--magma), 1);
+    padding-bottom: 1rem;
+  }
+
+  .actions-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    button {
+      background-color: rgba(var(--base-color), 1);
+      color: rgba(var(--black), 1);
+
+      font-family: var(--secondary-font-stack);
+      font-weight: 400;
+      font-size: 1.2rem;
+    }
   }
 }

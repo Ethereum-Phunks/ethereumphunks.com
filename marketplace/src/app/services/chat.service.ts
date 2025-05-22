@@ -1,17 +1,20 @@
 import { Injectable } from '@angular/core';
-import { Store } from '@ngrx/store';
-
-import { Client, Conversation } from '@xmtp/browser-sdk';
-
 import { Observable } from 'rxjs';
 
-import { GlobalState } from '@/models/global-state';
+import { AsyncStream, Client, ClientOptions, DecodedMessage, Dm, Group, Identifier, Signer, SortDirection } from '@xmtp/browser-sdk';
+
+import { toBytes, WalletClient } from 'viem';
+
+import { NormalizedConversation, NormalizedConversationWithMessages, NormalizedMessage } from '@/models/chat';
 
 import { Web3Service } from './web3.service';
 import { UtilService } from './util.service';
+import { StorageService } from './storage.service';
+
+import * as fs from 'fs';
 
 /**
- * Service for handling XMTP messaging functionality
+ * Service for handling XMTP chat functionality
  */
 @Injectable({
   providedIn: 'root'
@@ -22,299 +25,377 @@ export class ChatService {
   ENCODING: any = 'binary';
 
   /** XMTP client instance */
-  client!: Client;
+  private client!: Client;
 
   /** XMTP client configuration options */
-  clientOptions: any = {
-    env: 'dev',
+  private clientOptions: ClientOptions = {
+    env: 'production',
+    // structuredLogging: true,
   };
 
   constructor(
-    private store: Store<GlobalState>,
     private web3Svc: Web3Service,
-    private utilSvc: UtilService
-  ) {}
+    private utilSvc: UtilService,
+    private storageSvc: StorageService
+  ) {
+    // navigator.storage.getDirectory().then(async (rootDir) => {
+    //   await rootDir.removeEntry('.opfs-libxmtp-metadata', { recursive: true });
+    //   console.log('Deleted .opfs-libxmtp-metadata');
+    // });
+  }
 
   /**
-   * Signs in to XMTP using the connected wallet
-   * @returns Promise resolving to boolean indicating success
+   * Creates a new XMTP user with the provided passcode
+   * @param passcode Passcode for encrypting keys
+   * @param address Ethereum address of the user
+   * @returns Promise resolving to connection status and active inbox ID
+   * @throws Error if XMTP client creation fails
    */
-  async signInToXmtp(): Promise<boolean> {
+  async createXmtpUser(passcode: string, address: `0x${string}`): Promise<{ connected: boolean, activeInboxId: string | undefined }> {
     try {
+      console.log('Creating XMTP user with passcode:', passcode);
+      const dbEncryptionKey = await this.createEncryptionKeyFromPasscode(passcode, address);
+      console.log('Encryption key:', Array.from(dbEncryptionKey).map(b => b.toString(16).padStart(2, '0')).join(''));
+
       const walletClient = await this.web3Svc.getActiveWalletClient();
-      if (!walletClient?.account?.address) {
-        throw new Error('No wallet address found');
-      }
+      const signer = this.createSCWSigner(walletClient);
 
-      const signer = {
-        type: "EOA" as const,
-        getIdentifier: () => ({
-          identifierKind: "Ethereum",
-          identifier: walletClient.account.address.toLowerCase()
-        }),
-        signMessage: async (message: string) => {
-          const signature = await walletClient.signMessage({
-            message
-          });
-          return new Uint8Array(Buffer.from(signature.slice(2), 'hex'));
-        }
-      };
-
-      const dbEncryptionKey = window.crypto.getRandomValues(new Uint8Array(32));
-
-      this.client = await Client.create(signer as any, {
-        dbEncryptionKey
+      this.client = await Client.create(signer, {
+        ...this.clientOptions,
+        dbEncryptionKey,
       });
 
       if (this.client) {
-        return true;
+        await this.client.conversations.sync();
+        await this.client.conversations.syncAll();
+        console.log('Signed in to XMTP', this.client.inboxId);
+        return { connected: true, activeInboxId: this.client.inboxId };
       }
     } catch (error) {
-      console.error('Error signing in to XMTP', error);
+      throw error;
     }
 
-    return false;
+    return { connected: false, activeInboxId: undefined };
   }
 
   /**
    * Reconnects to XMTP using stored keys for an address
-   * @param address Wallet address to reconnect
-   * @returns Promise resolving to boolean indicating success
+   * @param passcode Passcode for decrypting stored keys
+   * @param address Ethereum address of the user
+   * @returns Promise resolving to connection status and active inbox ID
+   * @throws Error if no XMTP identity exists, incorrect passcode, or XMTP connection fails
    */
-  async reconnectXmtp(address: string): Promise<boolean> {
-    // console.time('reconnectXmtp');
-    // let keys = this.loadKeys(address);
-    // if (!keys) {
-    //   console.timeEnd('reconnectXmtp');
-    //   return false;
-    // }
+  async connectExistingXmtpUser(passcode: string, address: `0x${string}`): Promise<{ connected: boolean, activeInboxId: string | undefined }> {
+    try {
+      console.log('Connecting to XMTP with address:', address);
+      const identifier: Identifier = {
+        identifier: address,
+        identifierKind: 'Ethereum',
+      };
 
-    // this.client = await Client.create(null, {
-    //   ...this.clientOptions,
-    //   privateKeyOverride: keys
-    // });
+      const dbEncryptionKey = await this.getEncryptionKeyWithPasscode(passcode, address);
+      console.log('Encryption key:', Array.from(dbEncryptionKey).map(b => b.toString(16).padStart(2, '0')).join(''));
 
-    // this.streamAllMessages();
+      this.client = await Client.build(identifier, {
+        ...this.clientOptions,
+        dbEncryptionKey,
+      });
 
-    // if (this.client) {
-    //   console.timeEnd('reconnectXmtp');
-    //   return true;
-    // }
-    // console.timeEnd('reconnectXmtp');
-    return false;
+      if (this.client) {
+        await this.client.conversations.syncAll();
+        console.log('Reconnected to XMTP', this.client.inboxId);
+        return { connected: true, activeInboxId: this.client.inboxId };
+      }
+    } catch (error) {
+      throw error;
+    }
+
+    return { connected: false, activeInboxId: undefined };
   }
 
   /**
-   * Creates a new conversation with a user
-   * @param userAddress Address to start conversation with
-   * @returns Promise resolving to the created Conversation
+   * Disconnects from XMTP by closing the client connection
    */
-  async createConversationWithUser(userAddress: string): Promise<Conversation> {
-    return {} as Conversation;
-    // if (!this.client) await this.signInToXmtp();
-    // const conversation = await this.client.conversations.newConversation(userAddress);
-    // return conversation;
+  disconnectXmtp(): void {
+    if (this.client) this.client.close();
   }
 
   /**
-   * Gets all messages from a conversation
-   * @param conversation Conversation to get messages from
-   * @returns Promise resolving to array of messages
+   * Lists and streams all direct message conversations from the XMTP client
+   * @param address The Ethereum address of the current user
+   * @returns Observable emitting arrays of normalized conversations
+   * @throws Error if client connection fails, list/stream operation fails, or conversation normalization fails
    */
-  async getChatMessagesFromConversation(conversation: Conversation): Promise<any> {
-    return [];
-    // console.time(`getChatMessagesFromConversation:${conversation.peerAddress}`);
-    // const messages = await conversation.messages();
-    // console.timeEnd(`getChatMessagesFromConversation:${conversation.peerAddress}`);
-    // console.log(`Fetched messages for ${conversation.peerAddress}:`, messages.length);
-    // return messages;
+  listAndStreamAllDms(address: `0x${string}`): Observable<NormalizedConversation[]> {
+    return new Observable<NormalizedConversation[]>(observer => {
+      let conversations: NormalizedConversation[] = [];
+      let closed = false;
+      // Initial fetch
+      this.client.conversations.listDms().then(async (allDms: Dm[]) => {
+        conversations = (await Promise.all(allDms.map(dm => this.normalizeDmConversation(dm, address)))).filter(Boolean) as NormalizedConversation[];
+        observer.next([...conversations]);
+        console.log('conversations', conversations);
+        // Start streaming new conversations
+        this.client.conversations.stream().then(async (stream: AsyncStream<Dm | Group>) => {
+          try {
+            for await (const dm of stream) {
+              if (dm instanceof Dm) {
+                if (closed) break;
+                const normalized = await this.normalizeDmConversation(dm, address);
+                if (normalized && !conversations.some(c => c.id === normalized.id)) {
+                  conversations = [...conversations, normalized];
+                  observer.next([...conversations]);
+                }
+              }
+            }
+          } catch (error) {
+            observer.error(error);
+          }
+        }).catch(err => observer.error(err));
+      }).catch(err => observer.error(err));
+      // Teardown logic
+      return () => { closed = true; };
+    });
   }
 
   /**
-   * Checks if a user can be messaged via XMTP
-   * @param userAddress Address to check
-   * @returns Promise resolving to boolean indicating if user can be messaged
+   * Normalizes a DM conversation
+   * @param dm The DM conversation to normalize
+   * @param address The Ethereum address of the current user
+   * @returns Promise resolving to normalized conversation or null if normalization fails
    */
-  async checkCanMessageUser(userAddress: string): Promise<boolean> {
-    return false;
-    // const canMessage = await this.client.canMessage(userAddress);
-    // return canMessage;
+  async normalizeDmConversation(dm: Dm, address: `0x${string}`): Promise<NormalizedConversation | null> {
+    if (!dm) return null;
+    try {
+      const members = await dm.members();
+      const consentState = await dm.consentState();
+      const peerInboxId = await dm.peerInboxId();
+
+      // Get latest message for proper timestamp
+      const latestMessage = (await dm.messages({ limit: BigInt(1), direction: SortDirection.Descending }))[0];
+      const latestMessageContent = latestMessage?.content as string;
+
+      return {
+        id: dm.id,
+        timestamp: new Date(Number(latestMessage?.sentAtNs || dm.createdAtNs) / 1000000),
+        peerInboxId,
+        consentState,
+        latestMessageContent,
+        members: members.map((m: any) => {
+          return m.accountIdentifiers
+            .filter((res: any) => res.identifierKind === 'Ethereum' && res.identifier !== address)[0];
+        }).filter((m: any) => !!m),
+      };
+    } catch (err) {
+      console.error('Failed to normalize DM:', err, dm);
+      return null;
+    }
   }
 
   /**
-   * Gets all contacts
-   * @returns Promise resolving to contacts list
+   * Gets the most recent 100 messages from a conversation and streams new ones as they arrive
+   * @param conversationId The ID of the conversation
+   * @returns Observable emitting normalized conversation with messages (newest first)
+   * @throws Error if no active inbox ID or wallet address found, conversation not found, or normalization fails
    */
-  async getContacts(): Promise<any> {
-    return [];
-    // return this.client.contacts;
+  getAndStreamConversationMessages(conversationId: string): Observable<NormalizedConversationWithMessages> {
+    const activeInboxId = this.client.inboxId;
+    if (!activeInboxId) throw new Error('No active inbox ID found');
+
+    // Get the current user's address for normalization
+    const address = this.web3Svc.getCurrentAddress();
+    if (!address) throw new Error('No wallet address found');
+
+    return new Observable<NormalizedConversationWithMessages>(observer => {
+      let messages: NormalizedMessage[] = [];
+      let conversationInfo: NormalizedConversation | null = null;
+      let closed = false;
+      this.client.conversations.getConversationById(conversationId).then(async (conversation) => {
+        if (!conversation) {
+          observer.error(new Error('Conversation not found'));
+          return;
+        }
+        // Normalize the conversation info
+        conversationInfo = await this.normalizeDmConversation(conversation as Dm, address);
+        if (!conversationInfo) {
+          observer.error(new Error('Failed to normalize conversation'));
+          return;
+        }
+        // Initial fetch
+        const initialMessages = await conversation.messages({ limit: BigInt(100), direction: SortDirection.Descending });
+        messages = await Promise.all(initialMessages.map(message => this.normalizeMessage(message as DecodedMessage, activeInboxId)));
+        // Sort newest first
+        messages.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
+        observer.next({ ...conversationInfo, messages: [...messages] });
+        // Start streaming new messages
+        conversation.stream().then(async (stream) => {
+          try {
+            for await (const message of stream) {
+              if (closed) break;
+              const normalized = await this.normalizeMessage(message as DecodedMessage, activeInboxId);
+              // Only add if not already present (by id)
+              if (!messages.some(m => m.id === normalized.id)) {
+                messages = [normalized, ...messages];
+                // Keep only the most recent 100
+                messages = messages.slice(0, 100);
+                observer.next({ ...conversationInfo!, messages: [...messages] });
+              }
+            }
+          } catch (error) {
+            observer.error(error);
+          }
+        }).catch(err => observer.error(err));
+      }).catch(err => observer.error(err));
+      // Teardown logic
+      return () => { closed = true; };
+    });
   }
 
   /**
-   * Sends a message in a conversation
-   * @param conversation Conversation to send message in
-   * @param message Message content to send
+   * Normalizes a message
+   * @param message The message to normalize
+   * @param activeInboxId The current user's inbox ID to determine if message is from self
+   * @returns Promise resolving to normalized message
    */
-  async sendMessageToConversation(
-    conversation: Conversation,
-    message: string | null
-  ): Promise<void> {
-    return;
-    // if (!message) return;
-    // const preparedMsg = await conversation.prepareMessage(message);
+  async normalizeMessage(message: DecodedMessage, activeInboxId: string): Promise<NormalizedMessage> {
+    return {
+      id: message.id,
+      content: message.content as string,
+      timestamp: new Date(Number(message.sentAtNs) / 1000000),
+      senderInboxId: message.senderInboxId,
+      self: message.senderInboxId === activeInboxId,
+    };
+  }
 
-    // try {
-    //   preparedMsg.send();
-    // } catch (e) {
-    //   console.error(e);
-    // }
+  async sendMessageToConversation(conversationId: string, message: string): Promise<string> {
+    const conversation = await this.client.conversations.getConversationById(conversationId);
+    if (!conversation) throw new Error('Conversation not found');
+    return await conversation.send(message);
   }
 
   /**
-   * Sends a message to a user
-   * @param user Address to send message to
-   * @param message Message content to send
+   * Creates a signer for XMTP using the wallet client
+   * @param walletClient The wallet client to create signer from
+   * @returns Signer object for XMTP
+   * @throws Error if no wallet address is found
    */
-  async sendMessage(
-    user: string,
-    message: string | null
-  ) {
-    return;
-    // if (!message) return;
-    // if (!this.client) await this.signInToXmtp();
+  private createSCWSigner(walletClient: WalletClient): Signer {
+    const address = walletClient.account?.address;
+    if (!address) throw new Error('No wallet address found');
 
-    // const conversations = await this.getConversations();
-    // const conversation = conversations.filter(
-    //   (conv) => conv.peerAddress.toLowerCase() === user.toLowerCase()
-    // )[0];
-
-    // await this.sendMessageToConversation(conversation, message);
+    return {
+      type: 'EOA',
+      getIdentifier: () => ({
+        identifier: address.toLowerCase(),
+        identifierKind: 'Ethereum',
+      }),
+      signMessage: async (message: string) => {
+        const signature = await walletClient.signMessage({
+          account: address,
+          message,
+        });
+        return toBytes(signature);
+      },
+    };
   }
 
   /**
-   * Streams messages from a conversation
-   * @param conversation Conversation to stream messages from
-   * @returns Observable of messages
+   * Creates an encryption key from a passcode and address
+   * @param passcode User's passcode for encryption
+   * @param address User's wallet address
+   * @returns Promise resolving to encryption key as Uint8Array
    */
-  streamMessages(conversation: Conversation): Observable<any> {
-    return new Observable();
-    // return new Observable(subscriber => {
-    //   (async () => {
-    //     console.time(`streamMessages:${conversation.peerAddress}`);
-    //     let count = 0;
-    //     for await (const message of await conversation.streamMessages()) {
-    //       subscriber.next(message);
-    //       count++;
-    //     }
-    //     console.timeEnd(`streamMessages:${conversation.peerAddress}`);
-    //     console.log(`streamMessages processed messages for ${conversation.peerAddress}:`, count);
-    //   })().catch(err => subscriber.error(err));
-    //   return () => {
-    //     // Teardown logic here
-    //   };
-    // });
-  }
+  private async createEncryptionKeyFromPasscode(passcode: string, address: `0x${string}`): Promise<Uint8Array> {
+    // Get user salt - used for PBKDF2 key derivation
+    const salt = await this.getOrCreateUserSalt(address);
 
-  /**
-   * Gets all conversations
-   * @returns Promise resolving to array of conversations
-   */
-  async getConversations(): Promise<Conversation[]> {
-    return [];
-    // if (!this.client) await this.signInToXmtp();
-    // console.time('getConversations');
-    // const conversations = await this.client.conversations.list();
-    // console.timeEnd('getConversations');
-    // console.log('Fetched conversations:', conversations.length);
-    // return conversations;
-  }
-
-  /**
-   * Streams all incoming messages and creates notifications
-   */
-  async streamAllMessages() {
-    return;
-    // console.time('streamAllMessages');
-    // let count = 0;
-    // for await (const message of await this.client.conversations.streamAllMessages()) {
-    //   if (message.senderAddress === this.client.address) continue;
-
-    //   const isOld = new Date(message.sent).getTime() < (new Date().getTime() - 10000);
-    //   if (isOld) continue;
-
-    //   let notification: Notification = {
-    //     id: this.utilSvc.createIdFromString(message.id),
-    //     timestamp: new Date(message.sent).getTime(),
-    //     type: 'chat',
-    //     function: 'chatMessage',
-    //     chatAddress: message.senderAddress,
-    //   };
-
-    //   this.store.dispatch(upsertNotification({ notification }));
-    //   count++;
-    // }
-    // console.timeEnd('streamAllMessages');
-    // console.log('streamAllMessages processed messages:', count);
-  }
-
-  /**
-   * Checks if XMTP keys exist for an address
-   * @param address Address to check for keys
-   * @returns Boolean indicating if keys exist
-   */
-  keysExist(address: string): boolean {
-    return !!this.loadKeys(address);
-  }
-
-  // DEV ONLY ========================================== //
-  // Utility functions for storing keys in local storage //
-
-  /**
-   * Gets current environment
-   */
-  private getEnv = (): "dev" | "production" | "local" => {
-    return "production";
-  };
-
-  /**
-   * Builds local storage key for storing XMTP keys
-   * @param walletAddress Address to build key for
-   */
-  private buildLocalStorageKey = (walletAddress: string) => {
-    walletAddress = walletAddress.toLowerCase();
-    return walletAddress ? `xmtp:${this.getEnv()}:keys:${walletAddress}` : "";
-  }
-
-  /**
-   * Loads XMTP keys from storage for an address
-   * @param walletAddress Address to load keys for
-   */
-  private loadKeys = (walletAddress: string): Uint8Array | null => {
-    walletAddress = walletAddress.toLowerCase();
-    const val = sessionStorage.getItem(this.buildLocalStorageKey(walletAddress));
-    return val ? Buffer.from(val, this.ENCODING) : null;
-  };
-
-  /**
-   * Stores XMTP keys for an address
-   * @param walletAddress Address to store keys for
-   * @param keys Keys to store
-   */
-  private storeKeys = (walletAddress: string, keys: Uint8Array) => {
-    walletAddress = walletAddress.toLowerCase();
-    sessionStorage.setItem(
-      this.buildLocalStorageKey(walletAddress),
-      Buffer.from(keys).toString(this.ENCODING),
+    // Derive key from passcode
+    const enc = new TextEncoder();
+    const keyMaterial = await window.crypto.subtle.importKey(
+      'raw', enc.encode(passcode), {name: 'PBKDF2'}, false, ['deriveKey']
     );
-  };
+
+    // Generate a strong encryption key directly from the passcode
+    const key = await window.crypto.subtle.deriveKey(
+      {
+        name: 'PBKDF2',
+        salt: salt,
+        iterations: 100000,
+        hash: 'SHA-256'
+      },
+      keyMaterial,
+      { name: 'AES-GCM', length: 256 },
+      true, // Make key extractable
+      ['encrypt', 'decrypt']
+    );
+
+    // Export the key as raw bytes to use as dbEncryptionKey
+    const keyBytes = await window.crypto.subtle.exportKey('raw', key);
+    return new Uint8Array(keyBytes);
+  }
 
   /**
-   * Removes stored XMTP keys for an address
-   * @param walletAddress Address to remove keys for
+   * Gets the encryption key for an existing user using their passcode
+   * @param passcode Passcode for deriving the key
+   * @param address User's wallet address
+   * @returns Promise resolving to encryption key as Uint8Array
+   * @throws Error if no XMTP identity exists for the address
    */
-  private wipeKeys = (walletAddress: string) => {
-    walletAddress = walletAddress.toLowerCase();
-    // This will clear the conversation cache + the private keys
-    sessionStorage.removeItem(this.buildLocalStorageKey(walletAddress));
-  };
+  private async getEncryptionKeyWithPasscode(passcode: string, address: `0x${string}`): Promise<Uint8Array> {
+    // Check if user salt exists
+    const userSalt = await this.storageSvc.getItem<string>(`user-salt-${address}`, true);
+    if (!userSalt) {
+      throw new Error('No XMTP identity found for this address. Please create a new identity first.');
+    }
+
+    const salt = this.utilSvc.base64ToUint8Array(userSalt);
+
+    // Derive key from passcode
+    const enc = new TextEncoder();
+    const keyMaterial = await window.crypto.subtle.importKey(
+      'raw', enc.encode(passcode), {name: 'PBKDF2'}, false, ['deriveKey']
+    );
+
+    // Generate encryption key from the passcode using same parameters
+    const key = await window.crypto.subtle.deriveKey(
+      {
+        name: 'PBKDF2',
+        salt: salt,
+        iterations: 100000,
+        hash: 'SHA-256'
+      },
+      keyMaterial,
+      { name: 'AES-GCM', length: 256 },
+      true,
+      ['encrypt', 'decrypt']
+    );
+
+    // Export the key as raw bytes
+    const keyBytes = await window.crypto.subtle.exportKey('raw', key);
+    return new Uint8Array(keyBytes);
+  }
+
+  /**
+   * Gets or creates a salt for the user's encryption
+   * @param address User's wallet address
+   * @returns Promise resolving to salt as Uint8Array
+   */
+  private async getOrCreateUserSalt(address: `0x${string}`): Promise<Uint8Array> {
+    const userSalt = await this.storageSvc.getItem<string>(`user-salt-${address}`, true);
+    if (userSalt) return this.utilSvc.base64ToUint8Array(userSalt);
+
+    const salt = window.crypto.getRandomValues(new Uint8Array(16));
+    await this.storageSvc.setItem(`user-salt-${address}`, this.utilSvc.uint8ArrayToBase64(salt), true);
+    return salt;
+  }
+
+  /**
+   * Checks if a user has required encryption parameters stored
+   * @param address User's wallet address
+   * @returns Promise resolving to boolean indicating if salt exists
+   */
+  async hasStoredUserSalt(address: `0x${string}`): Promise<boolean> {
+    const userSalt = await this.storageSvc.getItem<string>(`user-salt-${address}`, true);
+    return !!userSalt;
+  }
 }

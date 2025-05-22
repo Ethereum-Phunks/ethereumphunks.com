@@ -1,5 +1,5 @@
 <div class="chat-wrapper">
-  @if ((this.toUser$ | async); as toUser) {
+  @if ((conversation$ | async); as conversation) {
     <div
       class="chat-header">
 
@@ -8,12 +8,12 @@
       </button>
 
       <div class="with">
-        Chatting with <app-address [address]="toUser" />
+        Chatting with <app-address [address]="(toUser$ | async) ?? null" />
       </div>
     </div>
 
     <div #messages class="messages-wrapper">
-      @for (message of (messages$ | async); track message.id) {
+      @for (message of conversation.messages; track message.id) {
         <div
           class="chat-message"
           [class.self]="message.self">
@@ -37,14 +37,14 @@
         </div>
       }
 
-      @if (this.error) {
+      @if (this.error()) {
         <div class="error">
-          <p [innerHTML]="this.error"></p>
+          <p [innerHTML]="this.error()"></p>
         </div>
       }
     </div>
 
-    <form (submit)="sendMessage($event, toUser)">
+    <form (submit)="sendMessage($event, conversation)">
       <input type="text" [formControl]="messageInput" [placeholder]="'Your Message'" />
       <button type="submit">Send</button>
     </form>

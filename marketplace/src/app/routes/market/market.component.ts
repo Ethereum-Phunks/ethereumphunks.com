@@ -638,10 +638,12 @@ export class MarketComponent {
   }
 
   openChat(toAddress: string) {
-    this.store.dispatch(setChat({
-      active: true,
-      toAddress,
-    }));
+    // TODO: set chat
+    console.log('openChat', toAddress);
+    // this.store.dispatch(setChat({
+    //   active: true,
+    //   toAddress,
+    // }));
   }
 
   // Submissions

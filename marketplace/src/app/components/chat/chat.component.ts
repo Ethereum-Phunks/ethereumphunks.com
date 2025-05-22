@@ -8,7 +8,7 @@ import { ConversationComponent } from './conversation/conversation.component';
 import { ConversationsComponent } from './conversations/conversations.component';
 import { LoginComponent } from './login/login.component';
 
-import { selectChatConnected, selectChatState } from '@/state/chat/chat.selectors';
+import { selectChat, selectChatConnected, selectChatState } from '@/state/chat/chat.selectors';
 import { selectConfig } from '@/state/app/app-state.selectors';
 
 import { ViewType } from '@/models/chat';
@@ -33,13 +33,13 @@ export class ChatComponent {
 
   activeViewTitle = signal<string | null>(null);
 
-  activeView$: Observable<ViewType> = this.store.select(selectChatState).pipe(
-    switchMap(({ toAddress }) => {
+  activeView$: Observable<ViewType> = this.store.select(selectChat).pipe(
+    switchMap(({ active, activeConversationId }) => {
       return this.store.select(selectConfig).pipe(
         switchMap((config) => {
           return this.store.select(selectChatConnected).pipe(
-            map((connected) => {
-              if (connected) return toAddress ? 'conversation' : 'conversations';
+            map(({ connected, activeInboxId }) => {
+              if (connected) return activeConversationId ? 'conversation' : 'conversations';
               return 'login';
             })
           )

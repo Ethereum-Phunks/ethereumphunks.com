@@ -1,28 +1,36 @@
-import { AppState, ChatState } from '@/models/global-state';
+import { ChatState } from '@/models/global-state';
 import { Action, ActionReducer, createReducer, on } from '@ngrx/store';
 
 import * as actions from './chat.actions';
 
 export const initialState: ChatState = {
-  active: false,
   connected: false,
-  conversations: [],
+  activeInboxId: undefined,
+
+  active: false,
+  activeConversationId: undefined,
+
   activeConversation: null,
-  toAddress: null,
+
+  hasAccount: false,
+  conversations: null,
 };
 
 export const chatReducer: ActionReducer<ChatState, Action> = createReducer(
   initialState,
-  on(actions.setChat, (state, { active, toAddress }) => {
-    return { ...state, active, toAddress };
+  on(actions.setChatConnected, (state, { connected, activeInboxId }) => {
+    return { ...state, connected, activeInboxId };
   }),
-  on(actions.setChatConnected, (state, { connected }) => {
-    return { ...state, connected };
+  on(actions.setChat, (state, { active, activeConversationId }) => {
+    return { ...state, active, activeConversationId: activeConversationId };
+  }),
+  on(actions.setHasAccount, (state, { hasAccount }) => {
+    return { ...state, hasAccount };
   }),
   on(actions.setConversations, (state, { conversations }) => {
     return { ...state, conversations };
   }),
-  on(actions.setActiveConversation, (state, { activeConversation }) => {
-    return { ...state, activeConversation };
+  on(actions.setActiveConversation, (state, { conversation }) => {
+    return { ...state, activeConversation: conversation ?? null };
   }),
 );

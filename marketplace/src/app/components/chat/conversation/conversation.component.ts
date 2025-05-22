@@ -1,19 +1,22 @@
-import { Component, ElementRef, EventEmitter, Input, Output, ViewChild } from '@angular/core';
-import { AsyncPipe, DatePipe, JsonPipe, NgTemplateOutlet } from '@angular/common';
+import { Component, ElementRef, signal, ViewChild } from '@angular/core';
+import { AsyncPipe, DatePipe, NgTemplateOutlet } from '@angular/common';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 
 import { TimeagoModule } from 'ngx-timeago';
 
+import { Store } from '@ngrx/store';
+import { map, tap, filter, switchMap, share, shareReplay } from 'rxjs';
+
 import { ChatService } from '@/services/chat.service';
 
-import { BehaviorSubject, Observable, catchError, filter, from, map, of, scan, startWith, switchMap, tap } from 'rxjs';
-
-import { Message } from '@/models/chat';
-import { WalletAddressDirective } from '@/directives/wallet-address.directive';
-import { Store } from '@ngrx/store';
 import { GlobalState } from '@/models/global-state';
-import { setChat } from '@/state/chat/chat.actions';
-import { selectChatState } from '@/state/chat/chat.selectors';
+
+import { WalletAddressDirective } from '@/directives/wallet-address.directive';
+
+import { selectActiveConversation } from '@/state/chat/chat.selectors';
+import { setActiveConversation, setChat } from '@/state/chat/chat.actions';
+import { selectWalletAddress } from '@/state/app/app-state.selectors';
+import { NormalizedConversationWithMessages } from '@/models/chat';
 
 @Component({
   selector: 'app-conversation',
@@ -35,73 +38,57 @@ export class ConversationComponent {
 
   @ViewChild('messages') messages!: ElementRef<HTMLDivElement>;
 
-  error!: string | null;
-
-  messageInput: FormControl<string | null> = new FormControl(null);
-
-  private user = new BehaviorSubject<string>('');
-  user$ = this.user.asObservable();
-
-  conversations$: Observable<any[]> = of([]);
-
-  toUser$ = this.store.select(selectChatState).pipe(map((state) => state.toAddress));
-
-  messages$: Observable<Message[]> = this.toUser$.pipe(
-    filter((user) => !!user),
-    switchMap((user) =>
-      from(this.chatSvc.createConversationWithUser(user!)).pipe(
-        switchMap(conversation =>
-          from(this.chatSvc.getChatMessagesFromConversation(conversation)).pipe(
-            switchMap(pastMessages =>
-              this.chatSvc.streamMessages(conversation).pipe(
-                map(currentMessage => [currentMessage]),
-                startWith(pastMessages),
-                scan((acc: Message[], currentMessages: Message[]) => [...acc, ...currentMessages], [])
-              )
-            )
-          )
-        ),
-        map((messages: any[]) => messages.map((message) => ({
-          id: message.id,
-          sender: message.senderAddress,
-          content: message.content || message.contentFallback,
-          self: message.senderAddress.toLowerCase() !== user?.toLowerCase(),
-          timestamp: new Date(message.sent).getTime(),
-        }))),
-        tap((messages: Message[]) => {
-          if (messages?.length) this.error = null;
-          setTimeout(() => {
-            const el = this.messages.nativeElement;
-            if (el) el.scrollTop = el.scrollHeight;
-          }, 0);
-        }),
-        catchError(err => {
-          console.error('Error creating conversation', err);
-          this.error = 'Error: ' + err?.message || 'Unknown error';
-          return of([]);
-        })
-      )
-    )
+  conversation$ = this.store.select(selectActiveConversation).pipe(
+    filter((conversation) => !!conversation),
+    map((conversation) => {
+      return {
+        ...conversation,
+        messages: [...conversation.messages].sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime())
+      }
+    }),
+    tap(() => setTimeout(() => this.scrollToBottom(), 100)),
+    shareReplay(1),
   );
+
+  toUser$ = this.conversation$.pipe(
+    switchMap((conversation) => this.store.select(selectWalletAddress).pipe(
+      filter((walletAddress) => !!walletAddress),
+      map((walletAddress) =>
+        conversation.members.find((member) =>
+          member.identifier?.toLowerCase() !== walletAddress?.toLowerCase())?.identifier
+      )
+    ))
+  );
+
+  error = signal<string | null>(null);
+  messageInput: FormControl<string | null> = new FormControl(null);
 
   constructor(
     private store: Store<GlobalState>,
     private chatSvc: ChatService,
   ) {}
 
-  async sendMessage($event: Event, toUser: string) {
+  async sendMessage($event: Event, conversation: NormalizedConversationWithMessages) {
     $event.preventDefault();
+    const message = this.messageInput.value;
+    if (!message) return;
 
     try {
-      await this.chatSvc.sendMessage(toUser, this.messageInput.value);
+      await this.chatSvc.sendMessageToConversation(conversation.id, message);
     } catch (error) {
       console.log('Error sending message', error);
     }
 
     this.messageInput.setValue(null);
+    this.scrollToBottom();
   }
 
   goBack() {
-    this.store.dispatch(setChat({ active: true, toAddress: null }));
+    this.store.dispatch(setChat({ active: true }));
+    this.store.dispatch(setActiveConversation({ conversation: undefined }));
+  }
+
+  scrollToBottom() {
+    this.messages.nativeElement.scrollTop = this.messages.nativeElement.scrollHeight;
   }
 }

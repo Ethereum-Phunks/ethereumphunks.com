@@ -1,67 +1,49 @@
-import { AsyncPipe, JsonPipe } from '@angular/common';
-import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
-import { TimeagoModule } from 'ngx-timeago';
-
-import { ChatService } from '@/services/chat.service';
-import { DataService } from '@/services/data.service';
-
-import { WalletAddressDirective } from '@/directives/wallet-address.directive';
-import { from, map, switchMap, tap } from 'rxjs';
-import { LazyLoadImageModule } from 'ng-lazyload-image';
-import { ImageUrlPipe } from '@/pipes/image-url.pipe';
+import { AsyncPipe } from '@angular/common';
+import { Component } from '@angular/core';
 import { Store } from '@ngrx/store';
-import { GlobalState } from '@/models/global-state';
-import { setChat } from '@/state/chat/chat.actions';
 
+import { TimeagoModule } from 'ngx-timeago';
+import { LazyLoadImageModule } from 'ng-lazyload-image';
+import { tap } from 'rxjs';
+
+import { GlobalState } from '@/models/global-state';
+import { NormalizedConversation } from '@/models/chat';
+
+import { AvatarComponent } from "@/components/avatar/avatar.component";
+import { WalletAddressDirective } from '@/directives/wallet-address.directive';
+
+import { selectConversations } from '@/state/chat/chat.selectors';
+
+import { setChat } from '@/state/chat/chat.actions';
 @Component({
   imports: [
     AsyncPipe,
-    ImageUrlPipe,
-
     TimeagoModule,
     LazyLoadImageModule,
-
     WalletAddressDirective,
-  ],
+    AvatarComponent
+],
   selector: 'app-conversations',
   standalone: true,
   templateUrl: './conversations.component.html',
   styleUrl: './conversations.component.scss'
 })
-export class ConversationsComponent implements OnInit {
+export class ConversationsComponent {
 
-  convosLength = 0;
-
-  conversations$ = from(this.chatSvc.getConversations()).pipe(
-    switchMap((convos: any[]) => {
-      const addresses = convos.map(convo => convo.peerAddress.toLowerCase());
-      return this.dataSvc.addressesAreHolders(addresses).pipe(
-        map((allowed) => {
-          const allowedAddresses = allowed.map((res: any) => res.address);
-          this.convosLength = allowedAddresses.length;
-
-          return convos.filter((convo) => {
-            return allowedAddresses.includes(convo.peerAddress.toLowerCase());
-          }).map(convo => ({
-            topic: convo.topic,
-            peerAddress: convo.peerAddress,
-            timestamp: new Date(convo.createdAt).getTime(),
-            profileItem: allowed.filter((res: any) => res.address === convo.peerAddress.toLowerCase())[0]?.item,
-          })).sort((a, b) => b.timestamp - a.timestamp)
-        })
-      )
-    }),
+  conversations$ = this.store.select(selectConversations).pipe(
+    // tap((conversations) => {
+    //   console.log('ConversationsComponent:conversations', conversations);
+    // })
   );
 
   constructor(
-    private store: Store<GlobalState>,
-    private dataSvc: DataService,
-    private chatSvc: ChatService
+    private store: Store<GlobalState>
   ) {}
 
-  ngOnInit() {}
-
-  selectConversation(convo: any) {
-    this.store.dispatch(setChat({ active: true, toAddress: convo.peerAddress }));
+  goToConversation(conversation: NormalizedConversation) {
+    this.store.dispatch(setChat({
+      active: true,
+      activeConversationId: conversation.id
+    }));
   }
 }

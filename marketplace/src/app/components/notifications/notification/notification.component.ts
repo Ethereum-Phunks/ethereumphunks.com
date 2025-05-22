@@ -85,8 +85,8 @@ export class NotificationComponent {
     this.store.dispatch(setNotifHoverState({ notifHoverState: { [notificationId]: false } }));
   }
 
-  setChat(toAddress: string) {
-    this.store.dispatch(setChat({ active: true, toAddress }));
+  setChat(activeConversationId: string) {
+    this.store.dispatch(setChat({ active: true, activeConversationId }));
     this.store.dispatch(removeNotification({ txId: this.txn()?.id || '' }));
   }
 

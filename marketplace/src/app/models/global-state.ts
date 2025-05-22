@@ -3,7 +3,7 @@ import { DataState } from './data.state';
 import { MarketState } from './market.state';
 
 import { Theme } from './theme';
-import { Conversation } from '@xmtp/xmtp-js';
+import { NormalizedConversation, NormalizedConversationWithMessages } from './chat';
 
 export interface GlobalState {
   appState: AppState;
@@ -86,10 +86,15 @@ export interface GlobalConfig {
 
 export interface ChatState {
   active: boolean;
-  toAddress: string | null | undefined;
+  activeConversationId: string | null | undefined;
+
   connected: boolean;
-  conversations: Conversation[];
-  activeConversation: Conversation | null;
+  activeInboxId: string | undefined;
+
+  hasAccount: boolean;
+
+  conversations: NormalizedConversation[] | null;
+  activeConversation: NormalizedConversationWithMessages | null;
 }
 
 export interface NotificationState {

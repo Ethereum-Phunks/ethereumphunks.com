@@ -1,7 +1,6 @@
 import { createAction, props } from '@ngrx/store';
 
 import { AppState, Cooldowns, EventType, GlobalConfig, HistoryItem, LinkedAccount } from '@/models/global-state';
-import { LogItem } from '@/services/socket.service';
 
 export const setConnected = createAction(
   '[App State] Set Wallet Connected',
@@ -161,10 +160,6 @@ export const setSearchHistoryActive = createAction(
 export const setIsSearchResult = createAction(
   '[App State] Set Is Search Result',
   props<{ isSearchResult: boolean }>()
-);
-
-export const reconnectChat = createAction(
-  '[App State] Reconnect Chat'
 );
 
 export const setCollectionsMenuActive = createAction(
