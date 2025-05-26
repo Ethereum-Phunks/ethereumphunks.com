@@ -3,7 +3,7 @@ import { mkdir } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 
-import { Client, Signer, type XmtpEnv, IdentifierKind } from '@xmtp/node-sdk';
+import { Client, Signer, type XmtpEnv, IdentifierKind, LogLevel } from '@xmtp/node-sdk';
 
 import { createWalletClient, fromHex, http, toBytes, toHex } from 'viem';
 import { privateKeyToAccount } from 'viem/accounts';
@@ -27,7 +27,7 @@ export class AgentService implements OnModuleInit {
 
   signer = this.createSigner(process.env.AGENT_WALLET_PK as `0x${string}`);
   dbEncryptionKey = this.getEncryptionKeyFromHex(
-    process.env.AGENT_ENCRYPTION_KEY
+    process.env.AGENT_ENCRYPTION_KEY as string
   );
 
   env: XmtpEnv = process.env.XMTP_ENV as XmtpEnv;
@@ -37,8 +37,8 @@ export class AgentService implements OnModuleInit {
     private readonly langchainSvc: LangchainService
   ) {}
 
-  async onModuleInit() {
-    this.main();
+  onModuleInit() {
+    this.main().catch(console.error);
   }
 
   async main() {
@@ -48,7 +48,7 @@ export class AgentService implements OnModuleInit {
       dbEncryptionKey: this.dbEncryptionKey,
       env: this.env,
       dbPath: this.getDbPath(this.env + '-' + signerIdentifier),
-      loggingLevel: process.env.LOGGING_LEVEL as any,
+      loggingLevel: process.env.LOGGING_LEVEL as LogLevel,
     });
     this.logAgentDetails(client);
 
