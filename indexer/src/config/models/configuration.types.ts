@@ -18,6 +18,7 @@ export type SupabaseConfig = {
 
 export type Features = {
   queue: number;
+  bridge: number;
   discord: number;
   twitter: number;
   telegram: number;

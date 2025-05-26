@@ -11,6 +11,7 @@ export const validationSchema = Joi.object({
 
   // Features
   QUEUE: Joi.number().valid(0, 1).required(),
+  BRIDGE: Joi.number().valid(0, 1).default(0),
   DISCORD: Joi.number().valid(0, 1).default(0),
   TWITTER: Joi.number().valid(0, 1).default(0),
   TELEGRAM: Joi.number().valid(0, 1).default(0),
@@ -89,6 +90,7 @@ export default registerAs('app', (): AppConfig => {
 
     features: {
       queue: Number(process.env.QUEUE) || 0,
+      bridge: Number(process.env.BRIDGE) || 0,
       discord: Number(process.env.DISCORD) || 0,
       twitter: Number(process.env.TWITTER) || 0,
       telegram: Number(process.env.TELEGRAM) || 0,
@@ -162,6 +164,8 @@ export default registerAs('app', (): AppConfig => {
       privateKey: process.env.API_PRIVATE_KEY,
     },
   };
+
+  // console.log(config);
 
   return config;
 });

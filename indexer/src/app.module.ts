@@ -8,7 +8,6 @@ import { SharedModule } from '@/modules/shared/shared.module';
 import { QueueModule } from '@/modules/queue/queue.module';
 import { NotifsModule } from '@/modules/notifs/notifs.module';
 import { BridgeL1Module } from '@/modules/bridge-l1/bridge-l1.module';
-import { NftModule } from '@/modules/nft/nft.module';
 import { BridgeL2Module } from '@/modules/bridge-l2/bridge-l2.module';
 import { EthscriptionsModule } from '@/modules/ethscriptions/ethscriptions.module';
 import { TxPoolModule } from '@/modules/tx-pool/tx-pool.module';
@@ -16,7 +15,6 @@ import { EthscriptionsMintModule } from '@/modules/ethscriptions-mint/ethscripti
 import { AdminModule } from '@/modules/admin/admin.module';
 import { ProcessingModule } from '@/modules/processing/processing.module';
 import { EvmModule } from '@/modules/evm/evm.module';
-import { AgentModule } from '@/modules/agent/agent.module';
 
 import { AppService } from '@/app.service';
 import { AppController } from '@/app.controller';
@@ -33,11 +31,8 @@ import { AppConfigModule } from '@/config/config.module';
     HttpModule,
 
     EvmModule,
-    NftModule,
-    BridgeL2Module,
 
     EthscriptionsModule,
-    BridgeL1Module,
 
     NotifsModule,
     SharedModule,
@@ -46,6 +41,16 @@ import { AppConfigModule } from '@/config/config.module';
     StorageModule,
     AdminModule,
     ProcessingModule,
+
+    ConditionalModule.registerWhen(
+      BridgeL1Module,
+      (config) => (!!Number(config['BRIDGE']))
+    ),
+
+    ConditionalModule.registerWhen(
+      BridgeL2Module,
+      (config) => (!!Number(config['BRIDGE']))
+    ),
 
     ConditionalModule.registerWhen(
       EthscriptionsMintModule,
@@ -61,7 +66,6 @@ import { AppConfigModule } from '@/config/config.module';
       TxPoolModule,
       (config) => (!!Number(config['TX_POOL']))
     ),
-    AgentModule,
   ],
   controllers: [
     AppController

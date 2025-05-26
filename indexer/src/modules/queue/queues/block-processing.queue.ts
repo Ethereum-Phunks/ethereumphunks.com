@@ -39,6 +39,7 @@ export class BlockProcessingQueue {
   }
 
   async pauseQueue(): Promise<void> {
+    Logger.debug('Pausing queue');
     await this.queue.pause();
   }
 

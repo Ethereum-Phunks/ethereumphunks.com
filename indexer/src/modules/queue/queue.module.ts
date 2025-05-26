@@ -1,9 +1,10 @@
 import { Module, forwardRef } from '@nestjs/common';
+import { ConditionalModule } from '@nestjs/config';
 import { HttpModule } from '@nestjs/axios';
+
 import { BullModule, getQueueToken } from '@nestjs/bull';
 import { Queue } from 'bull';
 
-import { NftModule } from '@/modules/nft/nft.module';
 import { SharedModule } from '@/modules/shared/shared.module';
 import { StorageModule } from '@/modules/storage/storage.module';
 import { CommentsModule } from '@/modules/comments/comments.module';
@@ -26,6 +27,15 @@ import { BLOCK_PROCESSING_QUEUE, BRIDGE_PROCESSING_QUEUE } from './constants/que
   imports: [
     AppConfigModule,
     HttpModule,
+    BridgeL1Module,
+    SharedModule,
+    StorageModule,
+    NotifsModule,
+    ProcessingModule,
+
+    forwardRef(() => EthscriptionsModule),
+    forwardRef(() => CommentsModule),
+
     BullModule.forRootAsync({
       imports: [AppConfigModule],
       useFactory: async (configService: AppConfigService) => ({
@@ -45,14 +55,6 @@ import { BLOCK_PROCESSING_QUEUE, BRIDGE_PROCESSING_QUEUE } from './constants/que
         name: BRIDGE_PROCESSING_QUEUE,
       }
     ),
-    SharedModule,
-    BridgeL1Module,
-    NftModule,
-    StorageModule,
-    NotifsModule,
-    ProcessingModule,
-    forwardRef(() => EthscriptionsModule),
-    forwardRef(() => CommentsModule),
   ],
   providers: [
     {
