@@ -1,5 +1,5 @@
-@use 'abstracts/variables' as * ;
-@use 'abstracts/mixins' as *;
+@use '@scss/abstracts/variables' as *;
+@use '@scss/abstracts/mixins' as *;
 
 :host {
   font-family: var(--secondary-font-stack);

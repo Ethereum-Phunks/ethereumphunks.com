@@ -20,7 +20,7 @@ import { DataService } from '@/services/data.service';
 import { ThemeService } from '@/services/theme.service';
 import { PwaUpdateService } from '@/services/pwa-update.service';
 
-import { selectIsMobile } from '@/state/app/app-state.selectors';
+import { selectConfig, selectIsMobile } from '@/state/app/app-state.selectors';
 import { selectLogsActive } from '@/state/indexer-logs/indexer-logs.selectors';
 
 import * as appStateActions from '@/state/app/app-state.actions';
@@ -61,6 +61,7 @@ export class AppComponent implements OnInit {
 
   chatActive$ = this.store.select(selectChat).pipe(map(({ active }) => active));
   logsActive$ = this.store.select(selectLogsActive);
+  config$ = this.store.select(selectConfig);
 
   constructor(
     @Inject(DOCUMENT) private document: Document,
@@ -144,12 +145,12 @@ export class AppComponent implements OnInit {
   }
 
   setStatusBarVisible() {
-    if (window.innerWidth > 800) {
-      this.statusBarVisible.set(true);
-    } else {
-      const scrollY = window.scrollY;
-      this.statusBarVisible.set(scrollY > 100);
-    }
+    // if (window.innerWidth > 800) {
+    //   this.statusBarVisible.set(true);
+    // } else {
+    //   const scrollY = window.scrollY;
+    //   this.statusBarVisible.set(scrollY > 100);
+    // }
   }
 
   async toggleChat() {

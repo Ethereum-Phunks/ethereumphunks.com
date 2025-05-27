@@ -22,7 +22,8 @@ export const environment = {
   bridgeAddress: ''.toLowerCase(),
   bridgeAddressL2: '0x26e8fD77346b4B006C5Df61f9706581933560F12'.toLowerCase(),
 
-  relayUrl: 'https://relay.ethereumphunks.com',
+  // relayUrl: 'https://relay.ethereumphunks.com',
+  relayUrl: 'http://10.0.0.73:3002',
   staticUrl: 'https://kcbuycbhynlmsrvoegzp.supabase.co/storage/v1/object/public',
 
   supabaseUrl: 'http://127.0.0.1:54321',

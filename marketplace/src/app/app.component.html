@@ -25,13 +25,16 @@
   [class.visible]="statusBarVisible()">
 
   <app-status-bar />
-  <button
-    class="chat-button"
-    [class.active]="chatActive$ | async"
-    (click)="toggleChat()">
 
-    <ng-template [ngTemplateOutlet]="chatIcon" />
-  </button>
+  @if ((config$ | async)?.chat) {
+    <button
+      class="chat-button"
+      [class.active]="chatActive$ | async"
+      (click)="toggleChat()">
+
+      <ng-template [ngTemplateOutlet]="chatIcon" />
+    </button>
+  }
 </div>
 
 @if ((chatActive$ | async); as active) {

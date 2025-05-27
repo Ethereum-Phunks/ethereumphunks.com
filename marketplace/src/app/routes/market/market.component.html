@@ -25,7 +25,7 @@
                     <app-address [address]="address" class="highlight" />
                   </a>
 
-                  @if ((address | lowercase) !== (walletAddress$ | async)) {
+                  @if ((address | lowercase) !== (walletAddress$ | async) && ((config$ | async)?.chat)) {
                     <button class="chat-button" (click)="createConversation(address)">
                       <ng-template [ngTemplateOutlet]="chatIcon" />
                     </button>

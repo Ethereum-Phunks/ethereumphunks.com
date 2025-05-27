@@ -160,6 +160,8 @@ export class MarketComponent {
     map((blocksBehind) => true)
   );
 
+  config$ = this.store.select(appStateSelectors.selectConfig);
+
   ceil = Math.ceil;
   objectKeys = Object.keys;
   objectValues = Object.values;

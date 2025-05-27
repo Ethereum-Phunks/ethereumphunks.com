@@ -22,7 +22,7 @@ export const environment = {
   bridgeAddressL2: '0x2A953aA14e986b0595A0c5201dD267391BF7d39d'.toLowerCase(),
 
   // relayUrl: 'https://relay-sepolia.ethereumphunks.com',
-  relayUrl: 'http://10.0.0.73:3069',
+  relayUrl: 'http://10.0.0.73:3003',
   staticUrl: 'https://kcbuycbhynlmsrvoegzp.supabase.co/storage/v1/object/public',
 
   supabaseUrl: 'http://10.0.0.73:54321',

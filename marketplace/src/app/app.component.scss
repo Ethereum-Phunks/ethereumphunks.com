@@ -1,5 +1,5 @@
-@use 'abstracts/variables' as *;
-@use 'abstracts/mixins' as *;
+@use '@scss/abstracts/variables' as *;
+@use '@scss/abstracts/mixins' as *;
 
 main {
   min-height: calc(100vh - 21rem);
@@ -92,7 +92,7 @@ app-chat {
   border: .3rem solid rgba(var(--base-color), 1);
 
   width: 100%;
-  max-width: 40rem;
+  max-width: 50rem;
   height: 50rem;
 }
 
@@ -103,7 +103,7 @@ app-logger {
   right: 0;
 
   width: 100%;
-  max-width: 40rem;
+  max-width: 60rem;
   height: 50rem;
 
   background-color: rgba(var(--dark-grey), 1);

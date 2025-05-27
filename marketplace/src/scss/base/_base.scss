@@ -2,8 +2,8 @@
 // This file contains very basic styles.
 // -----------------------------------------------------------------------------
 
-@use 'abstracts/variables' as *;
-@use 'abstracts/mixins' as *;
+@use '@scss/abstracts/variables' as *;
+@use '@scss/abstracts/mixins' as *;
 
 /**
  * Set up a decent box model on the root element
