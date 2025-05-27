@@ -6,4 +6,8 @@ merkleGen
 phoenix
 Archive.zip
 
+.env
+.env.*
+
+*.sql
 *.zip
