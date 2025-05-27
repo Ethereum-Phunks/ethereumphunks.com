@@ -25,7 +25,8 @@ export class CustomLogger extends ConsoleLogger {
     this.singleLog$.pipe(
       filter(log => log !== null),
       scan((acc: LogItem[], log: LogItem) => [...acc, log].slice(-100), []),
-      tap(logs => this.logCollection.next(logs))
+      tap(logs => this.logCollection.next(logs)),
+      // tap(logs => console.log('logs', logs))
     ).subscribe();
   }
 

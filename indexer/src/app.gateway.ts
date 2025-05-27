@@ -17,7 +17,7 @@ import { AppConfigService } from '@/config/config.service';
     methods: ['GET']
   }
 })
-export class AppGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect {
+export class AppGateway {
 
   @WebSocketServer() server: Server;
 
@@ -27,9 +27,7 @@ export class AppGateway implements OnGatewayInit, OnGatewayConnection, OnGateway
     private readonly logger: CustomLogger,
     private readonly storageService: StorageService,
     private readonly configSvc: AppConfigService
-  ) {}
-
-  onGatewayInit(server: Server) {
+  ) {
     this.chainName = this.configSvc.chain.chainIdL1 === 1 ? 'mainnet' : 'sepolia';
   }
 
