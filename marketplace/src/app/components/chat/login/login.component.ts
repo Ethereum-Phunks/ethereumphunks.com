@@ -9,6 +9,8 @@ import { GlobalState } from '@/models/global-state';
 
 import { selectHasAccount } from '@/state/chat/chat.selectors';
 import { setChatConnected } from '@/state/chat/chat.actions';
+import { selectWalletAddress } from '@/state/app/app-state.selectors';
+import { map, tap } from 'rxjs/operators';
 
 @Component({
   selector: 'app-login',
@@ -21,7 +23,7 @@ import { setChatConnected } from '@/state/chat/chat.actions';
   templateUrl: './login.component.html',
   styleUrl: './login.component.scss'
 })
-export class LoginComponent implements AfterViewInit {
+export class LoginComponent {
 
   @ViewChild('signInButton') signInButton!: ElementRef<HTMLButtonElement>;
   @ViewChild('createAccountButton') createAccountButton!: ElementRef<HTMLButtonElement>;
@@ -37,13 +39,23 @@ export class LoginComponent implements AfterViewInit {
 
   passcodeError = signal<string | null>(null);
 
+  walletConnected$ = this.store.select(selectWalletAddress).pipe(
+    map((address) => !!address),
+    tap((connected) => {
+      if (connected) {
+        setTimeout(() => {
+          this.passcodeInputs.first?.nativeElement?.focus();
+        }, 100);
+      }
+    })
+  );
   hasAccount$ = this.store.select(selectHasAccount);
 
   constructor(
     private store: Store<GlobalState>,
     private fb: FormBuilder,
     private chatSvc: ChatService,
-    private web3Svc: Web3Service,
+    public web3Svc: Web3Service,
   ) {
     this.passcodeForm = this.fb.group({
       d0: new FormControl('', [Validators.pattern('^[0-9]$')]),
@@ -61,13 +73,6 @@ export class LoginComponent implements AfterViewInit {
   }
 
   /**
-   * After view initialization, focuses the first passcode input field
-   */
-  ngAfterViewInit(): void {
-    this.passcodeInputs.first.nativeElement.focus();
-  }
-
-  /**
    * Handles input events for passcode digits
    * Manages single digit input and automatic focus advancement
    * @param event The input event
@@ -79,14 +84,6 @@ export class LoginComponent implements AfterViewInit {
     const isConfirmationInput = type === 'confirm';
     const controlPrefix = isConfirmationInput ? 'c' : 'd';
     const refs = isConfirmationInput ? this.confirmInputs.toArray() : this.passcodeInputs.toArray();
-
-    console.log({
-      input,
-      index,
-      isConfirmationInput,
-      controlPrefix,
-      refs
-    });
 
     // Make sure only one digit is entered
     if (input.value.length > 1) {
@@ -119,6 +116,9 @@ export class LoginComponent implements AfterViewInit {
    */
   async verifyPasscode() {
     this.confirmingPasscode.set(true);
+    setTimeout(() => {
+      this.confirmInputs.first?.nativeElement?.focus();
+    }, 100);
   }
 
   /**

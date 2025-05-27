@@ -25,9 +25,9 @@ export class ChatEffects {
     switchMap(({ walletAddress }) => {
       return from(this.chatSvc.hasStoredUserSalt(walletAddress as `0x${string}`));
     }),
-    tap((hasAccount) => {
-      console.log('Has account', { hasAccount });
-    }),
+    // tap((hasAccount) => {
+    //   console.log('Has account', { hasAccount });
+    // }),
     map((hasAccount) => setHasAccount({ hasAccount })),
   ));
 
@@ -57,9 +57,9 @@ export class ChatEffects {
     switchMap(({ activeConversationId }) => {
       return this.chatSvc.getAndStreamConversationMessages(activeConversationId!);
     }),
-    tap((conversation) => {
-      console.log('activeConversation$', conversation);
-    }),
+    // tap((conversation) => {
+    //   console.log('activeConversation$', conversation);
+    // }),
     map((conversation) => setActiveConversation({ conversation })),
   ));
 

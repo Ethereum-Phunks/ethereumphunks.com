@@ -50,7 +50,13 @@ export class ChatService {
     try {
       console.log('Creating XMTP user with passcode:', passcode);
       const dbEncryptionKey = await this.createEncryptionKeyFromPasscode(passcode, address);
-      // console.log('Encryption key:', Array.from(dbEncryptionKey).map(b => b.toString(16).padStart(2, '0')).join(''));
+
+      console.log('===============================================');
+      console.log(
+        'CREATE ENCRYPTION KEY:',
+        Array.from(dbEncryptionKey).map(b => b.toString(16).padStart(2, '0')).join('')
+      );
+      console.log('===============================================');
 
       const walletClient = await this.web3Svc.getActiveWalletClient();
       const signer = this.createSCWSigner(walletClient);
@@ -88,7 +94,13 @@ export class ChatService {
       };
 
       const dbEncryptionKey = await this.getEncryptionKeyWithPasscode(passcode, address);
-      // console.log('Encryption key:', Array.from(dbEncryptionKey).map(b => b.toString(16).padStart(2, '0')).join(''));
+
+      console.log('===============================================');
+      console.log(
+        'GET ENCRYPTION KEY:',
+        Array.from(dbEncryptionKey).map(b => b.toString(16).padStart(2, '0')).join('')
+      );
+      console.log('===============================================');
 
       this.client = await Client.build(identifier, {
         ...this.clientOptions,
@@ -330,7 +342,7 @@ export class ChatService {
    */
   private async createEncryptionKeyFromPasscode(passcode: string, address: `0x${string}`): Promise<Uint8Array> {
     // Get user salt - used for PBKDF2 key derivation
-    const salt = await this.getOrCreateUserSalt(address);
+    const salt = await this.createSalt();
 
     // Derive key from passcode
     const enc = new TextEncoder();
@@ -410,6 +422,14 @@ export class ChatService {
     const salt = window.crypto.getRandomValues(new Uint8Array(16));
     await this.storageSvc.setItem(`user-salt-${address}`, this.utilSvc.uint8ArrayToBase64(salt), true);
     return salt;
+  }
+
+  /**
+   * Creates a new salt for the user
+   * @returns Promise resolving to salt as Uint8Array
+   */
+  async createSalt(): Promise<Uint8Array> {
+    return window.crypto.getRandomValues(new Uint8Array(16));
   }
 
   /**

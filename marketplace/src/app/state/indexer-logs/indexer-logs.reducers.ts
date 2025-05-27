@@ -21,7 +21,6 @@ on(actions.setLogs, (state, { logs }) => {
     ...state,
     logs
   };
-  console.log({setLogs});
   return setLogs
   })
 );

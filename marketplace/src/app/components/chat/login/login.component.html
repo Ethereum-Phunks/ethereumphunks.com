@@ -3,124 +3,131 @@
   <h2>EtherPhunks P2P Chat (beta)</h2>
 </div>
 
-<div class="passcode-form-wrapper">
+@if (walletConnected$ | async) {
+  <div class="passcode-form-wrapper">
 
-  @if (loading()) {
-    <div class="loading-wrapper">
-      <p>Loading...</p>
-      <img src="/loader-dark.gif" width="15" height="15" alt="" />
-    </div>
-  }
-
-  <div class="form-title-wrapper">
-    @if (hasAccount$ | async; as hasAccount) {
-      <h2>Enter your passcode</h2>
-    } @else {
-      @if (confirmingPasscode()) {
-        <h2>Confirm passcode</h2>
-        <h3>Enter your passcode again.</h3>
-      } @else {
-        <h2>Create a passcode</h2>
-        <h3>Create a passcode to start chatting.</h3>
-      }
+    @if (loading()) {
+      <div class="loading-wrapper">
+        <p>Loading...</p>
+        <img src="/loader-dark.gif" width="15" height="15" alt="" />
+      </div>
     }
-  </div>
 
-  @if (confirmingPasscode()) {
-    <form
-      autocomplete="off"
-      class="passcode-form"
-      [formGroup]="passcodeConfirmForm"
-      (submit)="$event.preventDefault()">
-
-      <div class="passcode-section">
-        <div class="inputs-row">
-          @for (i of [0,1,2,3]; track i) {
-            <input
-              #confirmInput
-              type="number"
-              min="0"
-              max="9"
-              maxlength="1"
-              class="passcode-input"
-              [formControlName]="'c'+i"
-              required
-              (input)="onInput($event, i, 'confirm')"
-              (focus)="onFocus($event)"
-            >
-          }
-        </div>
-      </div>
-    </form>
-  } @else {
-    <form
-      autocomplete="off"
-      class="passcode-form"
-      [formGroup]="passcodeForm"
-      (submit)="$event.preventDefault()">
-
-      <div class="passcode-section">
-        <div class="inputs-row">
-          @for (i of [0,1,2,3]; track i) {
-            <input
-              #passcodeInput
-              type="number"
-              min="0"
-              max="9"
-              maxlength="1"
-              class="passcode-input"
-              [formControlName]="'d'+i"
-              required
-              (input)="onInput($event, i, 'passcode')"
-              (focus)="onFocus($event)"
-            >
-          }
-        </div>
-      </div>
-    </form>
-  }
-
-  @if (passcodeError(); as passcodeError) {
-    <div class="error-message">
-      {{ passcodeError }}
-    </div>
-  }
-
-  <div class="actions-wrapper">
-    @if (passcodeError()) {
-      <button
-        (click)="startOver()">
-
-        Start Over
-      </button>
-    } @else {
+    <div class="form-title-wrapper">
       @if (hasAccount$ | async; as hasAccount) {
-        <button
-          #signInButton
-          (click)="signIn()">
-
-          Sign In
-        </button>
+        <h2>Enter your passcode</h2>
       } @else {
         @if (confirmingPasscode()) {
-          <button
-            #createAccountButton
-            (click)="createAccount()">
-
-            Create Account
-          </button>
+          <h2>Confirm passcode</h2>
+          <h3>Enter your passcode again.</h3>
         } @else {
-          <button
-            #verifyPasscodeButton
-            (click)="verifyPasscode()">
-
-            Confirm Passcode
-          </button>
+          <h2>Create a passcode</h2>
+          <h3>Create a passcode to start chatting.</h3>
         }
       }
+    </div>
+
+    @if (confirmingPasscode()) {
+      <form
+        autocomplete="off"
+        class="passcode-form"
+        [formGroup]="passcodeConfirmForm"
+        (submit)="$event.preventDefault()">
+
+        <div class="passcode-section">
+          <div class="inputs-row">
+            @for (i of [0,1,2,3]; track i) {
+              <input
+                #confirmInput
+                type="number"
+                min="0"
+                max="9"
+                maxlength="1"
+                class="passcode-input"
+                [formControlName]="'c'+i"
+                required
+                (input)="onInput($event, i, 'confirm')"
+                (focus)="onFocus($event)"
+              >
+            }
+          </div>
+        </div>
+      </form>
+    } @else {
+      <form
+        autocomplete="off"
+        class="passcode-form"
+        [formGroup]="passcodeForm"
+        (submit)="$event.preventDefault()">
+
+        <div class="passcode-section">
+          <div class="inputs-row">
+            @for (i of [0,1,2,3]; track i) {
+              <input
+                #passcodeInput
+                type="number"
+                min="0"
+                max="9"
+                maxlength="1"
+                class="passcode-input"
+                [formControlName]="'d'+i"
+                required
+                (input)="onInput($event, i, 'passcode')"
+                (focus)="onFocus($event)"
+              >
+            }
+          </div>
+        </div>
+      </form>
     }
+
+    @if (passcodeError(); as passcodeError) {
+      <div class="error-message">
+        {{ passcodeError }}
+      </div>
+    }
+
+    <div class="actions-wrapper">
+      @if (passcodeError()) {
+        <button
+          (click)="startOver()">
+
+          Start Over
+        </button>
+      } @else {
+        @if (hasAccount$ | async; as hasAccount) {
+          <button
+            #signInButton
+            (click)="signIn()">
+
+            Sign In
+          </button>
+        } @else {
+          @if (confirmingPasscode()) {
+            <button
+              #createAccountButton
+              (click)="createAccount()">
+
+              Create Account
+            </button>
+          } @else {
+            <button
+              #verifyPasscodeButton
+              (click)="verifyPasscode()">
+
+              Confirm Passcode
+            </button>
+          }
+        }
+      }
+    </div>
   </div>
-</div>
+} @else {
+  <div class="connect-wallet-wrapper">
+    <p>Connect your wallet to get started.</p>
+    <button (click)="web3Svc.connect()">Connect Wallet</button>
+  </div>
+}
 
 <div class="footer-wrapper">
   <p>EtherPhunks P2P Chat uses XMTP (Extensible Message Transport Protocol) for secure, decentralized messaging. XMTP provides end-to-end encryption, spam protection, and full user control over communications.</p>
@@ -133,62 +140,3 @@
 <ng-template #externalIcon>
   <svg height="9" viewBox="0 0 9 9" width="9" xmlns="http://www.w3.org/2000/svg"><path d="m3 0v1.5h-1.5v6h6v-1.5h1.5v3h-9v-9zm1.5 4.5v1.5h-1.5v-1.5zm1.5 0h-1.5v-1.5h1.5v-1.5h-1.5v-1.5h4.5v4.5h-1.5v-1.5h-1.5z" fill="currentColor" fill-rule="evenodd" /></svg>
 </ng-template>
-
-
-<!-- @if (hasAccount$ | async; as hasAccount) {
-} @else {
-  <div class="passcode-form-wrapper">
-    <h2>Create a passcode</h2>
-    <form [formGroup]="passcodeForm" autocomplete="off" class="passcode-form" (submit)="$event.preventDefault()">
-      <div class="passcode-section">
-        <label>Enter passcode</label>
-        <div class="inputs-row">
-          @for (i of [0,1,2,3]; track i) {
-            <input
-              #passcodeInput
-              type="number"
-              min="0"
-              max="9"
-              maxlength="1"
-              class="passcode-input"
-              [formControlName]="'d'+i"
-              required
-              (input)="onInput($event, i)"
-              (focus)="onFocus($event)"
-            >
-          }
-        </div>
-      </div>
-
-      <div class="passcode-section">
-        <label>Confirm passcode</label>
-        <div class="inputs-row">
-          @for (i of [0,1,2,3]; track i) {
-            <input
-              #confirmInput
-              type="number"
-              min="0"
-              max="9"
-              maxlength="1"
-              class="passcode-input"
-              [formControlName]="'c'+i"
-              required
-              (input)="onInput($event, i+4)"
-              (focus)="onFocus($event)"
-            >
-          }
-        </div>
-      </div>
-    </form>
-  </div>
-
-  <div class="actions-wrapper">
-    <button
-      #createAccountButton
-      (click)="createAccount()"
-      [disabled]="!passcodeForm.valid">
-
-      Create Account
-    </button>
-  </div>
-} -->
