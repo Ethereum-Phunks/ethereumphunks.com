@@ -1,9 +1,8 @@
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 
-import { AsyncStream, Client, ClientOptions, DecodedMessage, Dm, Group, Identifier, Signer, SortDirection } from '@xmtp/browser-sdk';
-
 import { toBytes, WalletClient } from 'viem';
+import { AsyncStream, Client, ClientOptions, DecodedMessage, Dm, Group, Identifier, Signer, SortDirection } from '@xmtp/browser-sdk';
 
 import { NormalizedConversation, NormalizedConversationWithMessages, NormalizedMessage } from '@/models/chat';
 
@@ -11,25 +10,20 @@ import { Web3Service } from './web3.service';
 import { UtilService } from './util.service';
 import { StorageService } from './storage.service';
 
-import * as fs from 'fs';
+import { environment } from '@environments/environment';
 
-/**
- * Service for handling XMTP chat functionality
- */
 @Injectable({
   providedIn: 'root'
 })
 export class ChatService {
-
-  /** Encoding used for storing XMTP keys */
-  ENCODING: any = 'binary';
 
   /** XMTP client instance */
   private client!: Client;
 
   /** XMTP client configuration options */
   private clientOptions: ClientOptions = {
-    env: 'production',
+    env: environment.agent.env,
+    // loggingLevel: 'off',
     // structuredLogging: true,
   };
 
@@ -38,6 +32,7 @@ export class ChatService {
     private utilSvc: UtilService,
     private storageSvc: StorageService
   ) {
+    // Clears all data from OPFS
     // navigator.storage.getDirectory().then(async (rootDir) => {
     //   await rootDir.removeEntry('.opfs-libxmtp-metadata', { recursive: true });
     //   console.log('Deleted .opfs-libxmtp-metadata');
@@ -55,7 +50,7 @@ export class ChatService {
     try {
       console.log('Creating XMTP user with passcode:', passcode);
       const dbEncryptionKey = await this.createEncryptionKeyFromPasscode(passcode, address);
-      console.log('Encryption key:', Array.from(dbEncryptionKey).map(b => b.toString(16).padStart(2, '0')).join(''));
+      // console.log('Encryption key:', Array.from(dbEncryptionKey).map(b => b.toString(16).padStart(2, '0')).join(''));
 
       const walletClient = await this.web3Svc.getActiveWalletClient();
       const signer = this.createSCWSigner(walletClient);
@@ -66,7 +61,6 @@ export class ChatService {
       });
 
       if (this.client) {
-        await this.client.conversations.sync();
         await this.client.conversations.syncAll();
         console.log('Signed in to XMTP', this.client.inboxId);
         return { connected: true, activeInboxId: this.client.inboxId };
@@ -94,7 +88,7 @@ export class ChatService {
       };
 
       const dbEncryptionKey = await this.getEncryptionKeyWithPasscode(passcode, address);
-      console.log('Encryption key:', Array.from(dbEncryptionKey).map(b => b.toString(16).padStart(2, '0')).join(''));
+      // console.log('Encryption key:', Array.from(dbEncryptionKey).map(b => b.toString(16).padStart(2, '0')).join(''));
 
       this.client = await Client.build(identifier, {
         ...this.clientOptions,
@@ -267,10 +261,39 @@ export class ChatService {
     };
   }
 
+  /**
+   * Creates a new DM conversation with the provided address
+   * @param to The address of the user to create a conversation with
+   * @returns Promise resolving to the conversation ID
+   * @throws Error if the conversation creation fails
+   */
+  async createConversation(to: string): Promise<string> {
+    try {
+      const conversation = await this.client.conversations.newDmWithIdentifier({
+        identifier: to,
+        identifierKind: 'Ethereum',
+      });
+      return conversation.id;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  /**
+   * Sends a message to a conversation
+   * @param conversationId The ID of the conversation
+   * @param message The message to send
+   * @returns Promise resolving to the message ID
+   * @throws Error if the message sending fails
+   */
   async sendMessageToConversation(conversationId: string, message: string): Promise<string> {
-    const conversation = await this.client.conversations.getConversationById(conversationId);
-    if (!conversation) throw new Error('Conversation not found');
-    return await conversation.send(message);
+    try {
+      const conversation = await this.client.conversations.getConversationById(conversationId);
+      if (!conversation) throw new Error('Conversation not found');
+      return await conversation.send(message);
+    } catch (error) {
+      throw error;
+    }
   }
 
   /**

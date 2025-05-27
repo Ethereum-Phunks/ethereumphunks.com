@@ -6,13 +6,14 @@ import { Actions, createEffect, ofType } from '@ngrx/effects';
 
 import { GlobalState } from '@/models/global-state';
 
-import { from, map, switchMap, tap, distinctUntilChanged, filter, withLatestFrom } from 'rxjs';
+import { from, map, switchMap, tap, distinctUntilChanged, filter, withLatestFrom, of, catchError } from 'rxjs';
 
 import { ChatService } from '@/services/chat.service';
 import { DataService } from '@/services/data.service';
+import { Web3Service } from '@/services/web3.service';
 
 import { setWalletAddress } from '@/state/app/app-state.actions';
-import { setChatConnected, setHasAccount, setConversations, setChat, setActiveConversation } from './chat.actions';
+import { setChatConnected, setHasAccount, setConversations, setChat, setActiveConversation, setCreateConversationWithAddress } from './chat.actions';
 import { selectWalletAddress } from '../app/app-state.selectors';
 
 @Injectable()
@@ -62,10 +63,23 @@ export class ChatEffects {
     map((conversation) => setActiveConversation({ conversation })),
   ));
 
+  createConversationWithAddress$ = createEffect(() => this.actions$.pipe(
+    ofType(setCreateConversationWithAddress),
+    filter(({ address }) => !!address),
+    switchMap(({ address }) => from(this.chatSvc.createConversation(address!)).pipe(
+      catchError((error) => {
+        console.error('Error creating conversation', error);
+        return of(null);
+      })
+    )),
+    map((conversationId) => setChat({ active: true, activeConversationId: conversationId })),
+  ));
+
   constructor(
     private store: Store<GlobalState>,
     private actions$: Actions,
     private chatSvc: ChatService,
     private dataSvc: DataService,
+    private web3Svc: Web3Service,
   ) {}
 }

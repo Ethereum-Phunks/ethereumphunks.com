@@ -25,3 +25,8 @@ export const setActiveConversation = createAction(
   '[Chat] Set Active Conversation',
   props<{ conversation: NormalizedConversationWithMessages | undefined }>()
 );
+
+export const setCreateConversationWithAddress = createAction(
+  '[Chat] Set Create Conversation With Address',
+  props<{ address: string }>()
+);

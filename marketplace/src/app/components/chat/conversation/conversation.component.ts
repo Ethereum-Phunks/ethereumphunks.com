@@ -13,6 +13,8 @@ import { GlobalState } from '@/models/global-state';
 
 import { WalletAddressDirective } from '@/directives/wallet-address.directive';
 
+import { MarkdownPipe } from '@/pipes/markdown.pipe';
+
 import { selectActiveConversation } from '@/state/chat/chat.selectors';
 import { setActiveConversation, setChat } from '@/state/chat/chat.actions';
 import { selectWalletAddress } from '@/state/app/app-state.selectors';
@@ -29,7 +31,8 @@ import { NormalizedConversationWithMessages } from '@/models/chat';
     ReactiveFormsModule,
     TimeagoModule,
 
-    WalletAddressDirective
+    WalletAddressDirective,
+    MarkdownPipe
   ],
   templateUrl: './conversation.component.html',
   styleUrl: './conversation.component.scss'

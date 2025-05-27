@@ -1,5 +1,7 @@
 import { defineConfig, loadEnv } from 'vite';
 import { join, resolve } from 'path';
+import { visualizer } from 'rollup-plugin-visualizer';
+import checker from 'vite-plugin-checker';
 
 import fs from 'fs';
 import moment from 'moment';
@@ -84,8 +86,24 @@ export default defineConfig(({ command, mode }) => {
       rollupOptions: {
         input: {
           main: currentEnv.indexHtml || resolve(__dirname, 'src/index.html')
+        },
+        output: {
+          manualChunks: {
+            'vendor': [
+              '@web3modal/wagmi',
+              '@xmtp/proto',
+              '@ng-select/ng-select'
+            ],
+            'angular-core': ['@angular/core', '@angular/common', '@angular/platform-browser'],
+            'angular-features': ['@angular/router', '@angular/forms']
+          }
         }
-      }
+      },
+      modulePreload: true,
+      cssCodeSplit: true,
+      chunkSizeWarningLimit: 500,
+      reportCompressedSize: true,
+      assetsInlineLimit: 4096
     },
 
     css: {
@@ -116,7 +134,35 @@ export default defineConfig(({ command, mode }) => {
             resolve(__dirname, 'src/scss'),
             resolve(__dirname, 'node_modules/@ng-select/ng-select/scss')
           ]
+        },
+        tsCheckerOptions: {
+          overlay: true,
+          reportFiles: ['src/**/*.ts'],
+          issue: {
+            include: [
+              {
+                file: 'src/**/*.ts',
+                severity: 'error'
+              }
+            ]
+          }
         }
+      }),
+      checker({
+        typescript: {
+          root: __dirname,
+          tsconfigPath: resolve(__dirname, 'tsconfig.app.json'),
+        },
+        overlay: {
+          initialIsOpen: true,
+          position: 'tl',
+        },
+        enableBuild: false
+      }),
+      visualizer({
+        filename: './dist/stats.html',
+        gzipSize: true,
+        brotliSize: true,
       }),
       {
         name: 'rename-html-after-build',
@@ -134,6 +180,16 @@ export default defineConfig(({ command, mode }) => {
     server: {
       port: 4200,
       host: true,
+      allowedHosts: ['localhost', '10.0.0.73', '127.0.0.1', '0.0.0.0', 'mac'],
+      hmr: {
+        overlay: true,
+        clientPort: 4200,
+      },
+      watch: {
+        usePolling: true,
+        interval: 1000,
+        ignored: ['**/node_modules/**', '**/dist/**', '**/.git/**'],
+      },
     },
 
     preview: {
@@ -150,11 +206,14 @@ export default defineConfig(({ command, mode }) => {
     optimizeDeps: {
       include: ['@web3modal/wagmi', 'qrcode', 'zone.js', '@ng-select/ng-select', "@xmtp/proto"],
       exclude: ["@xmtp/wasm-bindings", "@xmtp/browser-sdk"],
+      cacheDir: 'node_modules/.vite',
       esbuildOptions: {
         target: 'es2020',
         define: {
           global: 'globalThis'
-        }
+        },
+        minify: true,
+        treeShaking: true
       }
     }
   };

@@ -25,7 +25,7 @@
 
               {{ message.timestamp | timeago : true }}
             </div>
-            <div class="content">{{ message.content }}</div>
+            <div class="content" [innerHTML]="message.content | markdown"></div>
           </div>
         </div>
       } @empty {

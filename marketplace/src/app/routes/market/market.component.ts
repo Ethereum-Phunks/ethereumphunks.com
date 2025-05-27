@@ -38,8 +38,7 @@ import { upsertNotification } from '@/state/notification/notification.actions';
 import { environment } from '@environments/environment';
 
 import { filter, map, tap } from 'rxjs';
-import { openModal } from '@/state/modal/modal.actions';
-import { setChat } from '@/state/chat/chat.actions';
+import { setCreateConversationWithAddress } from '@/state/chat/chat.actions';
 
 const defaultActionState = {
   canList: false,
@@ -178,10 +177,18 @@ export class MarketComponent {
     private fb: FormBuilder,
   ) {}
 
+  /**
+   * Sets the active sort option for the market view
+   * @param $event - The sort option selected by the user
+   */
   setSort($event: any): void {
     this.store.dispatch(marketStateActions.setActiveSort({ activeSort: $event }));
   }
 
+  /**
+   * Executes a batch action on selected phunks
+   * @param type - The type of batch action to perform (transfer, escrow, withdraw, list, or sweep)
+   */
   async batchAction(type: 'transfer' | 'escrow' | 'withdraw' | 'list' | 'sweep'): Promise<void> {
     if (!Object.keys(this.selected).length) return;
 
@@ -192,7 +199,10 @@ export class MarketComponent {
     if (type === 'withdraw') await this.withdrawSelected();
   }
 
-  // Actions
+  /**
+   * Prepares the UI for bulk buying of selected phunks
+   * Filters out phunks that are not in escrow or invalid, then sets up the form
+   */
   async buySelected(): Promise<void> {
     this.isBuyingBulk = true;
     this.store.dispatch(appStateActions.setSlideoutActive({ slideoutActive: true }));
@@ -213,6 +223,10 @@ export class MarketComponent {
     this.selectedPhunksFormArray = this.bulkActionsForm.get('buyPhunks') as FormArray;
   }
 
+  /**
+   * Prepares the UI for bulk transfer of selected phunks
+   * Filters out phunks that are in escrow or invalid, then sets up the form and focuses the address input
+   */
   async transferSelected(): Promise<void> {
     this.isTransferingBulk = true;
     this.store.dispatch(appStateActions.setSlideoutActive({ slideoutActive: true }));
@@ -233,6 +247,10 @@ export class MarketComponent {
     setTimeout(() => this.transferAddressInput.nativeElement.focus(), 0);
   }
 
+  /**
+   * Prepares the UI for bulk listing of selected phunks
+   * Filters out phunks that are not in escrow, then sets up the form
+   */
   async listSelected(): Promise<void> {
     this.isListingBulk = true;
     this.store.dispatch(appStateActions.setSlideoutActive({ slideoutActive: true }));
@@ -252,6 +270,10 @@ export class MarketComponent {
     this.selectedPhunksFormArray = this.bulkActionsForm.get('listingPhunks') as FormArray;
   }
 
+  /**
+   * Prepares the UI for bulk escrow of selected phunks
+   * Filters out phunks that are already in escrow or invalid, then sets up the form
+   */
   async escrowSelected(): Promise<void> {
     this.isEscrowingBulk = true;
     this.store.dispatch(appStateActions.setSlideoutActive({ slideoutActive: true }));
@@ -271,6 +293,10 @@ export class MarketComponent {
     this.selectedPhunksFormArray = this.bulkActionsForm.get('escrowPhunks') as FormArray;
   }
 
+  /**
+   * Prepares the UI for bulk withdrawal of selected phunks
+   * Filters out phunks that are not in escrow, then sets up the form
+   */
   async withdrawSelected(): Promise<void> {
     this.isWithdrawingBulk = true;
     this.store.dispatch(appStateActions.setSlideoutActive({ slideoutActive: true }));
@@ -290,6 +316,10 @@ export class MarketComponent {
     this.selectedPhunksFormArray = this.bulkActionsForm.get('withdrawPhunks') as FormArray;
   }
 
+  /**
+   * Submits a batch transfer transaction for selected phunks
+   * Validates the transfer address and executes the blockchain transaction
+   */
   async submitBatchTransfer(): Promise<void> {
 
     if (!this.bulkActionsForm.value.transferPhunks) return;
@@ -345,6 +375,10 @@ export class MarketComponent {
     }
   }
 
+  /**
+   * Submits a batch listing transaction for selected phunks
+   * Validates listing prices and executes the blockchain transaction
+   */
   async submitBatchListing(): Promise<void> {
     if (!this.bulkActionsForm.value.listingPhunks) return;
 
@@ -405,6 +439,10 @@ export class MarketComponent {
     }
   }
 
+  /**
+   * Submits a batch escrow transaction for selected phunks
+   * Transfers phunks to the escrow contract address
+   */
   async submitBatchEscrow(): Promise<void> {
     if (!this.bulkActionsForm.value.escrowPhunks) return;
 
@@ -464,6 +502,10 @@ export class MarketComponent {
     }
   }
 
+  /**
+   * Submits a batch withdrawal transaction for selected phunks
+   * Withdraws phunks from the escrow contract back to the user's wallet
+   */
   async submitBatchWithdraw(): Promise<void> {
     if (!this.bulkActionsForm.value.withdrawPhunks) return;
 
@@ -520,6 +562,10 @@ export class MarketComponent {
     }
   }
 
+  /**
+   * Submits a batch buy transaction for selected phunks
+   * Purchases multiple phunks that are currently listed for sale
+   */
   async submitBatchBuy(): Promise<void> {
     if (!this.bulkActionsForm.value.buyPhunks) return;
 
@@ -576,6 +622,11 @@ export class MarketComponent {
     }
   }
 
+  /**
+   * Handles changes to the selected phunks collection
+   * Updates the total value and available actions based on the current selection
+   * @param $event - The selection change event
+   */
   selectedChange($event: any): void {
     this.selectedValue = Object.values(this.selected).reduce(
       (acc: number, phunk: Phunk) => acc += Number(phunk.listing?.minValue || '0'),
@@ -601,6 +652,10 @@ export class MarketComponent {
     this.actionsState = { ...this.actionsState };
   }
 
+  /**
+   * Toggles the multiple selection mode on/off
+   * Clears any existing selections when disabling multiple selection
+   */
   setSelectActive() {
     this.selectMultipleActive = !this.selectMultipleActive;
     this.selectAll = false;
@@ -611,6 +666,10 @@ export class MarketComponent {
     this.filtersVisible = false;
   }
 
+  /**
+   * Clears all selected items and closes the selection mode
+   * Resets the actions state to default values
+   */
   clearSelectedAndClose() {
     this.selectMultipleActive = false;
     this.selectAll = false;
@@ -618,16 +677,27 @@ export class MarketComponent {
     this.actionsState = defaultActionState;
   }
 
+  /**
+   * Closes the slideout panel by dispatching the appropriate action
+   */
   closeSlideout(): void {
     this.store.dispatch(appStateActions.setSlideoutActive({ slideoutActive: false }));
   }
 
+  /**
+   * Copies the list price from one form control to the next
+   * @param index - The index of the current form control
+   */
   copyToNext(index: number) {
     this.selectedPhunksFormArray.controls[index + 1].get('listPrice')?.setValue(
       this.selectedPhunksFormArray.controls[index].get('listPrice')?.value
     );
   }
 
+  /**
+   * Resets all bulk action states and form arrays
+   * Called when the slideout is closed or actions are completed
+   */
   resetState() {
     this.isListingBulk = false;
     this.isTransferingBulk = false;
@@ -637,16 +707,11 @@ export class MarketComponent {
     this.selectedPhunksFormArray = this.fb.array([]);
   }
 
-  openChat(toAddress: string) {
-    // TODO: set chat
-    console.log('openChat', toAddress);
-    // this.store.dispatch(setChat({
-    //   active: true,
-    //   toAddress,
-    // }));
-  }
-
-  // Submissions
+  /**
+   * Validates and categorizes selected phunks based on their escrow status and ownership
+   * @param removeOwnedItems - Whether to filter out items owned by the current user
+   * @returns Object containing arrays of phunks categorized by their status
+   */
   async checkSelected(
     removeOwnedItems = false
   ): Promise<{ notInEscrow: Phunk[], inEscrow: Phunk[], invalid: Phunk[]}> {
@@ -677,6 +742,11 @@ export class MarketComponent {
     return { notInEscrow, inEscrow, invalid };
   }
 
+  /**
+   * Filters out phunks that are bridged/locked and cannot be traded
+   * @param phunks - Array of phunks to filter
+   * @returns Tuple containing valid and invalid phunks
+   */
   async filterLockedItems(phunks: Phunk[]): Promise<[Phunk[], Phunk[]]> {
     let validItems: Phunk[] = [];
     let invalidItems: Phunk[] = [];
@@ -686,6 +756,11 @@ export class MarketComponent {
     return [validItems, invalidItems];
   }
 
+  /**
+   * Filters out phunks that are owned by the current user
+   * @param phunks - Array of phunks to filter
+   * @returns Tuple containing valid and invalid phunks
+   */
   async filterOwnedItems(phunks: Phunk[]): Promise<[Phunk[], Phunk[]]> {
     const walletAddress = (await this.web3Svc.getCurrentAddress())?.toLowerCase();
     const marketAddress = environment.marketAddress.toLowerCase();
@@ -707,8 +782,20 @@ export class MarketComponent {
     return [validItems, invalidItems];
   }
 
+  /**
+   * Toggles the visibility of the filters panel
+   * Disables multiple selection mode when showing filters
+   */
   toggleFilters() {
     this.filtersVisible = !this.filtersVisible;
     this.selectMultipleActive = false;
+  }
+
+  /**
+   * Initiates the creation of a chat conversation with a specific address
+   * @param address - The wallet address to start a conversation with
+   */
+  async createConversation(address: string) {
+    this.store.dispatch(setCreateConversationWithAddress({ address }));
   }
 }

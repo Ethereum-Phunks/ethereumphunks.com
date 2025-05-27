@@ -53,20 +53,26 @@
 
 .chat-wrapper {
   width: 100%;
+  min-height: 0;
   height: 100%;
+  display: flex;
+  flex-direction: column;
 
   .messages-wrapper {
     position: relative;
-
+    flex: 1;
     display: flex;
     flex-direction: column;
-    justify-content: flex-end;
+    gap: 1rem;
 
-    overflow: auto;
+    overflow-y: auto;
     overflow-x: hidden;
-
     height: calc(100% - 8rem);
     padding: 1rem 0;
+
+    > :first-child {
+      margin-top: auto;
+    }
 
     * {
       cursor: default;
@@ -98,7 +104,7 @@
           font-size: 1.4rem;
           font-weight: 600;
           word-break: break-word;
-          white-space: pre-wrap;
+          // white-space: pre-wrap;
           overflow-wrap: anywhere;
 
           background-color: rgba(var(--text-color), .25);

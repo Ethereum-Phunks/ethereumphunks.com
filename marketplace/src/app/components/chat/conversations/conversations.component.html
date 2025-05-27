@@ -2,10 +2,32 @@
   <h2>Conversations</h2>
 </div>
 
+<button
+  class="create-conversation-button"
+  (click)="newConversation()"
+  [class.active]="isCreatingNewConversation()">
+
+  <span>+</span>
+</button>
+
+@if (isCreatingNewConversation()) {
+  <div class="new-conversation-wrapper">
+    <form (submit)="createConversation($event)">
+      <input type="text" placeholder="0x or ENS name" [formControl]="newConversationTo">
+      <button type="submit" [class.disabled]="newConversationTo.invalid || !newConversationTo.value">
+        <ng-template [ngTemplateOutlet]="createIcon" />
+      </button>
+      <button type="button" (click)="closeNewConversation()">
+        <ng-template [ngTemplateOutlet]="closeIcon" />
+      </button>
+    </form>
+  </div>
+}
+
 <div #conversations class="conversations-wrapper">
   @for (conversation of (conversations$ | async); track conversation.id) {
     <div
-      (click)="goToConversation(conversation)"
+      (click)="goToConversation(conversation.id)"
       class="conversation">
 
       <div class="profile-item">
@@ -56,3 +78,11 @@
     </div>
   }
 </div>
+
+<ng-template #createIcon>
+  <svg height="12" viewBox="0 0 15 12" width="15" xmlns="http://www.w3.org/2000/svg"><path d="m12 6h-3v-3h3v-3h3v3h-3zm-6 3v3h-3v-3zm3-3v3h-3v-3zm-6 0v3h-3v-3z" fill-rule="evenodd" fill="currentColor" /></svg>
+</ng-template>
+
+<ng-template #closeIcon>
+  <svg height="15" viewBox="0 0 15 15" width="15" xmlns="http://www.w3.org/2000/svg"><g fill="currentColor" fill-rule="evenodd"><path d="m6 6h3v3h-3z"/><path d="m3 3h3v3h-3z"/><path d="m3 9h3v3h-3z"/><path d="m0 0h3v3h-3z"/><path d="m0 12h3v3h-3z"/><path d="m12 3h-3v3h3z"/><path d="m12 9h-3v3h3z"/><path d="m15 0h-3v3h3z"/><path d="m15 12h-3v3h3z"/></g></svg>
+</ng-template>

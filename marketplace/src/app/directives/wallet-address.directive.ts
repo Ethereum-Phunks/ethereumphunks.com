@@ -1,6 +1,7 @@
 import { Directive, ElementRef, HostListener, Input, OnChanges, OnInit, SimpleChanges } from '@angular/core';
 
 import { Web3Service } from '@/services/web3.service';
+import { environment } from '@environments/environment';
 
 @Directive({
   standalone: true,
@@ -29,6 +30,11 @@ export class WalletAddressDirective implements OnChanges {
     const address = changes.address.currentValue;
 
     if (address) {
+      if (address === environment.agent.address) {
+        el.innerText = environment.agent.name;
+        return;
+      }
+
       el.innerText = address.substr(0, 5) + '...' + address.substr(address.length - 5, address.length);
       if (this.ens) this.getEns(el, address);
       return;

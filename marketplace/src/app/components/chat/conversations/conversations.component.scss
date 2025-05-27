@@ -2,12 +2,78 @@
 @use 'abstracts/mixins' as *;
 
 :host {
+  position: relative;
   display: flex;
   flex-direction: column;
   height: 100%;
 
   font-family: var(--secondary-font-stack);
   font-weight: 400;
+}
+
+.create-conversation-button {
+  position: absolute;
+  z-index: 1;
+  bottom: .5rem;
+  right: .5rem;
+
+  width: 4.5rem;
+  height: 4.5rem;
+
+  text-align: center;
+  justify-content: center;
+  align-items: center;
+
+  span {
+    font-size: 3rem;
+  }
+}
+
+.new-conversation-wrapper {
+  position: absolute;
+  z-index: 2;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+
+  padding: .5rem;
+
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+
+  // background-color: rgba(var(--dark-grey), .9);
+
+  form {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 4.5rem;
+
+    input {
+      width: calc(100% - 9rem);
+      height: 100%;
+    }
+
+    button {
+      width: 4.5rem;
+      height: 4.5rem;
+
+      text-align: center;
+      justify-content: center;
+      align-items: center;
+
+      background-color: rgba(var(--base-color), 1);
+      color: rgba(var(--dark-grey), 1);
+
+      &.disabled {
+        opacity: .5;
+        pointer-events: none;
+      }
+    }
+  }
 }
 
 .conversations-header {
@@ -27,20 +93,23 @@
 }
 
 .conversations-wrapper {
+  display: flex;
+  flex-direction: column;
+
   flex: 1 1 auto;
   overflow: auto;
   overflow-x: hidden;
+  gap: .5rem;
 
   min-height: 0;
   height: calc(100% - 4rem);
 
-  padding: 1rem 1rem 0;
+  padding: .5rem;
 
   .conversation {
     display: flex;
     height: 4rem;
     padding: 0;
-    margin-bottom: .5rem;
 
     color: rgba(var(--white), 1);
     border-bottom: 1px solid rgba(var(--white), .1);
@@ -105,6 +174,10 @@
       .timestamp {
         font-size: .8rem;
       }
+    }
+
+    &.bot {
+      background-color: rgba(var(--bid-color), 1);
     }
   }
 

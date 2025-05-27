@@ -1,4 +1,4 @@
-import { Component, input, effect, model } from '@angular/core';
+import { Component, input, effect, model, untracked } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { LazyLoadImageModule } from 'ng-lazyload-image';
 
@@ -27,15 +27,22 @@ export class AvatarComponent {
     private dataSvc: DataService
   ) {
     effect(async () => {
-      let avatar = await this.web3Svc.getEnsAvatar(this.address());
-      if (avatar) {
-        this.src.set(avatar);
+      const address = this.address();
+
+      if (address === environment.agent.address) {
+        untracked(() => this.src.set(`/bot-pfp.png`));
         return;
       }
 
-      avatar = await this.dataSvc.getUserAvatar(this.address());
+      let avatar = await this.web3Svc.getEnsAvatar(address);
       if (avatar) {
-        this.src.set(`${environment.staticUrl}/static/images/${avatar}`);
+        untracked(() => this.src.set(avatar!));
+        return;
+      }
+
+      avatar = await this.dataSvc.getUserAvatar(address);
+      if (avatar) {
+        untracked(() => this.src.set(`${environment.staticUrl}/static/images/${avatar}`));
         return;
       }
     })

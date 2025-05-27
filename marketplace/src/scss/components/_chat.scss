@@ -1,0 +1,14 @@
+.chat-message {
+  .message-inner {
+    .content {
+      p {
+        padding: 0 !important;
+        margin: 0 !important;
+        margin-block-start: 0 !important;
+        margin-block-end: 0 !important;
+        margin-inline-start: 0 !important;
+        margin-inline-end: 0 !important;
+      }
+    }
+  }
+}

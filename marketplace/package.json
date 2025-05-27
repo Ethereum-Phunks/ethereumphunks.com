@@ -43,7 +43,6 @@
     "@wagmi/core": "^2.17.1",
     "@web3modal/wagmi": "^5.1.11",
     "@xmtp/browser-sdk": "^2.0.13",
-    "@xmtp/xmtp-js": "^13.0.4",
     "animejs": "^3.2.1",
     "apollo-angular": "^10.0.3",
     "dotenv": "^16.4.5",
@@ -51,6 +50,7 @@
     "gsap": "^3.12.7",
     "ipfs-http-client": "56.0.1",
     "localforage": "^1.10.0",
+    "marked": "^15.0.12",
     "moment": "^2.30.1",
     "ng-lazyload-image": "^9.1.3",
     "ngx-pagination": "^6.0.3",
@@ -85,8 +85,10 @@
     "@types/tinycolor2": "^1.4.3",
     "@types/uuid": "^9.0.8",
     "esbuild-wasm": "^0.25.4",
+    "rollup-plugin-visualizer": "^5.14.0",
     "sass": "^1.89.0",
     "typescript": "5.5.4",
-    "vite": "^6.3.5"
+    "vite": "^6.3.5",
+    "vite-plugin-checker": "^0.9.3"
   }
 }
